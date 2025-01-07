@@ -1,0 +1,35 @@
+# macOS files
+.DS_Store
+
+# Binary files
+*.o
+*.obj
+*.dylib
+*.a
+*.exe
+*.dll
+*.so
+*.lib
+*.pdb
+*.idb
+*.ilk
+*.exp
+*.suo
+
+
+# Product folders
+build/
+bin/
+lib/
+
+# IDE artifacts
+.vscode/
+.idea/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
