@@ -20,3 +20,5 @@ find_package(OpenGL REQUIRED)
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE)
 
 target_link_libraries(${PROJECT_NAME} glfw glad cglm)
+
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror)

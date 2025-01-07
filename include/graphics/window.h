@@ -1,7 +1,4 @@
-#ifndef WINDOW_H
-#define WINDOW_H
-
-typedef struct GLFWwindow GLFWwindow;
+#pragma once
 
 void create_window(int width, int height, const char* title);
 
@@ -19,8 +16,4 @@ void swap_buffers();
 
 void poll_events();
 
-GLFWwindow* get_window();
-
 void set_swap_interval(int interval);
-
-#endif // WINDOW_H

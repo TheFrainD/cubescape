@@ -1,5 +1,4 @@
-#ifndef LOG_H
-#define LOG_H
+#pragma once
 
 // Logging levels
 enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
@@ -12,5 +11,3 @@ enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
 #define log_fatal(...) logger(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
 void logger(int level, const char *file, int line, const char *fmt, ...);
-
-#endif // LOG_H
