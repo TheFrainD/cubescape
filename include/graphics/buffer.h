@@ -21,18 +21,10 @@ typedef enum {
     BUFFER_TARGET_UNIFORM_BUFFER = 0x8A11
 } BufferTarget;
 
-typedef struct {
-    uint32_t id;
-    uint32_t size;
-    BufferTarget bound_target;
-} Buffer;
+uint32_t create_buffer(const void *data, size_t size, BufferUsage usage, BufferTarget target);
+void destroy_buffer(uint32_t *buffer);
 
-Buffer *create_buffer(const void *data, size_t size, BufferUsage usage, BufferTarget target);
-void destroy_buffer(Buffer *buffer);
+void bind_buffer(uint32_t buffer, BufferTarget target);
 
-void bind_buffer(Buffer *buffer, BufferTarget target);
-
-void buffer_data(Buffer *buffer, const void *data, size_t size, BufferUsage usage, BufferTarget target);
-void buffer_sub_data(Buffer *buffer, const void *data, size_t size, size_t offset, BufferTarget target);
-
-uint32_t buffer_get_handle(Buffer *buffer);
+void buffer_data(uint32_t buffer, const void *data, size_t size, BufferUsage usage, BufferTarget target);
+void buffer_sub_data(uint32_t buffer, const void *data, size_t size, size_t offset, BufferTarget target);

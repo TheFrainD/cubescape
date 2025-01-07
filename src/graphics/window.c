@@ -59,10 +59,11 @@ void create_window(int width, int height, const char* title) {
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
 #endif
 
     g_window = glfwCreateWindow(width, height, title, NULL, NULL);
@@ -83,10 +84,13 @@ void create_window(int width, int height, const char* title) {
         exit(EXIT_FAILURE);
     }
 
-    glViewport(0, 0, width, height);
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(g_window, &fbWidth, &fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
 
     log_info("Window created: %s (%dx%d)", title, width, height);
 }
+
 
 void destroy_window() {
     if (g_window) {
