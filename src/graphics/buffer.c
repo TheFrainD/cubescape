@@ -13,10 +13,13 @@ uint32_t create_buffer(const void *data, size_t size, BufferUsage usage, BufferT
     glBindBuffer(target, buffer);
     glBufferData(target, size, data, usage);
 
+    log_trace("Created buffer with ID: %d", buffer);
+
     return buffer;
 }
 
 void destroy_buffer(uint32_t *buffer) {
+    log_trace("Deleting buffer with ID: %d", *buffer);
     glDeleteBuffers(1, buffer);
 }
 

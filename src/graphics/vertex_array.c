@@ -2,13 +2,17 @@
 
 #include <glad/glad.h>
 
+#include "core/log.h"
+
 uint32_t create_vertex_array() {
     uint32_t vertex_array;
     glGenVertexArrays(1, &vertex_array);
+    log_trace("Created vertex array with ID: %d", vertex_array);
     return vertex_array;
 }
 
 void destroy_vertex_array(uint32_t *vertex_array) {
+    log_trace("Deleting vertex array with ID: %d", *vertex_array);
     glDeleteVertexArrays(1, vertex_array);
 }
 

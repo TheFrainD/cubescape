@@ -36,9 +36,12 @@ uint32_t create_shader(ShaderType type, const char *source) {
         return 0;
     }
 
+    log_trace("Created shader with ID: %d", shader);
+
     return shader;
 }
 
 void destroy_shader(uint32_t *shader) {
+    log_trace("Deleting shader with ID: %d", *shader);
     glDeleteShader(*shader);
 }

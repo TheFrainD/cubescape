@@ -11,3 +11,6 @@ enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
 #define log_fatal(...) logger(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
 void logger(int level, const char *file, int line, const char *fmt, ...);
+
+void set_log_level(int level);
+void set_log_file(const char *file);

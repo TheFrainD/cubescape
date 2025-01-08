@@ -27,10 +27,14 @@ ShaderProgram create_shader_program() {
     ShaderProgram program;
     program.id = glCreateProgram();
     memset(program.uniform_block_indeces, 0, sizeof(program.uniform_block_indeces));
+
+    log_trace("Created shader program with ID: %d", program.id);
     return program;
 }
 
 void destroy_shader_program(ShaderProgram *program) {
+    log_trace("Deleting shader program with ID: %d", program->id);
+
     glDeleteProgram(program->id);
 
     for (size_t i = 0; i < UNIFROM_BLOCK_INDEX_SIZE; i++) {
@@ -78,6 +82,7 @@ uint32_t get_uniform_block_index(ShaderProgram *program, const char *name) {
     }
 
     program->uniform_block_indeces[index] = strdup(name);
+    log_debug("Uniform block '%s' index: %d", name, index);
 
     return index;
 }

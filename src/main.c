@@ -31,6 +31,8 @@ const char* fragment_shader_source = "#version 330 core\n"
     "}\n\0";
 
 int main(int argc, char **argv) {
+    set_log_level(LOG_TRACE);
+    set_log_file("cubescape.log");
     log_info("%s starting up...", EXECUTABLE_NAME);
 
     create_window(800, 600, EXECUTABLE_NAME);
