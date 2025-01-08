@@ -61,7 +61,7 @@ void use_shader_program(ShaderProgram *program) {
 
 uint32_t get_uniform_block_index(ShaderProgram *program, const char *name) {
     for (size_t i = 0; i < UNIFROM_BLOCK_INDEX_SIZE; i++) {
-        if (strcmp(program->uniform_block_indeces[i], name) == 0) {
+        if (program->uniform_block_indeces[i] && strcmp(program->uniform_block_indeces[i], name) == 0) {
             return i;
         }
     }

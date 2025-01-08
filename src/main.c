@@ -1,6 +1,8 @@
 #include <stdio.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <cglm/cglm.h>
 
 #include "core/log.h"
 #include "graphics/window.h"
@@ -20,9 +22,12 @@ const char* vertex_shader_source = "#version 330 core\n"
 
 const char* fragment_shader_source = "#version 330 core\n"
     "out vec4 FragColor;\n"
+    "layout(std140) uniform ColorBlock {\n"
+    "   vec4 ourColor;\n"
+    "};\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0, 0.5, 0.2, 1.0);\n"
+    "   FragColor = ourColor;\n"
     "}\n\0";
 
 int main(int argc, char **argv) {
@@ -65,6 +70,12 @@ int main(int argc, char **argv) {
 
     destroy_shader(&vertex_shader);
     destroy_shader(&fragment_shader);
+
+    vec4 color = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+    uint32_t uniform_buffer = create_buffer(color, sizeof(vec4), BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
+    bind_base_buffer(uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0);
+    bind_uniform_block(&shader_program, "ColorBlock", 0);
 
     while (!window_should_close()) {
         poll_events();

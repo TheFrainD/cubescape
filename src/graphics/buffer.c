@@ -24,6 +24,18 @@ void bind_buffer(uint32_t buffer, BufferTarget target) {
     glBindBuffer(target, buffer);
 }
 
+void bind_range_buffer(uint32_t buffer, BufferTarget target, const uint32_t binding_point, size_t size) {
+    glBindBufferRange(target, binding_point, buffer, 0, size);
+}
+
+void bind_base_buffer(uint32_t buffer, BufferTarget target, const uint32_t binding_point) {
+    glBindBufferBase(target, binding_point, buffer);
+}
+
+void unbind_buffer(BufferTarget target) {
+    glBindBuffer(target, 0);
+}
+
 void buffer_data(uint32_t buffer, const void *data, size_t size, BufferUsage usage, BufferTarget target) {
     bind_buffer(buffer, target);
     glBufferData(target, size, data, usage);
