@@ -25,8 +25,8 @@ uint32_t create_buffer(const void *data, size_t size, BufferUsage usage, BufferT
 void destroy_buffer(uint32_t *buffer);
 
 void bind_buffer(uint32_t buffer, BufferTarget target);
-void bind_range_buffer(uint32_t buffer, BufferTarget target, const uint32_t binding_point, size_t size);
-void bind_base_buffer(uint32_t buffer, BufferTarget target, const uint32_t binding_point);
+void bind_buffer_range(uint32_t buffer, BufferTarget target, const uint32_t binding_point, size_t size);
+void bind_buffer_base(uint32_t buffer, BufferTarget target, const uint32_t binding_point);
 
 void unbind_buffer(BufferTarget target);
 

@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     vec4 color = { 1.0f, 0.0f, 0.0f, 1.0f };
 
     uint32_t uniform_buffer = create_buffer(color, sizeof(vec4), BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
-    bind_base_buffer(uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0);
+    bind_buffer_base(uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0);
     bind_uniform_block(&shader_program, "ColorBlock", 0);
 
     while (!window_should_close()) {
@@ -91,10 +91,10 @@ int main(int argc, char **argv) {
         swap_buffers();
     }
 
-    // Cleanup
     destroy_vertex_array(&vertex_array);
     destroy_buffer(&vertex_buffer);
     destroy_buffer(&element_buffer);
+    destroy_buffer(&uniform_buffer);
     destroy_shader_program(&shader_program);
 
     destroy_window();
