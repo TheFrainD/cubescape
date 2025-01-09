@@ -33,3 +33,6 @@ lib/
 *.user
 *.userosscache
 *.sln.docstates
+
+# log files
+*.log

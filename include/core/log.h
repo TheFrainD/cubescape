@@ -1,16 +1,38 @@
-#ifndef LOG_H
-#define LOG_H
+#pragma once
 
-// Logging levels
-enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+#include <stdio.h>
 
-#define log_trace(...) logger(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__)
-#define log_debug(...) logger(LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define log_info(...) logger(LOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
-#define log_warn(...) logger(LOG_WARN, __FILE__, __LINE__, __VA_ARGS__)
-#define log_error(...) logger(LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define log_fatal(...) logger(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+enum { LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LEVEL_INFO, LOG_LEVEL_WARN, LOG_LEVEL_ERROR, LOG_LEVEL_FATAL };
 
-void logger(int level, const char *file, int line, const char *fmt, ...);
+#define LOG_TRACE(...) logger_log(LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_DEBUG(...) logger_log(LOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_INFO(...) logger_log(LOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_WARN(...) logger_log(LOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_ERROR(...) logger_log(LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_FATAL(...) logger_log(LOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
-#endif // LOG_H
+/**
+ * @brief Logs a message with a specified log level.
+ *
+ * @param level The log level (e.g., DEBUG, INFO, WARN, ERROR).
+ * @param file The name of the source file where the log message is generated.
+ * @param line The line number in the source file where the log message is generated.
+ * @param fmt The format string for the log message (similar to printf).
+ * @param ... Additional arguments for the format string.
+ */
+void logger_log(int level, const char *file, int line, const char *fmt, ...);
+
+/**
+ * @brief Sets the logging level. Messages with a level lower than the specified level will not be logged.
+ *
+ * @param level The log level to set (e.g., DEBUG, INFO, WARN, ERROR).
+ */
+void logger_set_level(int level);
+
+/**
+ * @brief Sets the file pointer for logging output and the minimum log level for that file pointer.
+ *
+ * @param fp The file pointer where log messages will be written.
+ * @param level The minimum log level for messages to be written to the file pointer.
+ */
+void logger_set_fp(FILE *fp, int level);
