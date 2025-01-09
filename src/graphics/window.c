@@ -8,7 +8,10 @@
 
 #include "core/log.h"
 
-static GLFWwindow* g_window = NULL;
+GLFWwindow* g_window = NULL;
+
+static float last_frame = 0.0f;
+static float delta_time = 0.0f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -76,7 +79,7 @@ void create_window(int width, int height, const char* title) {
     glfwSetFramebufferSizeCallback(g_window, framebuffer_size_callback);
 
     glfwMakeContextCurrent(g_window);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         log_fatal("Failed to initialize GLAD");
@@ -116,4 +119,22 @@ void swap_buffers() {
 
 void poll_events() {
     glfwPollEvents();
+}
+
+void update_delta_time() {
+    float current_frame = glfwGetTime();
+    delta_time = current_frame - last_frame;
+    last_frame = current_frame;
+}
+
+float get_delta_time() {
+    return delta_time;
+}
+
+void get_framebuffer_size(int *width, int* height) {
+    if (!g_window) {
+        log_error("'get_framebuffer_size' failed: no window created");
+        return;
+    }
+    glfwGetFramebufferSize(g_window, width, height);
 }

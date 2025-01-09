@@ -140,6 +140,9 @@ typedef enum {
     MOUSE_BUTTON_MIDDLE = 2
 } MouseButton;
 
+typedef void (*MousePosistionCallback)(double x, double y);
+typedef void (*KeyPressedCallback)(Key key);
+
 void init_input_manager();
 
 int key_pressed(Key key);
@@ -147,3 +150,7 @@ int mouse_button_pressed(MouseButton button);
 
 void get_mouse_position(double *x, double *y);
 void get_mouse_scroll(double *x, double *y);
+
+void add_mouse_position_callback(MousePosistionCallback callback);
+
+void set_cursor_enabled(int enabled);

@@ -7,13 +7,15 @@ void destroy_window();
 void set_window_title(const char* title);
 
 void get_window_size(int *width, int* height);
-
+void get_framebuffer_size(int *width, int* height);
 void set_window_size(int width, int height);
 
 int window_should_close();
 
 void swap_buffers();
-
 void poll_events();
 
 void set_swap_interval(int interval);
+
+void update_delta_time();
+float get_delta_time();
