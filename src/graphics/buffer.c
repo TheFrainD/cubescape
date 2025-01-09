@@ -40,31 +40,26 @@ void destroy_buffer(uint32_t *buffer) {
 void bind_buffer(uint32_t buffer, BufferTarget target) {
     glBindBuffer(target, buffer);
     g_buffer_target_map[buffer] = target;
-    LOG_TRACE("Bound buffer with ID: %d to target: %s", buffer, buffer_target_to_string(target));
 }
 
 void bind_buffer_range(uint32_t buffer, BufferTarget target, const uint32_t binding_point, size_t size) {
     glBindBufferRange(target, binding_point, buffer, 0, size);
     g_buffer_target_map[buffer] = target;
-    LOG_TRACE("Bound buffer with ID: %d to target: %s at binding point: %d", buffer, buffer_target_to_string(target), binding_point);
 }
 
 void bind_buffer_base(uint32_t buffer, BufferTarget target, const uint32_t binding_point) {
     glBindBufferBase(target, binding_point, buffer);
     g_buffer_target_map[buffer] = target;
-    LOG_TRACE("Bound buffer with ID: %d to target: %s at binding point: %d", buffer, buffer_target_to_string(target), binding_point);
 }
 
 void unbind_buffer(BufferTarget target) {
     glBindBuffer(target, 0);
-    LOG_TRACE("Unbound buffer from target: %s", buffer_target_to_string(target));
 }
 
 void buffer_data(uint32_t buffer, size_t size, const void *data, BufferUsage usage) {
     BufferTarget target = g_buffer_target_map[buffer];
     bind_buffer(buffer, target);
     glBufferData(target, size, data, usage);
-    LOG_TRACE("Buffer data with size: %d and usage: %d", size, usage);
     unbind_buffer(target);
 }
 
@@ -72,6 +67,5 @@ void buffer_sub_data(uint32_t buffer, size_t offset, size_t size, const void *da
     BufferTarget target = g_buffer_target_map[buffer];
     bind_buffer(buffer, target);
     glBufferSubData(target, offset, size, data);
-    LOG_TRACE("Buffer sub data with offset: %d and size: %d", offset, size);
     unbind_buffer(target);
 }
