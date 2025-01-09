@@ -16,6 +16,7 @@ typedef struct {
     BlockId *blocks;
     uint32_t vertex_array;
     uint32_t vertex_buffer;
+    uint32_t index_buffer;
     size_t vertex_count;
 } Chunk;
 
