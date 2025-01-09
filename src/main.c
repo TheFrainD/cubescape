@@ -14,6 +14,7 @@
 #include "graphics/shader.h"
 #include "graphics/shader_program.h"
 #include "graphics/camera.h"
+#include "graphics/image.h"
 
 #define EXECUTABLE_NAME "Cubescape"
 
@@ -115,6 +116,9 @@ int main(int argc, char **argv) {
     uint32_t uniform_buffer = create_buffer(sizeof(mat4) * 3, NULL, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
     bind_buffer_base(uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0);
     shader_program_bind_uniform_block(&shader_program, "Matrices", 0);
+
+    Image cobblestone = image_load("assets/textures/cobblestone.png");
+    image_free(cobblestone);
 
     CameraSettings camera_settings = {0};
     camera_settings.speed = 2.5f;
