@@ -17,6 +17,8 @@
 #include "graphics/image.h"
 #include "graphics/texture.h"
 
+#include "world/chunk.h"
+
 #define EXECUTABLE_NAME "Cubescape"
 
 #define VERTEX_SHADER_PATH "assets/shaders/main.vs"
@@ -25,7 +27,7 @@
 #define LOG_FILE EXECUTABLE_NAME ".log"
 
 int main(int argc, char **argv) {
-    logger_set_level(LOG_LEVEL_INFO);
+    logger_set_level(LOG_LEVEL_TRACE);
 
     // Log to file
     FILE *log_fp = fopen(LOG_FILE, "w");
@@ -44,71 +46,6 @@ int main(int argc, char **argv) {
     window_init(window_settings);
 
     input_init();
-
-    float vertices[] = {
-        // Front face
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Bottom-left
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // Bottom-right
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // Top-right
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // Top-left
-
-        // Back face
-        0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
-        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // Bottom-right
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // Top-right
-        0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Top-left
-
-        // Left face
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
-        -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // Bottom-right
-        -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // Top-right
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Top-left
-
-        // Right face
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Bottom-left
-        0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // Bottom-right
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // Top-right
-        0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // Top-left
-
-        // Top face
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // Bottom-left
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // Bottom-right
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // Top-right
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Top-left
-
-        // Bottom face
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
-        0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // Bottom-right
-        0.5f, -0.5f,  0.5f,  1.0f, 1.0f, // Top-right
-        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f  // Top-left
-    };
-
-    int indices[] = {
-        // Front face
-        0, 1, 2,  2, 3, 0,
-        // Back face
-        4, 5, 6,  6, 7, 4,
-        // Left face
-        8, 9, 10, 10, 11, 8,
-        // Right face
-        12, 13, 14, 14, 15, 12,
-        // Top face
-        16, 17, 18, 18, 19, 16,
-        // Bottom face
-        20, 21, 22, 22, 23, 20
-    };
-
-    uint32_t vertex_array = create_vertex_array();
-
-    uint32_t vertex_buffer = create_buffer(sizeof(vertices), vertices, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_ARRAY_BUFFER);
-    uint32_t element_buffer = create_buffer(sizeof(indices), indices, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
-
-    bind_vertex_array(vertex_array);
-    bind_buffer(vertex_buffer, BUFFER_TARGET_ARRAY_BUFFER);
-    bind_buffer(element_buffer, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
-
-    vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, 5 * sizeof(float), (void*)0);
-    vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
     FILE *fp = fopen(VERTEX_SHADER_PATH, "r");
     if (!fp) {
@@ -146,6 +83,9 @@ int main(int argc, char **argv) {
     destroy_shader(&vertex_shader);
     destroy_shader(&fragment_shader);
 
+    Chunk *chunk = create_chunk(0, 0);
+    chunk_generate_mesh(chunk);
+
     uint32_t uniform_buffer = create_buffer(sizeof(mat4) * 3, NULL, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
     bind_buffer_base(uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0);
     shader_program_bind_uniform_block(&shader_program, "Matrices", 0);
@@ -164,17 +104,17 @@ int main(int argc, char **argv) {
     image_free(cobblestone);
 
     CameraSettings camera_settings = {0};
-    camera_settings.speed = 2.5f;
+    camera_settings.speed = 5.0f;
     camera_settings.sensitivity = 0.002f;
     camera_settings.fov = 45.0f;
-    camera_init((vec3){ 0.0f, 0.0f, 3.0f }, camera_settings, uniform_buffer);
+    camera_init((vec3){ 0.0f, 68.0f, 3.0f }, camera_settings, uniform_buffer);
 
     mat4 projection, model;
     camera_get_perpective(projection);
     glm_mat4_identity(model);
 
     buffer_sub_data(uniform_buffer, 0, sizeof(mat4), &model);
-    buffer_sub_data(uniform_buffer, sizeof(mat4) * 2, sizeof(mat4) ,&projection);
+    buffer_sub_data(uniform_buffer, sizeof(mat4) * 2, sizeof(mat4), &projection);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -191,24 +131,19 @@ int main(int argc, char **argv) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-        use_shader_program(&shader_program);
-
         camera_update_position();
 
-        bind_vertex_array(vertex_array);
         bind_texture(texture, 0);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        chunk_render(chunk, &shader_program);
 
         swap_buffers();
         update_delta_time();
     }
 
-    destroy_vertex_array(&vertex_array);
-    destroy_buffer(&vertex_buffer);
-    destroy_buffer(&element_buffer);
     destroy_buffer(&uniform_buffer);
     destroy_shader_program(&shader_program);
     destroy_texture(&texture);
+    destroy_chunk(chunk);
 
     window_destroy();
 
