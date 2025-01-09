@@ -6,6 +6,9 @@
 #include "graphics/window.h"
 #include "graphics/buffer.h"
 
+#define NEAR 0.1f
+#define FAR 100.0f
+
 struct Camera {
     vec3 position;
 
@@ -21,9 +24,6 @@ struct Camera {
     uint32_t uniform_buffer;
 };
 
-#define NEAR 0.1f
-#define FAR 100.0f
-
 static struct Camera g_camera;
 static vec3 world_up = (vec3){0.0f, 1.0f, 0.0f};
 
@@ -32,7 +32,7 @@ static void update_view() {
     vec3 center;
     glm_vec3_add(g_camera.position, g_camera.front, center);
     glm_lookat(g_camera.position, center, g_camera.up, view);
-    buffer_sub_data(g_camera.uniform_buffer, &view, sizeof(mat4), sizeof(mat4), BUFFER_TARGET_UNIFORM_BUFFER);
+    buffer_sub_data(g_camera.uniform_buffer, sizeof(mat4), sizeof(mat4), &view);
 }
 
 void camera_mouse_callback(double x, double y) {
@@ -80,22 +80,22 @@ void camera_update_position() {
     float velocity = g_camera.settings.speed * get_delta_time();
     vec3 translation = {0.0f, 0.0f, 0.0f};
 
-    if (key_pressed(KEY_W)) {
+    if (input_key_pressed(KEY_W)) {
         vec3 temp;
         glm_vec3_scale(g_camera.front, velocity, temp);
         glm_vec3_add(translation, temp, translation);
     }
-    if (key_pressed(KEY_S)) {
+    if (input_key_pressed(KEY_S)) {
         vec3 temp;
         glm_vec3_scale(g_camera.front, velocity, temp);
         glm_vec3_sub(translation, temp, translation);
     }
-    if (key_pressed(KEY_A)) {
+    if (input_key_pressed(KEY_A)) {
         vec3 temp;
         glm_vec3_scale(g_camera.right, velocity, temp);
         glm_vec3_sub(translation, temp, translation);
     }
-    if (key_pressed(KEY_D)) {
+    if (input_key_pressed(KEY_D)) {
         vec3 temp;
         glm_vec3_scale(g_camera.right, velocity, temp);
         glm_vec3_add(translation, temp, translation);
@@ -125,9 +125,9 @@ void camera_init(vec3 position, CameraSettings settings, uint32_t uniform_buffer
     glm_vec3_normalize(g_camera.right);
 
     // Disable cursor
-    set_cursor_enabled(0);
+    input_set_cursor_enabled(0);
 
-    add_mouse_position_callback(camera_mouse_callback);
+    input_add_mouse_position_callback(camera_mouse_callback);
 
     update_view();
 }
@@ -139,6 +139,10 @@ void camera_set_position(vec3 position) {
 
 void camera_get_position(vec3 position) {
     glm_vec3_copy(g_camera.position, position);
+}
+
+CameraSettings camera_get_settings() {
+    return g_camera.settings;
 }
 
 void camera_set_settings(CameraSettings settings) {

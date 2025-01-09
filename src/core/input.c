@@ -51,7 +51,7 @@ void mouse_scroll_callback(GLFWwindow* window, double x, double y) {
     g_input_manager.scroll_y = y;
 }
 
-void init_input_manager() {
+void input_init() {
     for (int i = 0; i < KEY_LAST; i++) {
         g_input_manager.keys[i] = GLFW_RELEASE;
     }
@@ -72,15 +72,15 @@ void init_input_manager() {
     glfwSetScrollCallback(g_window, mouse_scroll_callback);
 }
 
-int key_pressed(Key key) {
+int input_key_pressed(Key key) {
     return g_input_manager.keys[key] == GLFW_PRESS;
 }
 
-int mouse_button_pressed(MouseButton button) {
+int input_mouse_button_pressed(MouseButton button) {
     return g_input_manager.mouse_buttons[button] == GLFW_PRESS;
 }
 
-void get_mouse_position(double *x, double *y) {
+void input_get_mouse_position(double *x, double *y) {
     if (x) {
         *x = g_input_manager.mouse_x;
     }
@@ -89,7 +89,7 @@ void get_mouse_position(double *x, double *y) {
     }
 }
 
-void get_mouse_scroll(double *x, double *y) {
+void input_get_mouse_scroll(double *x, double *y) {
     if (x) {
         *x = g_input_manager.scroll_x;
     }
@@ -98,12 +98,12 @@ void get_mouse_scroll(double *x, double *y) {
     }
 }
 
-void add_mouse_position_callback(MousePosistionCallback callback) {
+void input_add_mouse_position_callback(MousePosistionCallback callback) {
     if (g_input_manager.mouse_position_callback_count < CALLBACK_ARRAY_SIZE) {
         g_input_manager.mouse_position_callbacks[g_input_manager.mouse_position_callback_count++] = callback;
     }
 }
 
-void set_cursor_enabled(int enabled) {
+void input_set_cursor_enabled(int enabled) {
     glfwSetInputMode(g_window, GLFW_CURSOR, enabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }

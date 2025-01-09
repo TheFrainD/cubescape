@@ -12,46 +12,43 @@ static const char *level_fg[] = {
     "37", "36", "32", "33", "31", "35"
 };
 
-static int current_log_level = LOG_INFO;
+static int stdout_log_level = LOG_LEVEL_INFO;
 
-void set_log_level(int level) {
+void logger_set_level(int level) {
     if (level >= 0 && level <= 5) {
-        current_log_level = level;
+        stdout_log_level = level;
     }
 }
 
-static FILE *log_file = NULL;
+static FILE *log_fp = NULL;
+static int fp_log_level = 0;
 
-void set_log_file(const char *file) {
-    if (log_file) {
-        fclose(log_file);
-    }
-    
-    log_file = fopen(file, "w");
-    if (!log_file) {
-        fprintf(stderr, "Could not open log file: %s\n", file);
-    }
+void logger_set_fp(FILE *fp, int level) {
+    log_fp = fp;
+    fp_log_level = level;
 }
 
-void logger(int level, const char *file, int line, const char *fmt, ...) {
-    if (level < current_log_level) {
-        return;
-    }
-
+void logger_log(int level, const char *file, int line, const char *fmt, ...) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
     char buf[64];
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm);
 
-    FILE *outputs[] = {stderr, log_file};
-    size_t num_outputs = log_file ? 2 : 1;
+    FILE *outputs[] = {stdout, log_fp};
+    size_t num_outputs = log_fp ? 2 : 1;
 
     for (size_t i = 0; i < num_outputs; ++i) {
         FILE *output = outputs[i];
 
-        if (output == stderr) {
+        if (output == stdout) {
+            if (level < stdout_log_level) {
+                continue;
+            }
             fprintf(output, "\x1b[90m[%s]\x1b[0m [\x1b[1;%sm%s\x1b[0m] ", buf, level_fg[level], level_strings[level]);
         } else {
+            if (level < fp_log_level) {
+                continue;
+            }
             fprintf(output, "[%s] [%s] ", buf, level_strings[level]);
         }
 

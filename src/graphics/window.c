@@ -18,12 +18,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void glfw_error_callback(int error, const char* description) {
-    log_error("GLFW error: %s", description);
+    LOG_ERROR("GLFW error: %s", description);
 }
 
-void set_window_title(const char* title) {
+void window_set_title(const char* title) {
     if (!g_window) {
-        log_error("'set_window_title' failed: no window created");
+        LOG_ERROR("'set_window_title' failed: no window created");
         return;
     }
     glfwSetWindowTitle(g_window, title);
@@ -31,7 +31,7 @@ void set_window_title(const char* title) {
 
 void get_window_size(int *width, int* height) {
     if (!g_window) {
-        log_error("'get_window_size' failed: no window created");
+        LOG_ERROR("'get_window_size' failed: no window created");
         return;
     }
     glfwGetWindowSize(g_window, width, height);
@@ -39,7 +39,7 @@ void get_window_size(int *width, int* height) {
 
 void set_window_size(int width, int height) {
     if (!g_window) {
-        log_error("'set_window_size' failed: no window created");
+        LOG_ERROR("'set_window_size' failed: no window created");
         return;
     }
     glfwSetWindowSize(g_window, width, height);
@@ -47,17 +47,17 @@ void set_window_size(int width, int height) {
 
 void set_swap_interval(int interval) {
     if (!g_window) {
-        log_error("'set_swap_interval' failed: no window created");
+        LOG_ERROR("'set_swap_interval' failed: no window created");
         return;
     }
     glfwSwapInterval(interval);
 }
 
-void create_window(int width, int height, const char* title) {
+void window_init(WindowSettings settings) {
     glfwSetErrorCallback(glfw_error_callback);
 
     if (!glfwInit()) {
-        log_fatal("Failed to initialize GLFW");
+        LOG_FATAL("Failed to initialize GLFW");
         exit(EXIT_FAILURE);
     }
 
@@ -69,9 +69,9 @@ void create_window(int width, int height, const char* title) {
     glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
 #endif
 
-    g_window = glfwCreateWindow(width, height, title, NULL, NULL);
+    g_window = glfwCreateWindow(settings.width, settings.height, settings.title, NULL, NULL);
     if (!g_window) {
-        log_fatal("Failed to create GLFW window");
+        LOG_FATAL("Failed to create GLFW window");
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
@@ -82,7 +82,7 @@ void create_window(int width, int height, const char* title) {
     glfwSwapInterval(0);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        log_fatal("Failed to initialize GLAD");
+        LOG_FATAL("Failed to initialize GLAD");
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
@@ -91,17 +91,21 @@ void create_window(int width, int height, const char* title) {
     glfwGetFramebufferSize(g_window, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
-    log_info("Window created: %s (%dx%d)", title, width, height);
+    LOG_INFO("Window created: %s (%dx%d)", settings.title, settings.width, settings.height);
+    const GLubyte* renderer = glGetString(GL_RENDERER);
+    const GLubyte* version = glGetString(GL_VERSION);
+    LOG_INFO("Renderer: %s", renderer);
+    LOG_INFO("OpenGL version supported %s", version);
 }
 
 
-void destroy_window() {
+void window_destroy() {
     if (g_window) {
         glfwDestroyWindow(g_window);
         glfwTerminate();
         g_window = NULL;
 
-        log_info("Window destroyed");
+        LOG_INFO("Window destroyed");
     }
 }
 
@@ -111,7 +115,7 @@ int window_should_close() {
 
 void swap_buffers() {
     if (!g_window) {
-        log_error("'swap_buffers' failed: no window created");
+        LOG_ERROR("'swap_buffers' failed: no window created");
         return;
     }
     glfwSwapBuffers(g_window);
@@ -133,7 +137,7 @@ float get_delta_time() {
 
 void get_framebuffer_size(int *width, int* height) {
     if (!g_window) {
-        log_error("'get_framebuffer_size' failed: no window created");
+        LOG_ERROR("'get_framebuffer_size' failed: no window created");
         return;
     }
     glfwGetFramebufferSize(g_window, width, height);

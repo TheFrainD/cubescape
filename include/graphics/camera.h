@@ -12,18 +12,51 @@ typedef struct {
     float fov;
 } CameraSettings;
 
-// Intialize the camera with the given position, settings, and uniform buffer
+/**
+ * @brief Initializes the camera with a given position and settings.
+ * 
+ * @param position The initial position of the camera.
+ * @param settings The settings to configure the camera.
+ * @param uniform_buffer The uniform buffer to use for the camera.
+ */
 void camera_init(vec3 position, CameraSettings settings, uint32_t uniform_buffer);
 
-// Update the position of the camera
+/**
+ * @brief Sets the position of the camera.
+ * 
+ * @param position The new position of the camera.
+ */
 void camera_set_position(vec3 position);
+
+/**
+ * @brief Gets the current position of the camera.
+ * 
+ * @param position A vector to store the current position of the camera.
+ */
 void camera_get_position(vec3 position);
 
-// Set the settings of the camera
+/**
+ * @brief Sets the settings of the camera.
+ * 
+ * @param settings The new settings to configure the camera.
+ */
 void camera_set_settings(CameraSettings settings);
 
-// Update the position of the camera
+/**
+ * @brief Gets the current settings of the camera.
+ * 
+ * @return CameraSettings The current settings of the camera.
+ */
+CameraSettings camera_get_settings();
+
+/**
+ * @brief Updates the camera's position based on its current settings.
+ */
 void camera_update_position();
 
-// Get the projection matrix of the camera
+/**
+ * @brief Gets the perspective projection matrix of the camera.
+ * 
+ * @param projection A matrix to store the perspective projection of the camera.
+ */
 void camera_get_perpective(mat4 projection);

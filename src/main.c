@@ -20,14 +20,28 @@
 #define VERTEX_SHADER_PATH "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
 
+#define LOG_FILE EXECUTABLE_NAME ".log"
+
 int main(int argc, char **argv) {
-    set_log_level(LOG_TRACE);
+    logger_set_level(LOG_LEVEL_INFO);
 
-    log_info("%s starting up...", EXECUTABLE_NAME);
+    // Log to file
+    FILE *log_fp = fopen(LOG_FILE, "w");
+    if (log_fp) {
+        logger_set_fp(log_fp, LOG_LEVEL_TRACE);
+    } else {
+        LOG_WARN("Failed to open log file: %s", LOG_FILE);
+    }
 
-    create_window(800, 600, EXECUTABLE_NAME);
+    LOG_INFO("%s starting up...", EXECUTABLE_NAME);
 
-    init_input_manager();
+    WindowSettings window_settings = {0};
+    window_settings.width = 800;
+    window_settings.height = 600;
+    window_settings.title = EXECUTABLE_NAME;
+    window_init(window_settings);
+
+    input_init();
 
     // Vertex data for a cube
     float vertices[] = {
@@ -53,8 +67,8 @@ int main(int argc, char **argv) {
 
     uint32_t vertex_array = create_vertex_array();
 
-    uint32_t vertex_buffer = create_buffer(vertices, sizeof(vertices), BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_ARRAY_BUFFER);
-    uint32_t element_buffer = create_buffer(indices, sizeof(indices), BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
+    uint32_t vertex_buffer = create_buffer(sizeof(vertices), vertices, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_ARRAY_BUFFER);
+    uint32_t element_buffer = create_buffer(sizeof(indices), indices, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
 
     bind_vertex_array(vertex_array);
     bind_buffer(vertex_buffer, BUFFER_TARGET_ARRAY_BUFFER);
@@ -64,7 +78,7 @@ int main(int argc, char **argv) {
 
     FILE *fp = fopen(VERTEX_SHADER_PATH, "r");
     if (!fp) {
-        log_fatal("Failed to open file: %s", VERTEX_SHADER_PATH);
+        LOG_FATAL("Failed to open file: %s", VERTEX_SHADER_PATH);
         return 1;
     }
 
@@ -75,7 +89,7 @@ int main(int argc, char **argv) {
 
     fp = fopen(FRAGMENT_SHADER_PATH, "r");
     if (!fp) {
-        log_fatal("Failed to open file: %s", FRAGMENT_SHADER_PATH);
+        LOG_FATAL("Failed to open file: %s", FRAGMENT_SHADER_PATH);
         return 1;
     }
 
@@ -91,16 +105,16 @@ int main(int argc, char **argv) {
     free(fragment_shader_source);
 
     ShaderProgram shader_program = create_shader_program();
-    attach_shader(&shader_program, vertex_shader);
-    attach_shader(&shader_program, fragment_shader);
+    attach_shader_to_shader_program(&shader_program, vertex_shader);
+    attach_shader_to_shader_program(&shader_program, fragment_shader);
     link_shader_program(&shader_program);
 
     destroy_shader(&vertex_shader);
     destroy_shader(&fragment_shader);
 
-    uint32_t uniform_buffer = create_buffer(NULL, sizeof(mat4) * 3, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
+    uint32_t uniform_buffer = create_buffer(sizeof(mat4) * 3, NULL, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
     bind_buffer_base(uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0);
-    bind_uniform_block(&shader_program, "Matrices", 0);
+    shader_program_bind_uniform_block(&shader_program, "Matrices", 0);
 
     CameraSettings camera_settings = {0};
     camera_settings.speed = 2.5f;
@@ -112,13 +126,16 @@ int main(int argc, char **argv) {
     camera_get_perpective(projection);
     glm_mat4_identity(model);
 
-    buffer_sub_data(uniform_buffer, &model, sizeof(mat4), 0, BUFFER_TARGET_UNIFORM_BUFFER);
-    buffer_sub_data(uniform_buffer, &projection, sizeof(mat4), sizeof(mat4) * 2, BUFFER_TARGET_UNIFORM_BUFFER);
+    buffer_sub_data(uniform_buffer, 0, sizeof(mat4), &model);
+    buffer_sub_data(uniform_buffer, sizeof(mat4) * 2, sizeof(mat4) ,&projection);
 
     while (!window_should_close()) {
         poll_events();
 
-        // Render
+        if (input_key_pressed(KEY_ESCAPE)) {
+            break;
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
@@ -128,10 +145,6 @@ int main(int argc, char **argv) {
 
         bind_vertex_array(vertex_array);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-        if (key_pressed(KEY_ESCAPE)) {
-            break;
-        }
 
         swap_buffers();
         update_delta_time();
@@ -143,6 +156,8 @@ int main(int argc, char **argv) {
     destroy_buffer(&uniform_buffer);
     destroy_shader_program(&shader_program);
 
-    destroy_window();
+    window_destroy();
+
+    fclose(log_fp);
     return 0;
 }

@@ -18,7 +18,7 @@ static void print_info_log(uint32_t program, const char *message) {
     char *info_log = malloc(length);
     glGetProgramInfoLog(program, length, &length, info_log);
 
-    log_error("%s: %s", message, info_log);
+    LOG_ERROR("%s: %s", message, info_log);
 
     free(info_log);
 }
@@ -28,12 +28,12 @@ ShaderProgram create_shader_program() {
     program.id = glCreateProgram();
     memset(program.uniform_block_indeces, 0, sizeof(program.uniform_block_indeces));
 
-    log_trace("Created shader program with ID: %d", program.id);
+    LOG_TRACE("Created shader program with ID: %d", program.id);
     return program;
 }
 
 void destroy_shader_program(ShaderProgram *program) {
-    log_trace("Deleting shader program with ID: %d", program->id);
+    LOG_TRACE("Deleting shader program with ID: %d", program->id);
 
     glDeleteProgram(program->id);
 
@@ -44,7 +44,7 @@ void destroy_shader_program(ShaderProgram *program) {
     }
 }
 
-void attach_shader(ShaderProgram *program, uint32_t shader) {
+void attach_shader_to_shader_program(ShaderProgram *program, uint32_t shader) {
     glAttachShader(program->id, shader);
 }
 
@@ -63,7 +63,7 @@ void use_shader_program(ShaderProgram *program) {
     glUseProgram(program->id);
 }
 
-uint32_t get_uniform_block_index(ShaderProgram *program, const char *name) {
+uint32_t shader_program_get_uniform_block_index(ShaderProgram *program, const char *name) {
     for (size_t i = 0; i < UNIFROM_BLOCK_INDEX_SIZE; i++) {
         if (program->uniform_block_indeces[i] && strcmp(program->uniform_block_indeces[i], name) == 0) {
             return i;
@@ -72,22 +72,22 @@ uint32_t get_uniform_block_index(ShaderProgram *program, const char *name) {
 
     uint32_t index = glGetUniformBlockIndex(program->id, name);
     if (index == GL_INVALID_INDEX) {
-        log_error("Uniform block '%s' not found", name);
+        LOG_ERROR("Uniform block '%s' not found", name);
         return GL_INVALID_INDEX;
     }
 
     if (program->uniform_block_indeces[index]) {
         free(program->uniform_block_indeces[index]);
-        log_warn("Uniform block index %d was overwritten", index);
+        LOG_WARN("Uniform block index %d was overwritten", index);
     }
 
     program->uniform_block_indeces[index] = strdup(name);
-    log_debug("Uniform block '%s' index: %d", name, index);
+    LOG_DEBUG("Uniform block '%s' index: %d", name, index);
 
     return index;
 }
 
-void bind_uniform_block(ShaderProgram *program, const char *name, uint32_t binding_point) {
-    uint32_t index = get_uniform_block_index(program, name);
+void shader_program_bind_uniform_block(ShaderProgram *program, const char *name, uint32_t binding_point) {
+    uint32_t index = shader_program_get_uniform_block_index(program, name);
     glUniformBlockBinding(program->id, index, binding_point);
 }

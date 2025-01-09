@@ -143,14 +143,53 @@ typedef enum {
 typedef void (*MousePosistionCallback)(double x, double y);
 typedef void (*KeyPressedCallback)(Key key);
 
-void init_input_manager();
+/**
+ * @brief Initializes the input system.
+ */
+void input_init();
 
-int key_pressed(Key key);
-int mouse_button_pressed(MouseButton button);
+/**
+ * @brief Checks if a specific key is pressed.
+ * 
+ * @param key The key to check.
+ * @return int Returns 1 if the key is pressed, 0 otherwise.
+ */
+int input_key_pressed(Key key);
 
-void get_mouse_position(double *x, double *y);
-void get_mouse_scroll(double *x, double *y);
+/**
+ * @brief Checks if a specific mouse button is pressed.
+ * 
+ * @param button The mouse button to check.
+ * @return int Returns 1 if the mouse button is pressed, 0 otherwise.
+ */
+int input_mouse_button_pressed(MouseButton button);
 
-void add_mouse_position_callback(MousePosistionCallback callback);
+/**
+ * @brief Retrieves the current mouse position.
+ * 
+ * @param x Pointer to store the x-coordinate of the mouse position.
+ * @param y Pointer to store the y-coordinate of the mouse position.
+ */
+void input_get_mouse_position(double *x, double *y);
 
-void set_cursor_enabled(int enabled);
+/**
+ * @brief Retrieves the current mouse scroll offset.
+ * 
+ * @param x Pointer to store the x-offset of the mouse scroll.
+ * @param y Pointer to store the y-offset of the mouse scroll.
+ */
+void input_get_mouse_scroll(double *x, double *y);
+
+/**
+ * @brief Adds a callback function for mouse position changes.
+ * 
+ * @param callback The callback function to be called when the mouse position changes.
+ */
+void input_add_mouse_position_callback(MousePosistionCallback callback);
+
+/**
+ * @brief Enables or disables the cursor.
+ * 
+ * @param enabled Set to 1 to enable the cursor, 0 to disable it.
+ */
+void input_set_cursor_enabled(int enabled);

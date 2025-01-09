@@ -17,7 +17,7 @@ static void print_info_log(uint32_t shader, const char *message) {
     char *info_log = malloc(length);
     glGetShaderInfoLog(shader, length, &length, info_log);
 
-    log_error("%s: %s", message, info_log);
+    LOG_ERROR("%s: %s", message, info_log);
 
     free(info_log);
 }
@@ -36,12 +36,12 @@ uint32_t create_shader(ShaderType type, const char *source) {
         return 0;
     }
 
-    log_trace("Created shader with ID: %d", shader);
+    LOG_TRACE("Created shader with ID: %d", shader);
 
     return shader;
 }
 
 void destroy_shader(uint32_t *shader) {
-    log_trace("Deleting shader with ID: %d", *shader);
+    LOG_TRACE("Deleting shader with ID: %d", *shader);
     glDeleteShader(*shader);
 }

@@ -8,5 +8,18 @@ typedef enum {
     SHADER_TYPE_GEOMETRY = 0x8DD9
 } ShaderType;
 
+/**
+ * @brief Creates a shader of the specified type from the given source code.
+ *
+ * @param type The type of shader to create (e.g., vertex, fragment).
+ * @param source The source code of the shader.
+ * @return The ID of the created shader.
+ */
 uint32_t create_shader(ShaderType type, const char *source);
+
+/**
+ * @brief Destroys the specified shader.
+ *
+ * @param shader A pointer to the ID of the shader to destroy.
+ */
 void destroy_shader(uint32_t *shader);
