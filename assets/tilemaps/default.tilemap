@@ -1,0 +1,4 @@
+name Default Texture
+tile 16
+size 256
+path assets/tilemaps/terrain.png

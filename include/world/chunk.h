@@ -5,6 +5,7 @@
 
 #include "world/block.h"
 #include "graphics/shader_program.h"
+#include "graphics/tilemap.h"
 
 #define CHUNK_SIZE 16
 #define CHUNK_HEIGHT 256
@@ -18,9 +19,10 @@ typedef struct {
     uint32_t vertex_buffer;
     uint32_t index_buffer;
     size_t vertex_count;
+    TileMap *tilemap;
 } Chunk;
 
-Chunk *create_chunk(int x, int y);
+Chunk *create_chunk(int x, int y, TileMap *tilemap);
 
 BlockId get_block(Chunk *chunk, int x, int y, int z);
 

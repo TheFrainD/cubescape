@@ -16,6 +16,7 @@
 #include "graphics/camera.h"
 #include "graphics/image.h"
 #include "graphics/texture.h"
+#include "graphics/tilemap.h"
 
 #include "world/chunk.h"
 
@@ -83,9 +84,6 @@ int main(int argc, char **argv) {
     destroy_shader(&vertex_shader);
     destroy_shader(&fragment_shader);
 
-    Chunk *chunk = create_chunk(0, 0);
-    chunk_generate_mesh(chunk);
-
     uint32_t uniform_buffer = create_buffer(sizeof(mat4) * 3, NULL, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
     bind_buffer_base(uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0);
     shader_program_bind_uniform_block(&shader_program, "Matrices", 0);
@@ -94,14 +92,17 @@ int main(int argc, char **argv) {
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &max_anisotropy);
     LOG_INFO("Max anisotropy: %.2f", max_anisotropy);
 
-    Image cobblestone = image_load("assets/textures/cobblestone.png");
-    uint32_t texture = create_texture();
-    texture_set_image(texture, cobblestone);
-    texture_set_wrapping(texture, TEXTURE_WRAPPING_REPEAT, TEXTURE_WRAPPING_REPEAT);
-    texture_set_filtering(texture, TEXTURE_FILTERING_NEAREST_MIPMAP_NEAREST, TEXTURE_FILTERING_NEAREST);
-    texture_generate_mipmaps(texture);
-    texture_set_anisotropy(texture, max_anisotropy);
-    image_free(cobblestone);
+    TileMap tilemap = {0};
+    load_tilemap("assets/tilemaps/default.tilemap", &tilemap);
+
+    Image tilemap_image = image_load(tilemap.path);
+    uint32_t tilemap_texture = create_texture();
+    texture_set_image(tilemap_texture, tilemap_image);
+    texture_set_wrapping(tilemap_texture, TEXTURE_WRAPPING_REPEAT, TEXTURE_WRAPPING_REPEAT);
+    texture_set_filtering(tilemap_texture, TEXTURE_FILTERING_NEAREST_MIPMAP_NEAREST, TEXTURE_FILTERING_NEAREST);
+    texture_generate_mipmaps(tilemap_texture);
+    texture_set_anisotropy(tilemap_texture, max_anisotropy);
+    image_free(tilemap_image);
 
     CameraSettings camera_settings = {0};
     camera_settings.speed = 5.0f;
@@ -121,6 +122,11 @@ int main(int argc, char **argv) {
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
+    Chunk *chunk = create_chunk(0, 0, &tilemap);
+    chunk_generate_mesh(chunk);
+
+    bool wireframe = false;
+
     while (!window_should_close()) {
         poll_events();
 
@@ -128,12 +134,21 @@ int main(int argc, char **argv) {
             break;
         }
 
+        if (input_key_pressed(KEY_F1)) {
+           if (wireframe) {
+               glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+           } else {
+               glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+           }
+           wireframe = !wireframe;
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
         camera_update_position();
 
-        bind_texture(texture, 0);
+        bind_texture(tilemap_texture, 0);
         chunk_render(chunk, &shader_program);
 
         swap_buffers();
@@ -142,8 +157,9 @@ int main(int argc, char **argv) {
 
     destroy_buffer(&uniform_buffer);
     destroy_shader_program(&shader_program);
-    destroy_texture(&texture);
+    destroy_texture(&tilemap_texture);
     destroy_chunk(chunk);
+    destroy_tilemap(&tilemap);
 
     window_destroy();
 

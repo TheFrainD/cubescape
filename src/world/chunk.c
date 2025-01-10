@@ -21,10 +21,11 @@
     vertices[chunk->vertex_count + 4] = v; \
     chunk->vertex_count += VERTEX_SIZE;
 
-Chunk *create_chunk(int x, int y) {
+Chunk *create_chunk(int x, int y, TileMap *tilemap) {
     Chunk *chunk = malloc(sizeof(Chunk));
     chunk->x = x;
     chunk->y = y;
+    chunk->tilemap = tilemap;
     chunk->blocks = malloc(CHUNK_VOLUME * sizeof(BlockId));
     chunk->vertex_array = create_vertex_array();
     chunk->vertex_buffer = create_buffer(CHUNK_VOLUME * VERTEX_SIZE * 36 * sizeof(float), NULL, BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
@@ -44,8 +45,17 @@ Chunk *create_chunk(int x, int y) {
         if (y > 64) {
             chunk->blocks[i] = BLOCK_ID_AIR;
             continue;
+        } else if (y > 63) {
+            chunk->blocks[i] = BLOCK_ID_GRASS;
+            continue;
+        } else if (y > 59) {
+            chunk->blocks[i] = BLOCK_ID_DIRT;
+            continue;
+        } else if (y > 54) {
+            chunk->blocks[i] = BLOCK_ID_COBBLESTONE;
+            continue;
         }
-        chunk->blocks[i] = BLOCK_ID_COBBLESTONE;
+        chunk->blocks[i] = BLOCK_ID_STONE;
     }
 
     LOG_TRACE("Created chunk at (%d, %d)", x, y);
@@ -85,13 +95,25 @@ void chunk_generate_mesh(Chunk *chunk) {
         int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
         int z = i / (CHUNK_SIZE * CHUNK_HEIGHT);
 
+        BlockId block = chunk->blocks[i];
+        BlockTiles tiles = get_block_tiles(block);
+        int row_size = chunk->tilemap->map_size / chunk->tilemap->tile_size;
+
         // Top face
         if (!is_block_opaque(get_block(chunk, x, y + 1, z))) {
+            TileId tile_id = tiles.up;
+
+            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+
+            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
+            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
+
             int start_index = chunk->vertex_count / VERTEX_SIZE;
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, 0.0f, 1.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, 1.0f, 1.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, 1.0f, 0.0f);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, 0.0f, 0.0f);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, u_min, v_max);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, u_max, v_max);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, u_max, v_min);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, u_min, v_min);
 
             indices[index_count++] = start_index;
             indices[index_count++] = start_index + 1;
@@ -99,15 +121,25 @@ void chunk_generate_mesh(Chunk *chunk) {
             indices[index_count++] = start_index;
             indices[index_count++] = start_index + 2;
             indices[index_count++] = start_index + 3;
+
+            LOG_INFO("umin=%f umax=%f vmin=%f vmax=%f", u_min, u_max, v_min, v_max);
         }
 
         // Bottom face
         if (!is_block_opaque(get_block(chunk, x, y - 1, z))) {
+            TileId tile_id = tiles.bottom;
+
+            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+
+            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
+            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
+
             int start_index = chunk->vertex_count / VERTEX_SIZE;
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, 0.0f, 0.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, 1.0f, 0.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, 1.0f, 1.0f);
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, 0.0f, 1.0f);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, u_min, v_max);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, u_max, v_max);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, u_max, v_min);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, u_min, v_min);
 
             indices[index_count++] = start_index;
             indices[index_count++] = start_index + 1;
@@ -119,11 +151,19 @@ void chunk_generate_mesh(Chunk *chunk) {
 
         // Front face
         if (!is_block_opaque(get_block(chunk, x, y, z + 1))) {
+            TileId tile_id = tiles.front;
+
+            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+
+            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
+            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
+
             int start_index = chunk->vertex_count / VERTEX_SIZE;
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, 0.0f, 0.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, 1.0f, 0.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, 1.0f, 1.0f);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, 0.0f, 1.0f);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, u_min, v_max);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, u_max, v_max);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, u_max, v_min);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, u_min, v_min);
 
             indices[index_count++] = start_index;
             indices[index_count++] = start_index + 1;
@@ -135,11 +175,19 @@ void chunk_generate_mesh(Chunk *chunk) {
 
         // Back face
         if (!is_block_opaque(get_block(chunk, x, y, z - 1))) {
+            TileId tile_id = tiles.back;
+
+            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+
+            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
+            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
+
             int start_index = chunk->vertex_count / VERTEX_SIZE;
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, 0.0f, 1.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, 1.0f, 1.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, 1.0f, 0.0f);
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, 0.0f, 0.0f);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, u_min, v_min);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, u_max, v_min);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, u_max, v_max);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, u_min, v_max);
 
             indices[index_count++] = start_index;
             indices[index_count++] = start_index + 1;
@@ -151,11 +199,19 @@ void chunk_generate_mesh(Chunk *chunk) {
 
         // Left face
         if (!is_block_opaque(get_block(chunk, x - 1, y, z))) {
+            TileId tile_id = tiles.left;
+
+            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+
+            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
+            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
+
             int start_index = chunk->vertex_count / VERTEX_SIZE;
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, 0.0f, 0.0f);
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, 1.0f, 0.0f);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, 1.0f, 1.0f);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, 0.0f, 1.0f);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, u_min, v_max);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, u_max, v_max);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, u_max, v_min);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, u_min, v_min);
 
             indices[index_count++] = start_index;
             indices[index_count++] = start_index + 1;
@@ -167,11 +223,19 @@ void chunk_generate_mesh(Chunk *chunk) {
 
         // Right face
         if (!is_block_opaque(get_block(chunk, x + 1, y, z))) {
+            TileId tile_id = tiles.right;
+
+            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
+
+            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
+            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
+
             int start_index = chunk->vertex_count / VERTEX_SIZE;
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, 1.0f, 0.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, 0.0f, 0.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, 0.0f, 1.0f);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, 1.0f, 1.0f);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, u_min, v_max);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, u_max, v_max);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, u_max, v_min);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, u_min, v_min);
 
             indices[index_count++] = start_index;
             indices[index_count++] = start_index + 1;
