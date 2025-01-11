@@ -6,7 +6,7 @@ typedef enum {
     SHADER_TYPE_VERTEX = 0x8B31,
     SHADER_TYPE_FRAGMENT = 0x8B30,
     SHADER_TYPE_GEOMETRY = 0x8DD9
-} ShaderType;
+} shader_type_t;
 
 /**
  * @brief Creates a shader of the specified type from the given source code.
@@ -15,7 +15,7 @@ typedef enum {
  * @param source The source code of the shader.
  * @return The ID of the created shader.
  */
-uint32_t create_shader(ShaderType type, const char *source);
+uint32_t create_shader(shader_type_t type, const char *source);
 
 /**
  * @brief Destroys the specified shader.

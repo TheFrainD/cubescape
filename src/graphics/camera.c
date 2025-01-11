@@ -9,7 +9,7 @@
 #define NEAR 0.1f
 #define FAR 100.0f
 
-struct Camera {
+struct camera {
     vec3 position;
 
     vec3 up;
@@ -19,20 +19,20 @@ struct Camera {
     float yaw;
     float pitch;
 
-    CameraSettings settings;
+    camera_settings_t settings;
 
     uint32_t uniform_buffer;
 };
 
-static struct Camera g_camera;
+static struct camera camera;
 static vec3 world_up = (vec3){0.0f, 1.0f, 0.0f};
 
 static void update_view() {
     mat4 view;
     vec3 center;
-    glm_vec3_add(g_camera.position, g_camera.front, center);
-    glm_lookat(g_camera.position, center, g_camera.up, view);
-    buffer_sub_data(g_camera.uniform_buffer, sizeof(mat4), sizeof(mat4), &view);
+    glm_vec3_add(camera.position, camera.front, center);
+    glm_lookat(camera.position, center, camera.up, view);
+    buffer_sub_data(camera.uniform_buffer, sizeof(mat4), sizeof(mat4), &view);
 }
 
 void camera_mouse_callback(double x, double y) {
@@ -53,55 +53,55 @@ void camera_mouse_callback(double x, double y) {
     last_x = x;
     last_y = y;
 
-    x_offset *= g_camera.settings.sensitivity;
-    y_offset *= g_camera.settings.sensitivity;
+    x_offset *= camera.settings.sensitivity;
+    y_offset *= camera.settings.sensitivity;
 
-    g_camera.pitch = CLAMP(g_camera.pitch + y_offset, -PI_2 + 0.01f, PI_2 - 0.01f);
+    camera.pitch = CLAMP(camera.pitch + y_offset, -PI_2 + 0.01f, PI_2 - 0.01f);
 
-    g_camera.yaw += x_offset;
-    g_camera.yaw = (g_camera.yaw < 0 ? TAU : 0.0f) + fmod(g_camera.yaw, TAU);
+    camera.yaw += x_offset;
+    camera.yaw = (camera.yaw < 0 ? TAU : 0.0f) + fmod(camera.yaw, TAU);
 
     // Update front, right, and up vectors
-    g_camera.front[0] = cos(g_camera.yaw) * cos(g_camera.pitch);
-    g_camera.front[1] = sin(g_camera.pitch);
-    g_camera.front[2] = sin(g_camera.yaw) * cos(g_camera.pitch);
-    glm_vec3_normalize(g_camera.front);
+    camera.front[0] = cos(camera.yaw) * cos(camera.pitch);
+    camera.front[1] = sin(camera.pitch);
+    camera.front[2] = sin(camera.yaw) * cos(camera.pitch);
+    glm_vec3_normalize(camera.front);
 
-    glm_vec3_cross(g_camera.front, world_up, g_camera.right);
-    glm_vec3_normalize(g_camera.right);
+    glm_vec3_cross(camera.front, world_up, camera.right);
+    glm_vec3_normalize(camera.right);
 
-    glm_vec3_cross(g_camera.right, g_camera.front, g_camera.up);
-    glm_vec3_normalize(g_camera.up);
+    glm_vec3_cross(camera.right, camera.front, camera.up);
+    glm_vec3_normalize(camera.up);
 
     update_view();
 }
 
 void camera_update_position() {
-    float velocity = g_camera.settings.speed * get_delta_time();
+    float velocity = camera.settings.speed * get_delta_time();
     vec3 translation = {0.0f, 0.0f, 0.0f};
 
     if (input_key_pressed(KEY_W)) {
         vec3 temp;
-        glm_vec3_scale(g_camera.front, velocity, temp);
+        glm_vec3_scale(camera.front, velocity, temp);
         glm_vec3_add(translation, temp, translation);
     }
     if (input_key_pressed(KEY_S)) {
         vec3 temp;
-        glm_vec3_scale(g_camera.front, velocity, temp);
+        glm_vec3_scale(camera.front, velocity, temp);
         glm_vec3_sub(translation, temp, translation);
     }
     if (input_key_pressed(KEY_A)) {
         vec3 temp;
-        glm_vec3_scale(g_camera.right, velocity, temp);
+        glm_vec3_scale(camera.right, velocity, temp);
         glm_vec3_sub(translation, temp, translation);
     }
     if (input_key_pressed(KEY_D)) {
         vec3 temp;
-        glm_vec3_scale(g_camera.right, velocity, temp);
+        glm_vec3_scale(camera.right, velocity, temp);
         glm_vec3_add(translation, temp, translation);
     }
 
-    glm_vec3_add(g_camera.position, translation, g_camera.position);
+    glm_vec3_add(camera.position, translation, camera.position);
 
     // Update view if there was any translation
     if (!glm_vec3_eqv(translation, GLM_VEC3_ZERO)) {
@@ -109,20 +109,20 @@ void camera_update_position() {
     }
 }
 
-void camera_init(vec3 position, CameraSettings settings, uint32_t uniform_buffer) {
-    glm_vec3_copy(position, g_camera.position);
+void camera_init(vec3 position, camera_settings_t settings, uint32_t uniform_buffer) {
+    glm_vec3_copy(position, camera.position);
 
-    g_camera.settings = settings;
-    g_camera.yaw = -PI_2;
-    g_camera.pitch = 0.0f;
+    camera.settings = settings;
+    camera.yaw = -PI_2;
+    camera.pitch = 0.0f;
 
-    g_camera.uniform_buffer = uniform_buffer;
+    camera.uniform_buffer = uniform_buffer;
 
     // Initialize front, up, and right vectors
-    glm_vec3_copy((vec3){0.0f, 0.0f, -1.0f}, g_camera.front);
-    glm_vec3_copy(world_up, g_camera.up);
-    glm_vec3_cross(g_camera.front, g_camera.up, g_camera.right);
-    glm_vec3_normalize(g_camera.right);
+    glm_vec3_copy((vec3){0.0f, 0.0f, -1.0f}, camera.front);
+    glm_vec3_copy(world_up, camera.up);
+    glm_vec3_cross(camera.front, camera.up, camera.right);
+    glm_vec3_normalize(camera.right);
 
     // Disable cursor
     input_set_cursor_enabled(0);
@@ -133,24 +133,24 @@ void camera_init(vec3 position, CameraSettings settings, uint32_t uniform_buffer
 }
 
 void camera_set_position(vec3 position) {
-    glm_vec3_copy(position, g_camera.position);
+    glm_vec3_copy(position, camera.position);
     update_view();
 }
 
 void camera_get_position(vec3 position) {
-    glm_vec3_copy(g_camera.position, position);
+    glm_vec3_copy(camera.position, position);
 }
 
-CameraSettings camera_get_settings() {
-    return g_camera.settings;
+camera_settings_t camera_get_settings() {
+    return camera.settings;
 }
 
-void camera_set_settings(CameraSettings settings) {
-    g_camera.settings = settings;
+void camera_set_settings(camera_settings_t settings) {
+    camera.settings = settings;
 }
 
 void camera_get_perpective(mat4 projection) {
     int width, height;
     get_framebuffer_size(&width, &height);
-    glm_perspective(RAD(g_camera.settings.fov), (float)width / (float)height, NEAR, FAR, projection);
+    glm_perspective(RAD(camera.settings.fov), (float)width / (float)height, NEAR, FAR, projection);
 }

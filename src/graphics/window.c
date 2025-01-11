@@ -21,28 +21,24 @@ void glfw_error_callback(int error, const char* description) {
     LOG_ERROR("GLFW error: %s", description);
 }
 
-void window_set_title(const char* title) {
+void window_set_settings(window_settings_t settings) {
     if (!g_window) {
-        LOG_ERROR("'set_window_title' failed: no window created");
+        LOG_ERROR("'window_set_settings' failed: no window created");
         return;
     }
-    glfwSetWindowTitle(g_window, title);
+    glfwSetWindowSize(g_window, settings.width, settings.height);
+    glfwSetWindowTitle(g_window, settings.title);
 }
 
-void get_window_size(int *width, int* height) {
+window_settings_t window_get_settings() {
+    window_settings_t settings = {0};
     if (!g_window) {
-        LOG_ERROR("'get_window_size' failed: no window created");
-        return;
+        LOG_ERROR("'window_get_settings' failed: no window created");
+        return settings;
     }
-    glfwGetWindowSize(g_window, width, height);
-}
-
-void set_window_size(int width, int height) {
-    if (!g_window) {
-        LOG_ERROR("'set_window_size' failed: no window created");
-        return;
-    }
-    glfwSetWindowSize(g_window, width, height);
+    glfwGetWindowSize(g_window, &settings.width, &settings.height);
+    settings.title = glfwGetWindowTitle(g_window);
+    return settings;
 }
 
 void set_swap_interval(int interval) {
@@ -53,7 +49,7 @@ void set_swap_interval(int interval) {
     glfwSwapInterval(interval);
 }
 
-void window_init(WindowSettings settings) {
+void window_init(window_settings_t settings) {
     glfwSetErrorCallback(glfw_error_callback);
 
     if (!glfwInit()) {

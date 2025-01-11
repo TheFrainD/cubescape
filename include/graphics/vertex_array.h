@@ -11,7 +11,7 @@ typedef enum {
     VERTEX_ARRAY_DATA_TYPE_UNSIGNED_INT = 0x1405,
     VERTEX_ARRAY_DATA_TYPE_FLOAT = 0x1406,
     VERTEX_ARRAY_DATA_TYPE_DOUBLE = 0x140A
-} VertexArrayDataType;
+} vertex_array_data_type_t;
 
 /**
  * @brief Creates a new vertex array object.
@@ -48,4 +48,4 @@ void unbind_vertex_array();
  * @param stride The byte offset between consecutive vertex attributes.
  * @param pointer A pointer to the first component of the first vertex attribute in the array.
  */
-void vertex_array_attrib(uint32_t index, int size, VertexArrayDataType type, int stride, const void *pointer);
+void vertex_array_attrib(uint32_t index, int size, vertex_array_data_type_t type, int stride, const void *pointer);

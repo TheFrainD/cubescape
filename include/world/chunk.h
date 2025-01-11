@@ -14,22 +14,22 @@
 typedef struct {
     int x;
     int y;
-    BlockId *blocks;
+    block_id_t *blocks;
     uint32_t vertex_array;
     uint32_t vertex_buffer;
     uint32_t index_buffer;
     size_t vertex_count;
-    TileMap *tilemap;
-} Chunk;
+    tilemap_t *tilemap;
+} chunk_t;
 
-Chunk *create_chunk(int x, int y, TileMap *tilemap);
+chunk_t *create_chunk(int x, int y, tilemap_t *tilemap);
 
-BlockId get_block(Chunk *chunk, int x, int y, int z);
+block_id_t get_block(chunk_t *chunk, int x, int y, int z);
 
-void chunk_set_block(Chunk *chunk, int x, int y, int z, BlockId block);
+void chunk_set_block(chunk_t *chunk, int x, int y, int z, block_id_t block);
 
-void chunk_generate_mesh(Chunk *chunk);
+void chunk_generate_mesh(chunk_t *chunk);
 
-void chunk_render(Chunk *chunk, ShaderProgram *shader_program);
+void chunk_render(chunk_t *chunk, shader_program_t *shader_program);
 
-void destroy_chunk(Chunk *chunk);
+void destroy_chunk(chunk_t *chunk);

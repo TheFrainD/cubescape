@@ -10,7 +10,7 @@ typedef enum {
     TEXTURE_WRAPPING_REPEAT = 0x2901,
     TEXTURE_WRAPPING_MIRRORED_REPEAT = 0x8370,
     TEXTURE_WRAPPING_MIRROR_CLAMP_TO_EDGE = 0x8743
-} TextureWrapping;
+} texture_wrapping_t;
 
 typedef enum {
     TEXTURE_FILTERING_NEAREST = 0x2600,
@@ -19,7 +19,7 @@ typedef enum {
     TEXTURE_FILTERING_LINEAR_MIPMAP_NEAREST = 0x2701,
     TEXTURE_FILTERING_NEAREST_MIPMAP_LINEAR = 0x2702,
     TEXTURE_FILTERING_LINEAR_MIPMAP_LINEAR = 0x2703
-} TextureFiltering;
+} texture_filtering_t;
 
 /**
  * @brief Creates a new texture.
@@ -52,7 +52,7 @@ void unbind_texture(uint32_t slot);
  * @param height The height of the texture.
  * @param format The format of the image data.
  */
-void texture_set_data(uint32_t texture, const uint8_t *data, int width, int height, ImageFormat format);
+void texture_set_data(uint32_t texture, const uint8_t *data, int width, int height, image_format_t format);
 
 /**
  * @brief Sets the image for a texture.
@@ -60,7 +60,7 @@ void texture_set_data(uint32_t texture, const uint8_t *data, int width, int heig
  * @param texture The ID of the texture.
  * @param image The image to set for the texture.
  */
-void texture_set_image(uint32_t texture, Image image);
+void texture_set_image(uint32_t texture, image_t image);
 
 /**
  * @brief Sets the wrapping mode for a texture.
@@ -69,7 +69,7 @@ void texture_set_image(uint32_t texture, Image image);
  * @param s The wrapping mode for the S coordinate.
  * @param t The wrapping mode for the T coordinate.
  */
-void texture_set_wrapping(uint32_t texture, TextureWrapping s, TextureWrapping t);
+void texture_set_wrapping(uint32_t texture, texture_wrapping_t s, texture_wrapping_t t);
 
 /**
  * @brief Sets the filtering mode for a texture.
@@ -78,7 +78,7 @@ void texture_set_wrapping(uint32_t texture, TextureWrapping s, TextureWrapping t
  * @param min The minifying filter.
  * @param mag The magnifying filter.
  */
-void texture_set_filtering(uint32_t texture, TextureFiltering min, TextureFiltering mag);
+void texture_set_filtering(uint32_t texture, texture_filtering_t min, texture_filtering_t mag);
 
 /**
  * @brief Generates mipmaps for a texture.

@@ -5,31 +5,31 @@
 typedef enum {
     IMAGE_FORMAT_RGB = 3,
     IMAGE_FORMAT_RGBA = 4
-} ImageFormat;
+} image_format_t;
 
 typedef struct {
     int32_t width;
     int32_t height;
-    ImageFormat format;
+    image_format_t format;
     uint8_t *data;
-} Image;
+} image_t;
 
 /**
  * @brief Loads an image from a file.
  * 
- * This function reads an image from the specified file and returns an Image object.
+ * This function reads an image from the specified file and returns an image_t object.
  * 
  * @param filename The path to the image file to be loaded.
- * @return Image The loaded image.
+ * @return image_t The loaded image.
  */
-Image image_load(const char *filename);
+image_t image_load(const char *filename);
 
 /**
- * @brief Frees the memory allocated for the given Image object.
+ * @brief Frees the memory allocated for the given image_t object.
  * 
  * This function releases the memory allocated for the image data.
- * The Image object itself is not freed, as it is not dynamically allocated.
+ * The image_t object itself is not freed, as it is not dynamically allocated.
  * 
- * @param image A pointer to the Image object whose data is to be freed.
+ * @param image A pointer to the image_t object whose data is to be freed.
  */
-void image_free(Image image);
+void image_free(image_t image);

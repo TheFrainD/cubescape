@@ -4,14 +4,14 @@ typedef struct {
     int width;
     int height;
     const char* title;
-} WindowSettings;
+} window_settings_t;
 
 /**
  * @brief Initializes the window with the given settings.
  * 
  * @param settings The settings to initialize the window with.
  */
-void window_init(WindowSettings settings);
+void window_init(window_settings_t settings);
 
 /**
  * @brief Destroys the window and releases any associated resources.
@@ -19,19 +19,18 @@ void window_init(WindowSettings settings);
 void window_destroy();
 
 /**
- * @brief Sets the title of the window.
+ * @brief Sets the settings of the window.
  * 
- * @param title The new title for the window.
+ * @param settings The new settings of the window.
  */
-void window_set_title(const char* title);
+void window_set_settings(window_settings_t settings);
 
 /**
- * @brief Retrieves the current size of the window.
+ * @brief Retrieves the settings of the window.
  * 
- * @param width Pointer to an integer to store the width of the window.
- * @param height Pointer to an integer to store the height of the window.
+ * @return window_settings_t The settings of the window.
  */
-void get_window_size(int *width, int* height);
+window_settings_t window_get_settings();
 
 /**
  * @brief Retrieves the size of the framebuffer.

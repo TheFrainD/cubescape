@@ -21,7 +21,7 @@ void unbind_texture(uint32_t slot) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void texture_set_data(uint32_t texture, const uint8_t *data, int width, int height, ImageFormat format) {
+void texture_set_data(uint32_t texture, const uint8_t *data, int width, int height, image_format_t format) {
     GLenum internal_format;
     GLenum display_format;
 
@@ -44,18 +44,18 @@ void texture_set_data(uint32_t texture, const uint8_t *data, int width, int heig
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void texture_set_image(uint32_t texture, Image image) {
+void texture_set_image(uint32_t texture, image_t image) {
     texture_set_data(texture, image.data, image.width, image.height, image.format);
 }
 
-void texture_set_wrapping(uint32_t texture, TextureWrapping s, TextureWrapping t) {
+void texture_set_wrapping(uint32_t texture, texture_wrapping_t s, texture_wrapping_t t) {
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, s);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, t);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void texture_set_filtering(uint32_t texture, TextureFiltering min, TextureFiltering mag) {
+void texture_set_filtering(uint32_t texture, texture_filtering_t min, texture_filtering_t mag) {
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag);

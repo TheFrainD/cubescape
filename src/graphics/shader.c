@@ -22,7 +22,7 @@ static void print_info_log(uint32_t shader, const char *message) {
     free(info_log);
 }
 
-uint32_t create_shader(ShaderType type, const char *source) {
+uint32_t create_shader(shader_type_t type, const char *source) {
     uint32_t shader = glCreateShader(type);
 
     glShaderSource(shader, 1, &source, NULL);

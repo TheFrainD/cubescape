@@ -24,7 +24,7 @@ void unbind_vertex_array() {
     glBindVertexArray(0);
 }
 
-void vertex_array_attrib(uint32_t index, int size, VertexArrayDataType type, int stride, const void *pointer) {
+void vertex_array_attrib(uint32_t index, int size, vertex_array_data_type_t type, int stride, const void *pointer) {
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, size, type, GL_FALSE, stride, pointer);
 }

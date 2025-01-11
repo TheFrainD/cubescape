@@ -23,8 +23,8 @@ static void print_info_log(uint32_t program, const char *message) {
     free(info_log);
 }
 
-ShaderProgram create_shader_program() {
-    ShaderProgram program;
+shader_program_t create_shader_program() {
+    shader_program_t program;
     program.id = glCreateProgram();
     memset(program.uniform_block_indeces, 0, sizeof(program.uniform_block_indeces));
 
@@ -32,7 +32,7 @@ ShaderProgram create_shader_program() {
     return program;
 }
 
-void destroy_shader_program(ShaderProgram *program) {
+void destroy_shader_program(shader_program_t *program) {
     LOG_TRACE("Deleting shader program with ID: %d", program->id);
 
     glDeleteProgram(program->id);
@@ -44,11 +44,11 @@ void destroy_shader_program(ShaderProgram *program) {
     }
 }
 
-void attach_shader_to_shader_program(ShaderProgram *program, uint32_t shader) {
+void attach_shader_to_shader_program(shader_program_t *program, uint32_t shader) {
     glAttachShader(program->id, shader);
 }
 
-void link_shader_program(ShaderProgram *program) {
+void link_shader_program(shader_program_t *program) {
     glLinkProgram(program->id);
 
     int success;
@@ -59,11 +59,11 @@ void link_shader_program(ShaderProgram *program) {
     }
 }
 
-void use_shader_program(ShaderProgram *program) {
+void use_shader_program(shader_program_t *program) {
     glUseProgram(program->id);
 }
 
-uint32_t shader_program_get_uniform_block_index(ShaderProgram *program, const char *name) {
+uint32_t shader_program_get_uniform_block_index(shader_program_t *program, const char *name) {
     for (size_t i = 0; i < UNIFROM_BLOCK_INDEX_SIZE; i++) {
         if (program->uniform_block_indeces[i] && strcmp(program->uniform_block_indeces[i], name) == 0) {
             return i;
@@ -87,7 +87,7 @@ uint32_t shader_program_get_uniform_block_index(ShaderProgram *program, const ch
     return index;
 }
 
-void shader_program_bind_uniform_block(ShaderProgram *program, const char *name, uint32_t binding_point) {
+void shader_program_bind_uniform_block(shader_program_t *program, const char *name, uint32_t binding_point) {
     uint32_t index = shader_program_get_uniform_block_index(program, name);
     glUniformBlockBinding(program->id, index, binding_point);
 }

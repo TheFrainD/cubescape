@@ -5,12 +5,8 @@ typedef struct {
     int tile_size;
     int map_size;
     char *path;
-} TileMap;
+} tilemap_t;
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+int load_tilemap(const char *filename, tilemap_t *tilemap);
 
-int load_tilemap(const char *filename, TileMap *tilemap);
-
-void destroy_tilemap(TileMap *tilemap);
+void destroy_tilemap(tilemap_t *tilemap);

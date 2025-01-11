@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
     LOG_INFO("%s starting up...", EXECUTABLE_NAME);
 
-    WindowSettings window_settings = {0};
+    window_settings_t window_settings = {0};
     window_settings.width = 800;
     window_settings.height = 600;
     window_settings.title = EXECUTABLE_NAME;
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
     uint32_t fragment_shader = create_shader(SHADER_TYPE_FRAGMENT, fragment_shader_source);
     free(fragment_shader_source);
 
-    ShaderProgram shader_program = create_shader_program();
+    shader_program_t shader_program = create_shader_program();
     attach_shader_to_shader_program(&shader_program, vertex_shader);
     attach_shader_to_shader_program(&shader_program, fragment_shader);
     link_shader_program(&shader_program);
@@ -110,10 +110,10 @@ int main(int argc, char **argv) {
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &max_anisotropy);
     LOG_INFO("Max anisotropy: %.2f", max_anisotropy);
 
-    TileMap tilemap = {0};
+    tilemap_t tilemap = {0};
     load_tilemap("assets/tilemaps/default.tilemap", &tilemap);
 
-    Image tilemap_image = image_load(tilemap.path);
+    image_t tilemap_image = image_load(tilemap.path);
     uint32_t tilemap_texture = create_texture();
     texture_set_image(tilemap_texture, tilemap_image);
     texture_set_wrapping(tilemap_texture, TEXTURE_WRAPPING_REPEAT, TEXTURE_WRAPPING_REPEAT);
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
     texture_set_anisotropy(tilemap_texture, max_anisotropy);
     image_free(tilemap_image);
 
-    CameraSettings camera_settings = {0};
+    camera_settings_t camera_settings = {0};
     camera_settings.speed = 5.0f;
     camera_settings.sensitivity = 0.002f;
     camera_settings.fov = 45.0f;
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
-    Chunk *chunk = create_chunk(0, 0, &tilemap);
+    chunk_t *chunk = create_chunk(0, 0, &tilemap);
     chunk_generate_mesh(chunk);
 
     is_running = 1;

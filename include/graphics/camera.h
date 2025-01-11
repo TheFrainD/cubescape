@@ -10,7 +10,7 @@ typedef struct {
     float speed;
     float sensitivity;
     float fov;
-} CameraSettings;
+} camera_settings_t;
 
 /**
  * @brief Initializes the camera with a given position and settings.
@@ -19,7 +19,7 @@ typedef struct {
  * @param settings The settings to configure the camera.
  * @param uniform_buffer The uniform buffer to use for the camera.
  */
-void camera_init(vec3 position, CameraSettings settings, uint32_t uniform_buffer);
+void camera_init(vec3 position, camera_settings_t settings, uint32_t uniform_buffer);
 
 /**
  * @brief Sets the position of the camera.
@@ -40,14 +40,14 @@ void camera_get_position(vec3 position);
  * 
  * @param settings The new settings to configure the camera.
  */
-void camera_set_settings(CameraSettings settings);
+void camera_set_settings(camera_settings_t settings);
 
 /**
  * @brief Gets the current settings of the camera.
  * 
- * @return CameraSettings The current settings of the camera.
+ * @return camera_settings_t The current settings of the camera.
  */
-CameraSettings camera_get_settings();
+camera_settings_t camera_get_settings();
 
 /**
  * @brief Updates the camera's position based on its current settings.
