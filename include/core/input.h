@@ -123,7 +123,7 @@ typedef enum {
     KEY_RIGHT_SUPER = 347,
     KEY_MENU = 348,
     KEY_LAST = 348
-} Key;
+} key_code_t;
 
 typedef enum {
     MOUSE_BUTTON_1 = 0,
@@ -138,10 +138,12 @@ typedef enum {
     MOUSE_BUTTON_LEFT = 0,
     MOUSE_BUTTON_RIGHT = 1,
     MOUSE_BUTTON_MIDDLE = 2
-} MouseButton;
+} mouse_button_code_t;
 
-typedef void (*MousePosistionCallback)(double x, double y);
-typedef void (*KeyPressedCallback)(Key key);
+typedef void (*mouse_pos_callback_t)(double x, double y);
+typedef void (*mouse_scroll_callback_t)(double x, double y);
+typedef void (*mouse_button_pressed_callback_t)(mouse_button_code_t button);
+typedef void (*key_pressed_callback_t)(key_code_t key);
 
 /**
  * @brief Initializes the input system.
@@ -154,7 +156,7 @@ void input_init();
  * @param key The key to check.
  * @return int Returns 1 if the key is pressed, 0 otherwise.
  */
-int input_key_pressed(Key key);
+int input_key_pressed(key_code_t key);
 
 /**
  * @brief Checks if a specific mouse button is pressed.
@@ -162,7 +164,7 @@ int input_key_pressed(Key key);
  * @param button The mouse button to check.
  * @return int Returns 1 if the mouse button is pressed, 0 otherwise.
  */
-int input_mouse_button_pressed(MouseButton button);
+int input_mouse_button_pressed(mouse_button_code_t button);
 
 /**
  * @brief Retrieves the current mouse position.
@@ -185,7 +187,28 @@ void input_get_mouse_scroll(double *x, double *y);
  * 
  * @param callback The callback function to be called when the mouse position changes.
  */
-void input_add_mouse_position_callback(MousePosistionCallback callback);
+void input_add_mouse_position_callback(mouse_pos_callback_t callback);
+
+/**
+ * @brief Adds a callback function for key presses.
+ * 
+ * @param callback The callback function to be called when a key is pressed.
+ */
+void input_add_key_pressed_callback(key_pressed_callback_t callback);
+
+/**
+ * @brief Adds a callback function for mouse button presses.
+ * 
+ * @param callback The callback function to be called when a mouse button is pressed.
+ */
+void input_add_mouse_button_pressed_callback(mouse_button_pressed_callback_t callback);
+
+/**
+ * @brief Adds a callback function for mouse scroll events.
+ * 
+ * @param callback The callback function to be called when the mouse is scrolled.
+ */
+void input_add_mouse_scroll_callback(mouse_scroll_callback_t callback);
 
 /**
  * @brief Enables or disables the cursor.

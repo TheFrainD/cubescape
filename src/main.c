@@ -27,6 +27,24 @@
 
 #define LOG_FILE EXECUTABLE_NAME ".log"
 
+static int is_running = 0;
+
+void key_callback(key_code_t key) {
+    if (key == KEY_ESCAPE) {
+        is_running = 0;
+    }
+
+    if (key == KEY_F1) {
+        static int wireframe = 0;
+        if (wireframe) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+        wireframe = !wireframe;
+    }
+}
+
 int main(int argc, char **argv) {
     logger_set_level(LOG_LEVEL_TRACE);
 
@@ -125,23 +143,12 @@ int main(int argc, char **argv) {
     Chunk *chunk = create_chunk(0, 0, &tilemap);
     chunk_generate_mesh(chunk);
 
-    bool wireframe = false;
+    is_running = 1;
 
-    while (!window_should_close()) {
+    input_add_key_pressed_callback(key_callback);
+
+    while (is_running) {
         poll_events();
-
-        if (input_key_pressed(KEY_ESCAPE)) {
-            break;
-        }
-
-        if (input_key_pressed(KEY_F1)) {
-           if (wireframe) {
-               glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-           } else {
-               glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-           }
-           wireframe = !wireframe;
-        }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -153,6 +160,8 @@ int main(int argc, char **argv) {
 
         swap_buffers();
         update_delta_time();
+
+        is_running &= !window_should_close();
     }
 
     destroy_buffer(&uniform_buffer);
