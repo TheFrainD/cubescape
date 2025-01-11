@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int load_tilemap(const char *filename, tilemap_t *tilemap) {
+int tilemap_load(const char *filename, tilemap_t *tilemap) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         return 0;
@@ -36,7 +36,7 @@ int load_tilemap(const char *filename, tilemap_t *tilemap) {
     return 1;
 }
 
-void destroy_tilemap(tilemap_t *tilemap) {
+void tilemap_free(tilemap_t *tilemap) {
     free(tilemap->name);
     free(tilemap->path);
 }

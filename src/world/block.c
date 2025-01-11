@@ -10,11 +10,11 @@
         tiles.right = TILE_ID; \
         break;
 
-int is_block_opaque(block_id_t block) {
+int block_is_opaque(block_id_t block) {
     return block != BLOCK_ID_AIR;
 }
 
-block_tiles_t get_block_tiles(block_id_t block) {
+block_tiles_t block_get_tiles(block_id_t block) {
     block_tiles_t tiles = {0};
 
     switch (block) {

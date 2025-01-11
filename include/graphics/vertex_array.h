@@ -18,26 +18,26 @@ typedef enum {
  * 
  * @return The ID of the created vertex array object.
  */
-uint32_t create_vertex_array();
+uint32_t vertex_array_create();
 
 /**
  * @brief Destroys the specified vertex array object.
  * 
  * @param vertex_array Pointer to the ID of the vertex array object to be destroyed.
  */
-void destroy_vertex_array(uint32_t *vertex_array);
+void vertex_array_destroy(uint32_t *vertex_array);
 
 /**
  * @brief Binds the specified vertex array object.
  * 
  * @param vertex_array The ID of the vertex array object to bind.
  */
-void bind_vertex_array(uint32_t vertex_array);
+void vertex_array_bind(uint32_t vertex_array);
 
 /**
  * @brief Unbinds the currently bound vertex array object.
  */
-void unbind_vertex_array();
+void vertex_array_unbind();
 
 /**
  * @brief Specifies the format of the vertex attribute data.

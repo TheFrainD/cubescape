@@ -3,8 +3,11 @@
 #include <stdint.h>
 
 #include <cglm/cglm.h>
+#include <cglm/struct.h>
 
 #include "graphics/shader_program.h"
+
+typedef struct camera camera_t;
 
 typedef struct {
     float speed;
@@ -13,50 +16,126 @@ typedef struct {
 } camera_settings_t;
 
 /**
- * @brief Initializes the camera with a given position and settings.
+ * @brief Initializes the camera with given settings.
  * 
- * @param position The initial position of the camera.
  * @param settings The settings to configure the camera.
- * @param uniform_buffer The uniform buffer to use for the camera.
+ * 
+ * @return camera_t* The initialized camera.
  */
-void camera_init(vec3 position, camera_settings_t settings, uint32_t uniform_buffer);
+camera_t *camera_create(camera_settings_t settings);
+
+/**
+ * @brief Destroys the camera.
+ * 
+ * @param camera The camera to destroy.
+ */
+void camera_destroy(camera_t *camera);
 
 /**
  * @brief Sets the position of the camera.
  * 
+ * @param camera The camera to set the position of.
  * @param position The new position of the camera.
  */
-void camera_set_position(vec3 position);
+void camera_set_position(camera_t *camera, vec3s position);
+
+/**
+ * @brief Translates the camera by the given translation vector.
+ * 
+ * @param camera The camera to translate.
+ * @param translation The translation vector.
+ */
+void camera_translate(camera_t *camera, vec3s translation);
 
 /**
  * @brief Gets the current position of the camera.
  * 
- * @param position A vector to store the current position of the camera.
+ * @param camera The camera to get the position of.
+ * 
+ * @return vec3s The current position of the camera.
  */
-void camera_get_position(vec3 position);
+vec3s camera_get_position(camera_t *camera);
 
 /**
  * @brief Sets the settings of the camera.
  * 
+ * @param camera The camera to set the settings of.
  * @param settings The new settings to configure the camera.
  */
-void camera_set_settings(camera_settings_t settings);
+void camera_set_settings(camera_t *camera, camera_settings_t settings);
 
 /**
  * @brief Gets the current settings of the camera.
  * 
+ * @param camera The camera to get the settings of.
+ * 
  * @return camera_settings_t The current settings of the camera.
  */
-camera_settings_t camera_get_settings();
-
-/**
- * @brief Updates the camera's position based on its current settings.
- */
-void camera_update_position();
+camera_settings_t camera_get_settings(camera_t *camera);
 
 /**
  * @brief Gets the perspective projection matrix of the camera.
  * 
- * @param projection A matrix to store the perspective projection of the camera.
+ * @param camera The camera to get the perspective projection matrix of.
+ * 
+ * @return mat4s The perspective projection matrix of the camera.
  */
-void camera_get_perpective(mat4 projection);
+mat4s camera_get_perspective(camera_t *camera);
+
+/**
+ * @brief Updates the view matrix of the camera based on the current mouse position.
+ * 
+ * @param camera The camera to update the view matrix of.
+ * @param mouse_position The current mouse position.
+ */
+void camera_update_view(camera_t *camera, vec2s mouse_position);
+
+/**
+ * @brief Gets the view matrix of the camera.
+ * 
+ * @param camera The camera to get the view matrix of.
+ * 
+ * @return mat4s The view matrix of the camera.
+ */
+mat4s camera_get_view(camera_t *camera);
+
+/**
+ * @brief Checks if the camera view has changed.
+ * 
+ * @param camera The camera to check if the view has changed.
+ * 
+ * @return int Returns 1 if the camera view has changed, 0 otherwise.
+ */
+int camera_view_changed(camera_t *camera);
+
+/**
+ * @brief Resets the camera view changed flag.
+ */
+void camera_view_reset(camera_t *camera);
+
+/**
+ * @brief Gets the front vector of the camera.
+ * 
+ * @param camera The camera to get the front vector of.
+ * 
+ * @return vec3s The front vector of the camera.
+ */
+vec3s camera_get_front(camera_t *camera);
+
+/**
+ * @brief Gets the up vector of the camera.
+ * 
+ * @param camera The camera to get the up vector of.
+ * 
+ * @return vec3s The up vector of the camera.
+ */
+vec3s camera_get_up(camera_t *camera);
+
+/**
+ * @brief Gets the right vector of the camera.
+ * 
+ * @param camera The camera to get the right vector of.
+ * 
+ * @return vec3s The right vector of the camera.
+ */
+vec3s camera_get_right(camera_t *camera);

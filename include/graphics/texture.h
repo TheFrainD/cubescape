@@ -26,7 +26,7 @@ typedef enum {
  * 
  * @return The ID of the created texture.
  */
-uint32_t create_texture();
+uint32_t texture_create();
 
 /**
  * @brief Binds a texture to a specified slot.
@@ -34,14 +34,14 @@ uint32_t create_texture();
  * @param texture The ID of the texture to bind.
  * @param slot The slot to bind the texture to.
  */
-void bind_texture(uint32_t texture, uint32_t slot);
+void texture_bind(uint32_t texture, uint32_t slot);
 
 /**
  * @brief Unbinds the texture from the specified slot.
  * 
  * @param slot The slot to unbind the texture from.
  */
-void unbind_texture(uint32_t slot);
+void texture_unbind(uint32_t slot);
 
 /**
  * @brief Sets the data for a texture.
@@ -102,4 +102,4 @@ void texture_set_anisotropy(uint32_t texture, float anisotropy);
  * 
  * @param texture A pointer to the ID of the texture to destroy.
  */
-void destroy_texture(uint32_t *texture);
+void texture_destroy(uint32_t *texture);

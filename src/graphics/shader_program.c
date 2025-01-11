@@ -23,7 +23,7 @@ static void print_info_log(uint32_t program, const char *message) {
     free(info_log);
 }
 
-shader_program_t create_shader_program() {
+shader_program_t shader_program_create() {
     shader_program_t program;
     program.id = glCreateProgram();
     memset(program.uniform_block_indeces, 0, sizeof(program.uniform_block_indeces));
@@ -32,7 +32,7 @@ shader_program_t create_shader_program() {
     return program;
 }
 
-void destroy_shader_program(shader_program_t *program) {
+void shader_program_destroy(shader_program_t *program) {
     LOG_TRACE("Deleting shader program with ID: %d", program->id);
 
     glDeleteProgram(program->id);
@@ -44,11 +44,11 @@ void destroy_shader_program(shader_program_t *program) {
     }
 }
 
-void attach_shader_to_shader_program(shader_program_t *program, uint32_t shader) {
+void shader_program_attach_shader(shader_program_t *program, uint32_t shader) {
     glAttachShader(program->id, shader);
 }
 
-void link_shader_program(shader_program_t *program) {
+void shader_program_link(shader_program_t *program) {
     glLinkProgram(program->id);
 
     int success;
@@ -59,7 +59,7 @@ void link_shader_program(shader_program_t *program) {
     }
 }
 
-void use_shader_program(shader_program_t *program) {
+void shader_program_use(shader_program_t *program) {
     glUseProgram(program->id);
 }
 

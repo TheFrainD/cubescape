@@ -30,14 +30,14 @@ typedef enum {
  * @param target The target to which the buffer is bound.
  * @return The ID of the created buffer.
  */
-uint32_t create_buffer(size_t size, const void *data, buffer_usage_t usage, buffer_target_t target);
+uint32_t buffer_create(size_t size, const void *data, buffer_usage_t usage, buffer_target_t target);
 
 /**
  * @brief Destroys the specified buffer.
  *
  * @param buffer A pointer to the ID of the buffer to destroy.
  */
-void destroy_buffer(uint32_t *buffer);
+void buffer_destroy(uint32_t *buffer);
 
 /**
  * @brief Binds the specified buffer to the given target.
@@ -45,7 +45,7 @@ void destroy_buffer(uint32_t *buffer);
  * @param buffer The ID of the buffer to bind.
  * @param target The target to which the buffer is bound.
  */
-void bind_buffer(uint32_t buffer, buffer_target_t target);
+void buffer_bind(uint32_t buffer, buffer_target_t target);
 
 /**
  * @brief Binds a range of the specified buffer to the given target.
@@ -55,7 +55,7 @@ void bind_buffer(uint32_t buffer, buffer_target_t target);
  * @param binding_point The binding point within the target.
  * @param size The size of the range to bind.
  */
-void bind_buffer_range(uint32_t buffer, buffer_target_t target, const uint32_t binding_point, size_t size);
+void buffer_bind_range(uint32_t buffer, buffer_target_t target, const uint32_t binding_point, size_t size);
 
 /**
  * @brief Binds the base of the specified buffer to the given target.
@@ -64,14 +64,14 @@ void bind_buffer_range(uint32_t buffer, buffer_target_t target, const uint32_t b
  * @param target The target to which the buffer is bound.
  * @param binding_point The binding point within the target.
  */
-void bind_buffer_base(uint32_t buffer, buffer_target_t target, const uint32_t binding_point);
+void buffer_bind_base(uint32_t buffer, buffer_target_t target, const uint32_t binding_point);
 
 /**
  * @brief Unbinds the buffer from the given target.
  *
  * @param target The target from which the buffer is unbound.
  */
-void unbind_buffer(buffer_target_t target);
+void buffer_unbind(buffer_target_t target);
 
 /**
  * @brief Updates the data of the specified buffer.

@@ -27,6 +27,21 @@ typedef struct {
     tile_id_t right;
 } block_tiles_t;
 
-int is_block_opaque(block_id_t block);
+/**
+ * @brief Checks if a block is opaque.
+ * 
+ * @param block The block to check.
+ * 
+ * @return int Returns 1 if the block is opaque, 0 otherwise.
+ */
+int block_is_opaque(block_id_t block);
 
-block_tiles_t get_block_tiles(block_id_t block);
+
+/**
+ * @brief Retrieves the tiles for a block.
+ * 
+ * @param block The block to retrieve the tiles for.
+ * 
+ * @return block_tiles_t The tiles for the block.
+ */
+block_tiles_t block_get_tiles(block_id_t block);

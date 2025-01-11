@@ -15,11 +15,11 @@ typedef enum {
  * @param source The source code of the shader.
  * @return The ID of the created shader.
  */
-uint32_t create_shader(shader_type_t type, const char *source);
+uint32_t shader_create(shader_type_t type, const char *source);
 
 /**
  * @brief Destroys the specified shader.
  *
  * @param shader A pointer to the ID of the shader to destroy.
  */
-void destroy_shader(uint32_t *shader);
+void shader_destroy(uint32_t *shader);

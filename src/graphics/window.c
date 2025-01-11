@@ -41,9 +41,9 @@ window_settings_t window_get_settings() {
     return settings;
 }
 
-void set_swap_interval(int interval) {
+void window_set_swap_interval(int interval) {
     if (!g_window) {
-        LOG_ERROR("'set_swap_interval' failed: no window created");
+        LOG_ERROR("'window_set_swap_interval' failed: no window created");
         return;
     }
     glfwSwapInterval(interval);
@@ -95,7 +95,7 @@ void window_init(window_settings_t settings) {
 }
 
 
-void window_destroy() {
+void window_deinit() {
     if (g_window) {
         glfwDestroyWindow(g_window);
         glfwTerminate();
@@ -109,31 +109,31 @@ int window_should_close() {
     return g_window ? glfwWindowShouldClose(g_window) : 1;
 }
 
-void swap_buffers() {
+void window_swap_buffers() {
     if (!g_window) {
-        LOG_ERROR("'swap_buffers' failed: no window created");
+        LOG_ERROR("'window_swap_buffers' failed: no window created");
         return;
     }
     glfwSwapBuffers(g_window);
 }
 
-void poll_events() {
+void window_poll_events() {
     glfwPollEvents();
 }
 
-void update_delta_time() {
+void window_update_delta_time() {
     float current_frame = glfwGetTime();
     delta_time = current_frame - last_frame;
     last_frame = current_frame;
 }
 
-float get_delta_time() {
+float window_get_delta_time() {
     return delta_time;
 }
 
-void get_framebuffer_size(int *width, int* height) {
+void window_get_framebuffer_size(int *width, int* height) {
     if (!g_window) {
-        LOG_ERROR("'get_framebuffer_size' failed: no window created");
+        LOG_ERROR("'window_get_framebuffer_size' failed: no window created");
         return;
     }
     glfwGetFramebufferSize(g_window, width, height);

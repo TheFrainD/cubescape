@@ -21,24 +21,24 @@
     vertices[chunk->vertex_count + 4] = v; \
     chunk->vertex_count += VERTEX_SIZE;
 
-chunk_t *create_chunk(int x, int y, tilemap_t *tilemap) {
+chunk_t *chunk_create(int x, int y, tilemap_t *tilemap) {
     chunk_t *chunk = malloc(sizeof(chunk_t));
     chunk->x = x;
     chunk->y = y;
     chunk->tilemap = tilemap;
     chunk->blocks = malloc(CHUNK_VOLUME * sizeof(block_id_t));
-    chunk->vertex_array = create_vertex_array();
-    chunk->vertex_buffer = create_buffer(CHUNK_VOLUME * VERTEX_SIZE * 36 * sizeof(float), NULL, BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
-    chunk->index_buffer = create_buffer(CHUNK_VOLUME * 36 * sizeof(int), NULL, BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
+    chunk->vertex_array = vertex_array_create();
+    chunk->vertex_buffer = buffer_create(CHUNK_VOLUME * VERTEX_SIZE * 36 * sizeof(float), NULL, BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
+    chunk->index_buffer = buffer_create(CHUNK_VOLUME * 36 * sizeof(int), NULL, BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
 
-    bind_vertex_array(chunk->vertex_array);
-    bind_buffer(chunk->vertex_buffer, BUFFER_TARGET_ARRAY_BUFFER);
+    vertex_array_bind(chunk->vertex_array);
+    buffer_bind(chunk->vertex_buffer, BUFFER_TARGET_ARRAY_BUFFER);
 
     vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, 5 * sizeof(float), (void*)0);
     vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-    unbind_buffer(BUFFER_TARGET_ARRAY_BUFFER);
-    unbind_vertex_array();
+    buffer_unbind(BUFFER_TARGET_ARRAY_BUFFER);
+    vertex_array_unbind();
 
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
@@ -63,7 +63,7 @@ chunk_t *create_chunk(int x, int y, tilemap_t *tilemap) {
     return chunk;
 }
 
-block_id_t get_block(chunk_t *chunk, int x, int y, int z) {
+block_id_t chunk_get_block(chunk_t *chunk, int x, int y, int z) {
     if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_HEIGHT || z < 0 || z >= CHUNK_SIZE) {
         return BLOCK_ID_AIR;
     }
@@ -87,7 +87,7 @@ void chunk_generate_mesh(chunk_t *chunk) {
 
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         // Don't render transparent blocks
-        if (!is_block_opaque(chunk->blocks[i])) {
+        if (!block_is_opaque(chunk->blocks[i])) {
             continue;
         }
 
@@ -96,11 +96,11 @@ void chunk_generate_mesh(chunk_t *chunk) {
         int z = i / (CHUNK_SIZE * CHUNK_HEIGHT);
 
         block_id_t block = chunk->blocks[i];
-        block_tiles_t tiles = get_block_tiles(block);
+        block_tiles_t tiles = block_get_tiles(block);
         int row_size = chunk->tilemap->map_size / chunk->tilemap->tile_size;
 
         // Top face
-        if (!is_block_opaque(get_block(chunk, x, y + 1, z))) {
+        if (!block_is_opaque(chunk_get_block(chunk, x, y + 1, z))) {
             tile_id_t tile_id = tiles.up;
 
             float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
@@ -124,7 +124,7 @@ void chunk_generate_mesh(chunk_t *chunk) {
         }
 
         // Bottom face
-        if (!is_block_opaque(get_block(chunk, x, y - 1, z))) {
+        if (!block_is_opaque(chunk_get_block(chunk, x, y - 1, z))) {
             tile_id_t tile_id = tiles.bottom;
 
             float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
@@ -148,7 +148,7 @@ void chunk_generate_mesh(chunk_t *chunk) {
         }
 
         // Front face
-        if (!is_block_opaque(get_block(chunk, x, y, z + 1))) {
+        if (!block_is_opaque(chunk_get_block(chunk, x, y, z + 1))) {
             tile_id_t tile_id = tiles.front;
 
             float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
@@ -172,7 +172,7 @@ void chunk_generate_mesh(chunk_t *chunk) {
         }
 
         // Back face
-        if (!is_block_opaque(get_block(chunk, x, y, z - 1))) {
+        if (!block_is_opaque(chunk_get_block(chunk, x, y, z - 1))) {
             tile_id_t tile_id = tiles.back;
 
             float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
@@ -196,7 +196,7 @@ void chunk_generate_mesh(chunk_t *chunk) {
         }
 
         // Left face
-        if (!is_block_opaque(get_block(chunk, x - 1, y, z))) {
+        if (!block_is_opaque(chunk_get_block(chunk, x - 1, y, z))) {
             tile_id_t tile_id = tiles.left;
 
             float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
@@ -220,7 +220,7 @@ void chunk_generate_mesh(chunk_t *chunk) {
         }
 
         // Right face
-        if (!is_block_opaque(get_block(chunk, x + 1, y, z))) {
+        if (!block_is_opaque(chunk_get_block(chunk, x + 1, y, z))) {
             tile_id_t tile_id = tiles.right;
 
             float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
@@ -254,16 +254,16 @@ void chunk_generate_mesh(chunk_t *chunk) {
 }
 
 void chunk_render(chunk_t *chunk, shader_program_t *shader_program) {
-    use_shader_program(shader_program);
-    bind_vertex_array(chunk->vertex_array);
-    bind_buffer(chunk->index_buffer, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
+    shader_program_use(shader_program);
+    vertex_array_bind(chunk->vertex_array);
+    buffer_bind(chunk->index_buffer, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
     glDrawElements(GL_TRIANGLES, chunk->vertex_count / VERTEX_SIZE * 6, GL_UNSIGNED_INT, 0);
-    unbind_buffer(BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
+    buffer_unbind(BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
 }
 
-void destroy_chunk(chunk_t *chunk) {
-    destroy_buffer(&chunk->vertex_buffer);
-    destroy_vertex_array(&chunk->vertex_array);
+void chunk_destroy(chunk_t *chunk) {
+    buffer_destroy(&chunk->vertex_buffer);
+    vertex_array_destroy(&chunk->vertex_array);
     free(chunk->blocks);
     free(chunk);
 }

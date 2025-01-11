@@ -19,7 +19,7 @@ const char* buffer_target_to_string(buffer_target_t target) {
     }
 }
 
-uint32_t create_buffer(size_t size, const void *data, buffer_usage_t usage, buffer_target_t target) {
+uint32_t buffer_create(size_t size, const void *data, buffer_usage_t usage, buffer_target_t target) {
     uint32_t buffer;
 
     glGenBuffers(1, &buffer);
@@ -31,41 +31,41 @@ uint32_t create_buffer(size_t size, const void *data, buffer_usage_t usage, buff
     return buffer;
 }
 
-void destroy_buffer(uint32_t *buffer) {
+void buffer_destroy(uint32_t *buffer) {
     LOG_TRACE("Deleting buffer with ID: %d", *buffer);
     glDeleteBuffers(1, buffer);
     g_buffer_target_map[*buffer] = 0;
 }
 
-void bind_buffer(uint32_t buffer, buffer_target_t target) {
+void buffer_bind(uint32_t buffer, buffer_target_t target) {
     glBindBuffer(target, buffer);
     g_buffer_target_map[buffer] = target;
 }
 
-void bind_buffer_range(uint32_t buffer, buffer_target_t target, const uint32_t binding_point, size_t size) {
+void buffer_bind_range(uint32_t buffer, buffer_target_t target, const uint32_t binding_point, size_t size) {
     glBindBufferRange(target, binding_point, buffer, 0, size);
     g_buffer_target_map[buffer] = target;
 }
 
-void bind_buffer_base(uint32_t buffer, buffer_target_t target, const uint32_t binding_point) {
+void buffer_bind_base(uint32_t buffer, buffer_target_t target, const uint32_t binding_point) {
     glBindBufferBase(target, binding_point, buffer);
     g_buffer_target_map[buffer] = target;
 }
 
-void unbind_buffer(buffer_target_t target) {
+void buffer_unbind(buffer_target_t target) {
     glBindBuffer(target, 0);
 }
 
 void buffer_data(uint32_t buffer, size_t size, const void *data, buffer_usage_t usage) {
     buffer_target_t target = g_buffer_target_map[buffer];
-    bind_buffer(buffer, target);
+    buffer_bind(buffer, target);
     glBufferData(target, size, data, usage);
-    unbind_buffer(target);
+    buffer_unbind(target);
 }
 
 void buffer_sub_data(uint32_t buffer, size_t offset, size_t size, const void *data) {
     buffer_target_t target = g_buffer_target_map[buffer];
-    bind_buffer(buffer, target);
+    buffer_bind(buffer, target);
     glBufferSubData(target, offset, size, data);
-    unbind_buffer(target);
+    buffer_unbind(target);
 }

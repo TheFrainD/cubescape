@@ -22,7 +22,7 @@ static void print_info_log(uint32_t shader, const char *message) {
     free(info_log);
 }
 
-uint32_t create_shader(shader_type_t type, const char *source) {
+uint32_t shader_create(shader_type_t type, const char *source) {
     uint32_t shader = glCreateShader(type);
 
     glShaderSource(shader, 1, &source, NULL);
@@ -41,7 +41,7 @@ uint32_t create_shader(shader_type_t type, const char *source) {
     return shader;
 }
 
-void destroy_shader(uint32_t *shader) {
+void shader_destroy(uint32_t *shader) {
     LOG_TRACE("Deleting shader with ID: %d", *shader);
     glDeleteShader(*shader);
 }

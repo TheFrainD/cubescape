@@ -4,19 +4,19 @@
 
 #include "core/log.h"
 
-uint32_t create_texture() {
+uint32_t texture_create() {
     uint32_t texture;
     glGenTextures(1, &texture);
     LOG_TRACE("Created texture with ID: %d", texture);
     return texture;
 }
 
-void bind_texture(uint32_t texture, uint32_t slot) {
+void texture_bind(uint32_t texture, uint32_t slot) {
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_2D, texture);
 }
 
-void unbind_texture(uint32_t slot) {
+void texture_unbind(uint32_t slot) {
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -74,7 +74,7 @@ void texture_set_anisotropy(uint32_t texture, float anisotropy) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void destroy_texture(uint32_t *texture) {
+void texture_destroy(uint32_t *texture) {
     LOG_TRACE("Deleting texture with ID: %d", *texture);
     glDeleteTextures(1, texture);
 }

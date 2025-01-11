@@ -4,23 +4,23 @@
 
 #include "core/log.h"
 
-uint32_t create_vertex_array() {
+uint32_t vertex_array_create() {
     uint32_t vertex_array;
     glGenVertexArrays(1, &vertex_array);
     LOG_TRACE("Created vertex array with ID: %d", vertex_array);
     return vertex_array;
 }
 
-void destroy_vertex_array(uint32_t *vertex_array) {
+void vertex_array_destroy(uint32_t *vertex_array) {
     LOG_TRACE("Deleting vertex array with ID: %d", *vertex_array);
     glDeleteVertexArrays(1, vertex_array);
 }
 
-void bind_vertex_array(uint32_t vertex_array) {
+void vertex_array_bind(uint32_t vertex_array) {
     glBindVertexArray(vertex_array);
 }
 
-void unbind_vertex_array() {
+void vertex_array_unbind() {
     glBindVertexArray(0);
 }
 
