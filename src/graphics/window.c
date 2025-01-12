@@ -8,13 +8,22 @@
 
 #include "core/log.h"
 
+#define CALLBACK_ARRAY_SIZE 64
+
 GLFWwindow* g_window = NULL;
 
 static float last_frame = 0.0f;
 static float delta_time = 0.0f;
 
+static window_framebuffersize_callback_t framebuffersize_callbacks[CALLBACK_ARRAY_SIZE];
+static size_t framebuffersize_callback_count = 0;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+
+    for (size_t i = 0; i < framebuffersize_callback_count; i++) {
+        framebuffersize_callbacks[i]((ivec2s){{width, height}});
+    }
 }
 
 void glfw_error_callback(int error, const char* description) {
@@ -87,7 +96,7 @@ void window_init(window_settings_t settings) {
     glfwGetFramebufferSize(g_window, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
-    LOG_INFO("Window created: %s (%dx%d)", settings.title, settings.width, settings.height);
+    LOG_INFO("Window initialized: %s (%dx%d)", settings.title, settings.width, settings.height);
     const GLubyte* renderer = glGetString(GL_RENDERER);
     const GLubyte* version = glGetString(GL_VERSION);
     LOG_INFO("Renderer: %s", renderer);
@@ -101,7 +110,7 @@ void window_deinit() {
         glfwTerminate();
         g_window = NULL;
 
-        LOG_INFO("Window destroyed");
+        LOG_INFO("Window deinitialized");
     }
 }
 
@@ -131,10 +140,38 @@ float window_get_delta_time() {
     return delta_time;
 }
 
-void window_get_framebuffer_size(int *width, int* height) {
+ivec2s window_get_framebuffer_size() {
     if (!g_window) {
         LOG_ERROR("'window_get_framebuffer_size' failed: no window created");
+        return (ivec2s){{0, 0}};
+    }
+
+    ivec2s size = {0};
+    glfwGetFramebufferSize(g_window, &size.x, &size.y);
+    return size;
+}
+
+ivec2s window_get_size() {
+    if (!g_window) {
+        LOG_ERROR("'window_get_size' failed: no window created");
+        return (ivec2s){{0, 0}};
+    }
+
+    ivec2s size = {0};
+    glfwGetWindowSize(g_window, &size.x, &size.y);
+    return size;
+}
+
+void window_set_size(ivec2s size) {
+    if (!g_window) {
+        LOG_ERROR("'window_set_size' failed: no window created");
         return;
     }
-    glfwGetFramebufferSize(g_window, width, height);
+    glfwSetWindowSize(g_window, size.x, size.y);
+}
+
+void window_add_framebuffersize_callback(window_framebuffersize_callback_t callback) {
+    if (framebuffersize_callback_count < CALLBACK_ARRAY_SIZE) {
+        framebuffersize_callbacks[framebuffersize_callback_count++] = callback;
+    }
 }

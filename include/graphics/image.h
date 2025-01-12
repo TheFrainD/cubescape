@@ -20,9 +20,9 @@ typedef struct {
  * This function reads an image from the specified file and returns an image_t object.
  * 
  * @param filename The path to the image file to be loaded.
- * @return image_t The loaded image.
+ * @return image_t* A pointer to the image_t object representing the loaded image.
  */
-image_t image_load(const char *filename);
+image_t *image_load(const char *filename);
 
 /**
  * @brief Frees the memory allocated for the given image_t object.
@@ -32,4 +32,4 @@ image_t image_load(const char *filename);
  * 
  * @param image A pointer to the image_t object whose data is to be freed.
  */
-void image_free(image_t image);
+void image_free(image_t *image);

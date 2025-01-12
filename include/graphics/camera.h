@@ -74,15 +74,6 @@ void camera_set_settings(camera_t *camera, camera_settings_t settings);
 camera_settings_t camera_get_settings(camera_t *camera);
 
 /**
- * @brief Gets the perspective projection matrix of the camera.
- * 
- * @param camera The camera to get the perspective projection matrix of.
- * 
- * @return mat4s The perspective projection matrix of the camera.
- */
-mat4s camera_get_perspective(camera_t *camera);
-
-/**
  * @brief Updates the view matrix of the camera based on the current mouse position.
  * 
  * @param camera The camera to update the view matrix of.

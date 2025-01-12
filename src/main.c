@@ -1,7 +1,5 @@
 #include <stdio.h>
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 
 #include "core/log.h"
@@ -17,10 +15,9 @@
 #include "graphics/image.h"
 #include "graphics/texture.h"
 #include "graphics/tilemap.h"
+#include "graphics/renderer.h"
 
 #include "world/chunk.h"
-
-#define EXECUTABLE_NAME "Cubescape"
 
 #define VERTEX_SHADER_PATH "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
@@ -36,13 +33,7 @@ void key_callback(key_code_t key) {
     }
 
     if (key == KEY_F1) {
-        static int wireframe = 0;
-        if (wireframe) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        }
-        wireframe = !wireframe;
+        renderer_get_state()->wireframe = !renderer_get_state()->wireframe;
     }
 }
 
@@ -120,92 +111,69 @@ int main(int argc, char **argv) {
     uint32_t fragment_shader = shader_create(SHADER_TYPE_FRAGMENT, fragment_shader_source);
     free(fragment_shader_source);
 
-    shader_program_t shader_program = shader_program_create();
-    shader_program_attach_shader(&shader_program, vertex_shader);
-    shader_program_attach_shader(&shader_program, fragment_shader);
-    shader_program_link(&shader_program);
+    shader_program_t *shader_program = shader_program_create();
+    shader_program_attach_shader(shader_program, vertex_shader);
+    shader_program_attach_shader(shader_program, fragment_shader);
+    shader_program_link(shader_program);
 
     shader_destroy(&vertex_shader);
     shader_destroy(&fragment_shader);
 
-    uint32_t uniform_buffer = buffer_create(sizeof(mat4) * 3, NULL, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
-    buffer_bind_base(uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0);
-    shader_program_bind_uniform_block(&shader_program, "Matrices", 0);
-
-    float max_anisotropy;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &max_anisotropy);
-    LOG_INFO("Max anisotropy: %.2f", max_anisotropy);
-
     tilemap_t tilemap = {0};
     tilemap_load("assets/tilemaps/default.tilemap", &tilemap);
 
-    image_t tilemap_image = image_load(tilemap.path);
+    image_t *tilemap_image = image_load(tilemap.path);
     uint32_t tilemap_texture = texture_create();
     texture_set_image(tilemap_texture, tilemap_image);
     texture_set_wrapping(tilemap_texture, TEXTURE_WRAPPING_REPEAT, TEXTURE_WRAPPING_REPEAT);
     texture_set_filtering(tilemap_texture, TEXTURE_FILTERING_NEAREST_MIPMAP_NEAREST, TEXTURE_FILTERING_NEAREST);
     texture_generate_mipmaps(tilemap_texture);
-    texture_set_anisotropy(tilemap_texture, max_anisotropy);
+    texture_set_anisotropy(tilemap_texture, renderer_get_state()->max_anisotropy);
     image_free(tilemap_image);
 
-    mat4s model = GLMS_MAT4_IDENTITY_INIT;
-    buffer_sub_data(uniform_buffer, 0, sizeof(mat4), &model);
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
-
-    chunk_t *chunk = chunk_create(0, 0, &tilemap);
-    chunk_generate_mesh(chunk);
-
     is_running = 1;
-
-    input_set_cursor_enabled(0);
-    input_add_key_pressed_callback(key_callback);
-    input_add_mouse_position_callback(mouse_callback);
 
     camera_settings_t camera_settings = {0};
     camera_settings.speed = 5.0f;
     camera_settings.sensitivity = 0.002f;
     camera_settings.fov = 45.0f;
-    camera = camera_create(camera_settings);
 
-    camera_set_position(camera, (vec3s){{ 0.0f, 68.0f, 3.0f }});
+    renderer_settings_t renderer_settings = {0};
+    renderer_settings.clear_color = (vec3s){{ 0.2f, 0.3f, 0.3f }};
+    renderer_settings.camera_settings = camera_settings;
+    renderer_init(renderer_settings);
 
-    mat4s projection = camera_get_perspective(camera);
-    buffer_sub_data(uniform_buffer, sizeof(mat4) * 2, sizeof(mat4), &projection);
+    camera = renderer_get_camera();
+    camera_set_position(camera, (vec3s){{ 10.0f, 68.0f, 10.0f }});
+
+    input_set_cursor_enabled(0);
+    input_add_key_pressed_callback(key_callback);
+    input_add_mouse_position_callback(mouse_callback);
+
+    chunk_t *chunk = chunk_create(0, 0, &tilemap);
+    chunk_generate_mesh(chunk, shader_program, tilemap_texture);
 
     while (is_running) {
         window_poll_events();
 
         update();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        renderer_begin_frame();
+           
+        renderer_draw_mesh(chunk->mesh, (vec3s){{ 0.0f, 0.0f, 0.0f }}, (vec3s){{ 0.0f, 0.0f, 0.0f }}, (vec3s){{ 1.0f, 1.0f, 1.0f }});
 
-        if (camera_view_changed(camera)) {
-            mat4s view = camera_get_view(camera);
-            buffer_sub_data(uniform_buffer, sizeof(mat4), sizeof(mat4), &view);
-            camera_view_reset(camera);
-        }
-
-        texture_bind(tilemap_texture, 0);
-        chunk_render(chunk, &shader_program);
-
-        window_swap_buffers();
+        renderer_end_frame();
         window_update_delta_time();
 
         is_running &= !window_should_close();
     }
 
-    camera_destroy(camera);
-    buffer_destroy(&uniform_buffer);
-    shader_program_destroy(&shader_program);
-    texture_destroy(&tilemap_texture);
     chunk_destroy(chunk);
+    shader_program_destroy(shader_program);
+    texture_destroy(&tilemap_texture);
     tilemap_free(&tilemap);
 
+    renderer_deinit();
     window_deinit();
 
     fclose(log_fp);

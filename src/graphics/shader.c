@@ -42,6 +42,11 @@ uint32_t shader_create(shader_type_t type, const char *source) {
 }
 
 void shader_destroy(uint32_t *shader) {
+    if (*shader == 0) {
+        LOG_ERROR("'shader_destroy' called with 0 shader");
+        return;
+    }
+
     LOG_TRACE("Deleting shader with ID: %d", *shader);
     glDeleteShader(*shader);
 }

@@ -60,7 +60,7 @@ void texture_set_data(uint32_t texture, const uint8_t *data, int width, int heig
  * @param texture The ID of the texture.
  * @param image The image to set for the texture.
  */
-void texture_set_image(uint32_t texture, image_t image);
+void texture_set_image(uint32_t texture, image_t *image);
 
 /**
  * @brief Sets the wrapping mode for a texture.

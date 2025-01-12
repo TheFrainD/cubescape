@@ -6,9 +6,6 @@
 #include "graphics/window.h"
 #include "graphics/buffer.h"
 
-#define NEAR 0.1f
-#define FAR 100.0f
-
 struct camera {
     vec3s position;
 
@@ -39,6 +36,11 @@ static void update_view(camera_t *camera) {
 }
 
 void camera_update_view(camera_t *camera, vec2s mouse_position) {
+    if (camera == NULL) {
+        LOG_ERROR("'camera_update_view' called with NULL camera");
+        return;
+    }
+
     static vec2s last_mouse_position = GLMS_VEC2_ZERO_INIT;
     static int first_mouse = 1;
 
@@ -69,6 +71,11 @@ void camera_update_view(camera_t *camera, vec2s mouse_position) {
 }
 
 void camera_destroy(camera_t *camera) {
+    if (camera == NULL) {
+        LOG_ERROR("'camera_destroy' called with NULL camera");
+        return;
+    }
+    
     free(camera);
 }
 
@@ -125,17 +132,6 @@ void camera_set_settings(camera_t *camera, camera_settings_t settings) {
         return;
     }
     camera->settings = settings;
-}
-
-mat4s camera_get_perspective(camera_t *camera) {
-    if (camera == NULL) {
-        LOG_ERROR("'camera_get_perspective' called with NULL camera");
-        return GLMS_MAT4_ZERO;
-    }
-
-    int width, height;
-    window_get_framebuffer_size(&width, &height);
-    return glms_perspective(RAD(camera->settings.fov), (float)width / (float)height, NEAR, FAR);
 }
 
 mat4s camera_get_view(camera_t *camera) {

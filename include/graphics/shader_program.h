@@ -4,17 +4,14 @@
 
 #define UNIFROM_BLOCK_INDEX_SIZE 64
 
-typedef struct {
-    uint32_t id;
-    char *uniform_block_indeces[UNIFROM_BLOCK_INDEX_SIZE];
-} shader_program_t;
+typedef struct shader_program shader_program_t;
 
 /**
  * @brief Creates a new shader program.
  * 
- * @return shader_program_t The created shader program.
+ * @return shader_program_t* A pointer to the newly created shader program.
  */
-shader_program_t shader_program_create();
+shader_program_t *shader_program_create();
 
 /**
  * @brief Destroys the given shader program.

@@ -1,10 +1,14 @@
 #pragma once
 
+#include <cglm/struct.h>
+
 typedef struct {
     int width;
     int height;
     const char* title;
 } window_settings_t;
+
+typedef void(*window_framebuffersize_callback_t)(ivec2s size);
 
 /**
  * @brief Initializes the window with the given settings.
@@ -35,18 +39,23 @@ window_settings_t window_get_settings();
 /**
  * @brief Retrieves the size of the framebuffer.
  * 
- * @param width Pointer to an integer to store the width of the framebuffer.
- * @param height Pointer to an integer to store the height of the framebuffer.
+ * @return ivec2s The size of the framebuffer.
  */
-void window_get_framebuffer_size(int *width, int* height);
+ivec2s window_get_framebuffer_size();
 
 /**
  * @brief Sets the size of the window.
  * 
- * @param width The new width of the window.
- * @param height The new height of the window.
+ * @param size The new size of the window.
  */
-void window_set_size(int width, int height);
+void window_set_size(ivec2s size);
+
+/**
+ * @brief Retrieves the size of the window.
+ * 
+ * @return ivec2s The size of the window.
+ */
+ivec2s window_get_size();
 
 /**
  * @brief Checks if the window should close.
@@ -83,3 +92,10 @@ void window_update_delta_time();
  * @return float The delta time between frames.
  */
 float window_get_delta_time();
+
+/**
+ * @brief Adds a callback function for framebuffer size changes.
+ * 
+ * @param callback The callback function to be called when the framebuffer size changes.
+ */
+void window_add_framebuffersize_callback(window_framebuffersize_callback_t callback);

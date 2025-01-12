@@ -4,8 +4,8 @@
 #include <stddef.h>
 
 #include "world/block.h"
-#include "graphics/shader_program.h"
 #include "graphics/tilemap.h"
+#include "graphics/mesh.h"
 
 #define CHUNK_SIZE 16
 #define CHUNK_HEIGHT 256
@@ -15,10 +15,7 @@ typedef struct {
     int x;
     int y;
     block_id_t *blocks;
-    uint32_t vertex_array;
-    uint32_t vertex_buffer;
-    uint32_t index_buffer;
-    size_t vertex_count;
+    mesh_t *mesh;
     tilemap_t *tilemap;
 } chunk_t;
 
@@ -59,7 +56,7 @@ void chunk_set_block(chunk_t *chunk, int x, int y, int z, block_id_t block);
  * 
  * @param chunk The chunk to generate the mesh for.
  */
-void chunk_generate_mesh(chunk_t *chunk);
+void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint32_t texture);
 
 /**
  * @brief Renders the chunk.

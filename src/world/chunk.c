@@ -8,37 +8,23 @@
 #include "graphics/buffer.h"
 #include "graphics/vertex_array.h"
 
-#define VERTEX_POSITION_SIZE 3
-#define VERTEX_TEXTURE_COORD_SIZE 2
-
-#define VERTEX_SIZE (VERTEX_POSITION_SIZE + VERTEX_TEXTURE_COORD_SIZE)
-
-#define ADD_VERTEX(vertices, x, y, z, u, v) \
-    vertices[chunk->vertex_count + 0] = x; \
-    vertices[chunk->vertex_count + 1] = y; \
-    vertices[chunk->vertex_count + 2] = z; \
-    vertices[chunk->vertex_count + 3] = u; \
-    vertices[chunk->vertex_count + 4] = v; \
-    chunk->vertex_count += VERTEX_SIZE;
+#define ADD_VERTEX(vertices, x, y, z, u, v) do { \
+    vertices[vertex_count] = (vertex_t){{{x, y, z}}, {{u, v}}}; \
+    ++vertex_count; \
+} while(0)
 
 chunk_t *chunk_create(int x, int y, tilemap_t *tilemap) {
+    if (tilemap == NULL) {
+        LOG_ERROR("'chunk_create' called with NULL tilemap");
+        return NULL;
+    }
+
     chunk_t *chunk = malloc(sizeof(chunk_t));
     chunk->x = x;
     chunk->y = y;
     chunk->tilemap = tilemap;
     chunk->blocks = malloc(CHUNK_VOLUME * sizeof(block_id_t));
-    chunk->vertex_array = vertex_array_create();
-    chunk->vertex_buffer = buffer_create(CHUNK_VOLUME * VERTEX_SIZE * 36 * sizeof(float), NULL, BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
-    chunk->index_buffer = buffer_create(CHUNK_VOLUME * 36 * sizeof(int), NULL, BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
-
-    vertex_array_bind(chunk->vertex_array);
-    buffer_bind(chunk->vertex_buffer, BUFFER_TARGET_ARRAY_BUFFER);
-
-    vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, 5 * sizeof(float), (void*)0);
-    vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-
-    buffer_unbind(BUFFER_TARGET_ARRAY_BUFFER);
-    vertex_array_unbind();
+    chunk->mesh = mesh_create(NULL, 0, NULL, 0, NULL, -1);
 
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
@@ -64,6 +50,11 @@ chunk_t *chunk_create(int x, int y, tilemap_t *tilemap) {
 }
 
 block_id_t chunk_get_block(chunk_t *chunk, int x, int y, int z) {
+    if (chunk == NULL) {
+        LOG_ERROR("'chunk_get_block' called with NULL chunk");
+        return BLOCK_ID_AIR;
+    }
+
     if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_HEIGHT || z < 0 || z >= CHUNK_SIZE) {
         return BLOCK_ID_AIR;
     }
@@ -72,6 +63,11 @@ block_id_t chunk_get_block(chunk_t *chunk, int x, int y, int z) {
 }
 
 void chunk_set_block(chunk_t *chunk, int x, int y, int z, block_id_t block) {
+    if (chunk == NULL) {
+        LOG_ERROR("'chunk_set_block' called with NULL chunk");
+        return;
+    }
+
     if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_HEIGHT || z < 0 || z >= CHUNK_SIZE) {
         return;
     }
@@ -79,11 +75,21 @@ void chunk_set_block(chunk_t *chunk, int x, int y, int z, block_id_t block) {
     chunk->blocks[x + y * CHUNK_SIZE + z * (CHUNK_SIZE * CHUNK_HEIGHT)] = block;
 }
 
-void chunk_generate_mesh(chunk_t *chunk) {
-    float *vertices = (float *)malloc(CHUNK_VOLUME * VERTEX_SIZE * 36 * sizeof(float));
-    int *indices = (int *)malloc(CHUNK_VOLUME * 36 * sizeof(int));
-    chunk->vertex_count = 0;
-    int index_count = 0;
+void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint32_t texture) {
+    if (chunk == NULL) {
+        LOG_ERROR("'chunk_generate_mesh' called with NULL chunk");
+        return;
+    }
+
+    if (shader_program == NULL) {
+        LOG_ERROR("'chunk_generate_mesh' called with NULL shader program");
+        return;
+    }
+
+    vertex_t *vertices = (vertex_t *)malloc(CHUNK_VOLUME * 36 * sizeof(vertex_t));
+    uint32_t *indices = (uint32_t *)malloc(CHUNK_VOLUME * 36 * sizeof(uint32_t));
+    size_t vertex_count = 0;
+    size_t index_count = 0;
 
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         // Don't render transparent blocks
@@ -109,18 +115,17 @@ void chunk_generate_mesh(chunk_t *chunk) {
             float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
             float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
 
-            int start_index = chunk->vertex_count / VERTEX_SIZE;
             ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, u_min, v_max);
             ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, u_max, v_max);
             ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, u_max, v_min);
             ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, u_min, v_min);
 
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 1;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index + 3;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 1;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count + 3;
         }
 
         // Bottom face
@@ -133,18 +138,17 @@ void chunk_generate_mesh(chunk_t *chunk) {
             float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
             float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
 
-            int start_index = chunk->vertex_count / VERTEX_SIZE;
             ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, u_min, v_max);
             ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, u_max, v_max);
             ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, u_max, v_min);
             ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, u_min, v_min);
 
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 1;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index + 3;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 1;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count + 3;
         }
 
         // Front face
@@ -157,18 +161,17 @@ void chunk_generate_mesh(chunk_t *chunk) {
             float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
             float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
 
-            int start_index = chunk->vertex_count / VERTEX_SIZE;
             ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, u_min, v_max);
             ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, u_max, v_max);
             ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, u_max, v_min);
             ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, u_min, v_min);
 
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 1;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index + 3;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 1;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count + 3;
         }
 
         // Back face
@@ -181,18 +184,17 @@ void chunk_generate_mesh(chunk_t *chunk) {
             float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
             float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
 
-            int start_index = chunk->vertex_count / VERTEX_SIZE;
             ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, u_min, v_min);
             ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, u_max, v_min);
             ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, u_max, v_max);
             ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, u_min, v_max);
 
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 1;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index + 3;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 1;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count + 3;
         }
 
         // Left face
@@ -205,18 +207,17 @@ void chunk_generate_mesh(chunk_t *chunk) {
             float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
             float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
 
-            int start_index = chunk->vertex_count / VERTEX_SIZE;
             ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, u_min, v_max);
             ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, u_max, v_max);
             ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, u_max, v_min);
             ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, u_min, v_min);
 
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 1;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index + 3;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 1;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count + 3;
         }
 
         // Right face
@@ -229,41 +230,39 @@ void chunk_generate_mesh(chunk_t *chunk) {
             float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
             float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
 
-            int start_index = chunk->vertex_count / VERTEX_SIZE;
             ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, u_min, v_max);
             ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, u_max, v_max);
             ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, u_max, v_min);
             ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, u_min, v_min);
 
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 1;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index;
-            indices[index_count++] = start_index + 2;
-            indices[index_count++] = start_index + 3;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 1;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count;
+            indices[index_count++] = vertex_count + 2;
+            indices[index_count++] = vertex_count + 3;
         }
     }
 
-    vertices = (float *)realloc(vertices, chunk->vertex_count * sizeof(float));
-    indices = (int *)realloc(indices, index_count * sizeof(int));
-    buffer_sub_data(chunk->vertex_buffer, 0, chunk->vertex_count * sizeof(float), vertices);
-    buffer_sub_data(chunk->index_buffer, 0, index_count * sizeof(int), indices);
+    vertices = (vertex_t *)realloc(vertices, vertex_count * sizeof(vertex_t));
+    indices = (uint32_t *)realloc(indices, index_count * sizeof(uint32_t));
+    
+    mesh_set_vertices(chunk->mesh, vertices, vertex_count);
+    mesh_set_indices(chunk->mesh, indices, index_count);
+    chunk->mesh->texture = texture;
+    chunk->mesh->shader_program = shader_program;
 
     free(vertices);
     free(indices);
 }
 
-void chunk_render(chunk_t *chunk, shader_program_t *shader_program) {
-    shader_program_use(shader_program);
-    vertex_array_bind(chunk->vertex_array);
-    buffer_bind(chunk->index_buffer, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
-    glDrawElements(GL_TRIANGLES, chunk->vertex_count / VERTEX_SIZE * 6, GL_UNSIGNED_INT, 0);
-    buffer_unbind(BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
-}
-
 void chunk_destroy(chunk_t *chunk) {
-    buffer_destroy(&chunk->vertex_buffer);
-    vertex_array_destroy(&chunk->vertex_array);
+    if (chunk == NULL) {
+        LOG_ERROR("'chunk_destroy' called with NULL chunk");
+        return;
+    }
+
+    mesh_destroy(chunk->mesh);
     free(chunk->blocks);
     free(chunk);
 }
