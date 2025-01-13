@@ -27,7 +27,7 @@ static void set_perspective(ivec2s size) {
         RAD(camera_get_settings(renderer.state.camera).fov), 
         (float)size.x / (float)size.y, 
         NEAR, FAR);
-    buffer_sub_data(renderer.uniform_buffer, sizeof(mat4) * 2, sizeof(mat4), &projection);
+    buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, sizeof(mat4) * 2, sizeof(mat4), &projection);
 }
 
 void renderer_init(renderer_settings_t settings) {
@@ -75,7 +75,7 @@ void renderer_begin_frame() {
 
     if (camera_view_changed(renderer.state.camera)) {
         mat4s view = camera_get_view(renderer.state.camera);
-        buffer_sub_data(renderer.uniform_buffer, sizeof(mat4), sizeof(mat4), &view);
+        buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, sizeof(mat4), sizeof(mat4), &view);
         camera_view_reset(renderer.state.camera);
     }
 
@@ -105,7 +105,7 @@ void renderer_draw_mesh(mesh_t *mesh, vec3s position, vec3s rotation, vec3s scal
     model = glms_rotate(model, rotation.z, (vec3s){{0.0f, 0.0f, 1.0f}});
     model = glms_scale(model, scale);
 
-    buffer_sub_data(renderer.uniform_buffer, 0, sizeof(mat4), &model);
+    buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0, sizeof(mat4), &model);
 
     glDrawElements(GL_TRIANGLES, mesh_get_index_count(mesh), GL_UNSIGNED_INT, 0);
 

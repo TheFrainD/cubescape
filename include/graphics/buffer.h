@@ -81,7 +81,7 @@ void buffer_unbind(buffer_target_t target);
  * @param data A pointer to the data to update the buffer with.
  * @param usage The intended usage pattern of the buffer.
  */
-void buffer_data(uint32_t buffer, size_t size, const void *data, buffer_usage_t usage);
+void buffer_data(uint32_t buffer, buffer_target_t target, size_t size, const void *data, buffer_usage_t usage);
 
 /**
  * @brief Updates a sub-region of the specified buffer.
@@ -91,4 +91,4 @@ void buffer_data(uint32_t buffer, size_t size, const void *data, buffer_usage_t 
  * @param size The size of the data to update.
  * @param data A pointer to the data to update the buffer with.
  */
-void buffer_sub_data(uint32_t buffer, size_t offset, size_t size, const void *data);
+void buffer_sub_data(uint32_t buffer, buffer_target_t target, size_t offset, size_t size, const void *data);

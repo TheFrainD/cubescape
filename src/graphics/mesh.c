@@ -59,9 +59,11 @@ void mesh_set_vertices(mesh_t *mesh, vertex_t *vertices, size_t vertex_count) {
     }
 
     if (vertex_count != mesh->private_data->vertex_count) {
-        buffer_data(mesh->private_data->vertex_buffer, vertex_count * sizeof(vertex_t), vertices, BUFFER_USAGE_DYNAMIC_DRAW);
+        buffer_data(mesh->private_data->vertex_buffer, BUFFER_TARGET_ARRAY_BUFFER, 
+        vertex_count * sizeof(vertex_t), vertices, BUFFER_USAGE_DYNAMIC_DRAW);
     } else { 
-        buffer_sub_data(mesh->private_data->vertex_buffer, 0, vertex_count * sizeof(vertex_t), vertices);
+        buffer_sub_data(mesh->private_data->vertex_buffer, BUFFER_TARGET_ARRAY_BUFFER, 
+        0, vertex_count * sizeof(vertex_t), vertices);
     }
 
     mesh->private_data->vertex_count = vertex_count;
@@ -80,9 +82,11 @@ void mesh_set_indices(mesh_t *mesh, uint32_t *indices, size_t index_count) {
     }
 
     if (index_count != mesh->private_data->index_count) {
-        buffer_data(mesh->private_data->index_buffer, index_count * sizeof(uint32_t), indices, BUFFER_USAGE_DYNAMIC_DRAW);
+        buffer_data(mesh->private_data->index_buffer, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER,
+        index_count * sizeof(uint32_t), indices, BUFFER_USAGE_DYNAMIC_DRAW);
     } else {
-        buffer_sub_data(mesh->private_data->index_buffer, 0, index_count * sizeof(uint32_t), indices);
+        buffer_sub_data(mesh->private_data->index_buffer, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER,
+        0, index_count * sizeof(uint32_t), indices);
     }
 
     mesh->private_data->index_count = index_count;

@@ -18,6 +18,7 @@
 #include "graphics/renderer.h"
 
 #include "world/chunk.h"
+#include "world/world.h"
 
 #define VERTEX_SHADER_PATH "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
@@ -63,7 +64,7 @@ void update() {
 }
 
 int main(int argc, char **argv) {
-    logger_set_level(LOG_LEVEL_TRACE);
+    logger_set_level(LOG_LEVEL_INFO);
 
     // Log to file
     FILE *log_fp = fopen(LOG_FILE, "w");
@@ -150,8 +151,8 @@ int main(int argc, char **argv) {
     input_add_key_pressed_callback(key_callback);
     input_add_mouse_position_callback(mouse_callback);
 
-    chunk_t *chunk = chunk_create(0, 0, &tilemap);
-    chunk_generate_mesh(chunk, shader_program, tilemap_texture);
+    world_t *world = world_create(&tilemap, tilemap_texture, shader_program);
+    int draw_distance = 6;
 
     while (is_running) {
         window_poll_events();
@@ -160,7 +161,14 @@ int main(int argc, char **argv) {
 
         renderer_begin_frame();
            
-        renderer_draw_mesh(chunk->mesh, (vec3s){{ 0.0f, 0.0f, 0.0f }}, (vec3s){{ 0.0f, 0.0f, 0.0f }}, (vec3s){{ 1.0f, 1.0f, 1.0f }});
+        for (size_t i = 0; i < WORLD_SIZE * WORLD_SIZE; ++i) {
+            chunk_t *chunk = world->chunks[i];
+            vec3s position = (vec3s){{ chunk->x * CHUNK_SIZE, 0.0f, chunk->y * CHUNK_SIZE }};
+            float distance = glms_vec3_distance(camera_get_position(camera), position);
+            if (distance < draw_distance * CHUNK_SIZE) {
+                renderer_draw_mesh(chunk->mesh, position, GLMS_VEC3_ZERO, GLMS_VEC3_ONE);
+            }
+        }
 
         renderer_end_frame();
         window_update_delta_time();
@@ -168,7 +176,7 @@ int main(int argc, char **argv) {
         is_running &= !window_should_close();
     }
 
-    chunk_destroy(chunk);
+    world_destroy(world);
     shader_program_destroy(shader_program);
     texture_destroy(&tilemap_texture);
     tilemap_free(&tilemap);
