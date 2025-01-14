@@ -19,6 +19,7 @@
 
 #include "world/chunk.h"
 #include "world/world.h"
+#include "world/world_renderer.h"
 
 #define VERTEX_SHADER_PATH "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
@@ -114,6 +115,11 @@ int main(int argc, char **argv) {
     free(fragment_shader_source);
 
     shader_program_t *shader_program = shader_program_create();
+    if (!shader_program) {
+        LOG_FATAL("Failed to create shader program");
+        return 1;
+    }
+
     shader_program_attach_shader(shader_program, vertex_shader);
     shader_program_attach_shader(shader_program, fragment_shader);
     shader_program_link(shader_program);
@@ -121,17 +127,11 @@ int main(int argc, char **argv) {
     shader_destroy(&vertex_shader);
     shader_destroy(&fragment_shader);
 
-    tilemap_t tilemap = {0};
-    tilemap_load("assets/tilemaps/default.tilemap", &tilemap);
-
-    image_t *tilemap_image = image_load(tilemap.path);
-    uint32_t tilemap_texture = texture_create();
-    texture_set_image(tilemap_texture, tilemap_image);
-    texture_set_wrapping(tilemap_texture, TEXTURE_WRAPPING_REPEAT, TEXTURE_WRAPPING_REPEAT);
-    texture_set_filtering(tilemap_texture, TEXTURE_FILTERING_NEAREST, TEXTURE_FILTERING_NEAREST);
-    image_free(tilemap_image);
-
-    is_running = 1;
+    tilemap_t *tilemap = tilemap_load("assets/tilemaps/default.tilemap");
+    if (!tilemap) {
+        LOG_FATAL("Failed to load tilemap");
+        return 1;
+    }
 
     camera_settings_t camera_settings = {0};
     camera_settings.speed = 5.0f;
@@ -151,37 +151,47 @@ int main(int argc, char **argv) {
     input_set_cursor_enabled(0);
     input_add_key_pressed_callback(key_callback);
     input_add_mouse_position_callback(mouse_callback);
+    
+    world_renderer_settings_t world_renderer_settings = {0};
+    world_renderer_settings.tilemap = tilemap;
+    world_renderer_settings.block_shader = shader_program;
+    world_renderer_settings.draw_distance = 2;
+    world_renderer_t *world_renderer = world_renderer_create(world_renderer_settings);
+    if (!world_renderer) {
+        LOG_FATAL("Failed to create world renderer");
+        return 1;
+    }
 
-    world_t *world = world_create(&tilemap, tilemap_texture, shader_program);
-    int draw_distance = 6;
+    world_settings_t world_settings = {0};
+    world_settings.size = 16;
+    world_t *world = world_create(world_settings);
+    if (!world) {
+        LOG_FATAL("Failed to create world");
+        return 1;
+    }
+
+    is_running = 1;
 
     while (is_running) {
-        window_poll_events();
+        is_running &= !window_should_close();
 
+        window_poll_events();
+        window_update_delta_time();
         update();
 
+        world_renderer_prepare(world_renderer, world);
+        
         renderer_begin_frame();
            
-        for (size_t i = 0; i < WORLD_SIZE * WORLD_SIZE; ++i) {
-            chunk_t *chunk = world->chunks[i];
-            vec3s position = (vec3s){{ chunk->x * CHUNK_SIZE, 0.0f, chunk->y * CHUNK_SIZE }};
-            vec3s camera_pos = camera_get_position(camera);
-            float distance = sqrtf(powf(camera_pos.x - position.x, 2) + powf(camera_pos.z - position.z, 2));
-            if (distance < draw_distance * CHUNK_SIZE) {
-                renderer_draw_mesh(chunk->mesh, position, GLMS_VEC3_ZERO, GLMS_VEC3_ONE);
-            }
-        }
+        world_renderer_render(world_renderer, world, camera_get_position(camera));
 
         renderer_end_frame();
-        window_update_delta_time();
-
-        is_running &= !window_should_close();
     }
 
     world_destroy(world);
+    world_renderer_destroy(world_renderer);
     shader_program_destroy(shader_program);
-    texture_destroy(&tilemap_texture);
-    tilemap_free(&tilemap);
+    tilemap_free(tilemap);
 
     renderer_deinit();
     window_deinit();

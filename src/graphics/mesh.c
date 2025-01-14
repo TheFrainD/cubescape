@@ -19,7 +19,6 @@ mesh_t *mesh_create(vertex_t *vertices, size_t vertex_count,
     mesh_t *mesh = malloc(sizeof(mesh_t));
     mesh->shader_program = shader_program;
     mesh->texture = texture;
-    mesh->dirty = 1;
 
     mesh->private_data = malloc(sizeof(mesh_private_data_t));
     mesh->private_data->vertex_count = vertex_count;
@@ -67,7 +66,6 @@ void mesh_set_vertices(mesh_t *mesh, vertex_t *vertices, size_t vertex_count) {
     }
 
     mesh->private_data->vertex_count = vertex_count;
-    mesh->dirty = 1;
 }
 
 void mesh_set_indices(mesh_t *mesh, uint32_t *indices, size_t index_count) {
@@ -90,7 +88,6 @@ void mesh_set_indices(mesh_t *mesh, uint32_t *indices, size_t index_count) {
     }
 
     mesh->private_data->index_count = index_count;
-    mesh->dirty = 1;
 }
 
 void mesh_bind(mesh_t *mesh) {

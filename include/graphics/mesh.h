@@ -15,8 +15,6 @@ typedef struct {
     shader_program_t *shader_program;
     uint32_t texture;
 
-    int dirty;
-
     mesh_private_data_t *private_data;
 } mesh_t;
 

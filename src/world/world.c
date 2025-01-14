@@ -4,14 +4,15 @@
 
 #include "core/log.h"
 
-world_t *world_create(tilemap_t *tilemap, uint32_t texture, shader_program_t *shader_program) {
+world_t *world_create(world_settings_t settings) {
     world_t *world = malloc(sizeof(world_t));
-    world->chunks = malloc(WORLD_SIZE * WORLD_SIZE * sizeof(chunk_t *));
+    world->size    = settings.size;
+    world->chunks  = malloc(world->size * world->size * sizeof(chunk_t *));
 
-    for (int x = 0; x < WORLD_SIZE; x++) {
-        for (int y = 0; y < WORLD_SIZE; y++) {
-            chunk_t *chunk = chunk_create(x, y, tilemap);
-            world->chunks[x + y * WORLD_SIZE] = chunk;
+    for (int x = 0; x < world->size; x++) {
+        for (int y = 0; y < world->size; y++) {
+            chunk_t *chunk                     = chunk_create((ivec2s){{x, y}});
+            world->chunks[x + y * world->size] = chunk;
 
             for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
                 int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
@@ -30,8 +31,6 @@ world_t *world_create(tilemap_t *tilemap, uint32_t texture, shader_program_t *sh
                 }
                 chunk->blocks[i] = BLOCK_ID_STONE;
             }
-
-            chunk_generate_mesh(chunk, shader_program, texture);
         }
     }
 
@@ -44,7 +43,7 @@ void world_destroy(world_t *world) {
         return;
     }
 
-    for (size_t i = 0; i < WORLD_SIZE * WORLD_SIZE; ++i) {
+    for (size_t i = 0; i < world->size * world->size; ++i) {
         chunk_destroy(world->chunks[i]);
     }
 
@@ -58,9 +57,9 @@ chunk_t *world_get_chunk(world_t *world, int x, int y) {
         return NULL;
     }
 
-    if (x < 0 || x >= WORLD_SIZE || y < 0 || y >= WORLD_SIZE) {
+    if (x < 0 || x >= world->size || y < 0 || y >= world->size) {
         return NULL;
     }
 
-    return world->chunks[x + y * WORLD_SIZE];
+    return world->chunks[x + y * world->size];
 }

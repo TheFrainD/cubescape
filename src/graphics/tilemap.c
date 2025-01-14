@@ -6,11 +6,16 @@
 
 #include "core/log.h"
 
-int tilemap_load(const char *filename, tilemap_t *tilemap) {
+#include "graphics/image.h"
+#include "graphics/texture.h"
+
+tilemap_t *tilemap_load(const char *filename) {
+    tilemap_t *tilemap = malloc(sizeof(tilemap_t));
+
     FILE *file = fopen(filename, "r");
     if (!file) {
         LOG_ERROR("Failed to open file: %s", filename);
-        return 0;
+        return NULL;
     }
 
     char line[256];
@@ -36,12 +41,29 @@ int tilemap_load(const char *filename, tilemap_t *tilemap) {
     }
 
     fclose(file);
-    return 1;
+
+    tilemap->texture = texture_create();
+
+    image_t *image   = image_load(tilemap->path);
+    texture_set_image(tilemap->texture, image);
+    image_free(image);
+
+    texture_set_filtering(tilemap->texture, TEXTURE_FILTERING_NEAREST, TEXTURE_FILTERING_NEAREST);
+    texture_set_wrapping(tilemap->texture, TEXTURE_WRAPPING_REPEAT, TEXTURE_WRAPPING_REPEAT);
+
+    return tilemap;
 }
 
 void tilemap_free(tilemap_t *tilemap) {
+    if (tilemap == NULL) {
+        LOG_ERROR("'tilemap_free' called with NULL tilemap");
+        return;
+    }
+
     free(tilemap->name);
     free(tilemap->path);
+    texture_destroy(&tilemap->texture);
+    free(tilemap); 
 }
 
 tile_uv_t tilemap_get_tile_uv(tilemap_t *tilemap, int tile_id) {
