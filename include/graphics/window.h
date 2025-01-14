@@ -5,7 +5,7 @@
 typedef struct {
     int width;
     int height;
-    
+
     const char* title;
 
     int multisample;
@@ -17,8 +17,10 @@ typedef void(*window_framebuffersize_callback_t)(ivec2s size);
  * @brief Initializes the window with the given settings.
  * 
  * @param settings The settings to initialize the window with.
+ * 
+ * @return int Zero if the window was initialized successfully, non-zero otherwise.
  */
-void window_init(window_settings_t settings);
+int window_init(window_settings_t settings);
 
 /**
  * @brief Destroys the window and releases any associated resources.

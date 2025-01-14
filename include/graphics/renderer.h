@@ -20,7 +20,7 @@ typedef struct {
     vec3s clear_color;
 
     camera_t *camera;
-    
+
     float near_clip;
     float far_clip;
 
@@ -33,8 +33,10 @@ typedef struct {
  * This function should be called before any other renderer functions.
  * 
  * @param settings The settings to configure the renderer.
+ * 
+ * @return int Zero if the renderer was initialized successfully, non-zero otherwise.
  */
-void renderer_init(renderer_settings_t settings);
+int renderer_init(renderer_settings_t settings);
 
 /**
  * @brief Deinitializes the renderer.

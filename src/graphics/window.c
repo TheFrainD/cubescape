@@ -55,12 +55,12 @@ void window_set_swap_interval(int interval) {
     glfwSwapInterval(interval);
 }
 
-void window_init(window_settings_t settings) {
+int window_init(window_settings_t settings) {
     glfwSetErrorCallback(glfw_error_callback);
 
     if (!glfwInit()) {
         LOG_FATAL("Failed to initialize GLFW");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -76,7 +76,7 @@ void window_init(window_settings_t settings) {
     if (!g_window) {
         LOG_FATAL("Failed to create GLFW window");
         glfwTerminate();
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     glfwSetFramebufferSizeCallback(g_window, framebuffer_size_callback);
@@ -87,7 +87,7 @@ void window_init(window_settings_t settings) {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         LOG_FATAL("Failed to initialize GLAD");
         glfwTerminate();
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     int fbWidth, fbHeight;
@@ -95,10 +95,8 @@ void window_init(window_settings_t settings) {
     glViewport(0, 0, fbWidth, fbHeight);
 
     LOG_INFO("Window initialized: %s (%dx%d)", settings.title, settings.width, settings.height);
-    const GLubyte* renderer = glGetString(GL_RENDERER);
-    const GLubyte* version  = glGetString(GL_VERSION);
-    LOG_INFO("Renderer: %s", renderer);
-    LOG_INFO("OpenGL version supported %s", version);
+
+    return 0;
 }
 
 void window_deinit() {

@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "core/log.h"
-
 #include "graphics/image.h"
 #include "graphics/texture.h"
 
@@ -44,7 +43,7 @@ tilemap_t *tilemap_load(const char *filename) {
 
     tilemap->texture = texture_create();
 
-    image_t *image   = image_load(tilemap->path);
+    image_t *image = image_load(tilemap->path);
     texture_set_image(tilemap->texture, image);
     image_free(image);
 
@@ -63,7 +62,7 @@ void tilemap_free(tilemap_t *tilemap) {
     free(tilemap->name);
     free(tilemap->path);
     texture_destroy(&tilemap->texture);
-    free(tilemap); 
+    free(tilemap);
 }
 
 tile_uv_t tilemap_get_tile_uv(tilemap_t *tilemap, int tile_id) {

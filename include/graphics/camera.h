@@ -10,7 +10,6 @@
 typedef struct camera camera_t;
 
 typedef struct {
-    float speed;
     float sensitivity;
     float fov;
 } camera_settings_t;
@@ -62,16 +61,25 @@ vec3s camera_get_position(camera_t *camera);
  * @param camera The camera to set the settings of.
  * @param settings The new settings to configure the camera.
  */
-void camera_set_settings(camera_t *camera, camera_settings_t settings);
+void camera_apply_settings(camera_t *camera, camera_settings_t settings);
 
 /**
- * @brief Gets the current settings of the camera.
+ * @brief Gets the field of view of the camera.
  * 
- * @param camera The camera to get the settings of.
+ * @param camera The camera to get the field of view of.
  * 
- * @return camera_settings_t The current settings of the camera.
+ * @return float The field of view of the camera.
  */
-camera_settings_t camera_get_settings(camera_t *camera);
+float camera_get_fov(camera_t *camera);
+
+/**
+ * @brief Gets the sensitivity of the camera.
+ * 
+ * @param camera The camera to get the sensitivity of.
+ * 
+ * @return float The sensitivity of the camera.
+ */
+float camera_get_sensitivity(camera_t *camera);
 
 /**
  * @brief Updates the view matrix of the camera based on the current mouse position.

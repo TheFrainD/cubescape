@@ -19,13 +19,12 @@ typedef struct {
 static renderer_t renderer;
 
 static void set_perspective(ivec2s size) {
-    mat4s projection =
-        glms_perspective(RAD(camera_get_settings(renderer.state.camera).fov), (float)size.x / (float)size.y,
-                         renderer.state.near_clip, renderer.state.far_clip);
+    mat4s projection = glms_perspective(RAD(camera_get_fov(renderer.state.camera)), (float)size.x / (float)size.y,
+                                        renderer.state.near_clip, renderer.state.far_clip);
     buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, sizeof(mat4) * 2, sizeof(mat4), &projection);
 }
 
-void renderer_init(renderer_settings_t settings) {
+int renderer_init(renderer_settings_t settings) {
     renderer.state.clear_color = settings.clear_color;
     renderer.state.near_clip   = settings.near_clip;
     renderer.state.far_clip    = settings.far_clip;
@@ -55,7 +54,14 @@ void renderer_init(renderer_settings_t settings) {
     // Get the maximum anisotropy level
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &renderer.state.max_anisotropy);
 
+    const GLubyte *renderer = glGetString(GL_RENDERER);
+    const GLubyte *version  = glGetString(GL_VERSION);
+    LOG_INFO("Renderer: %s", renderer);
+    LOG_INFO("OpenGL version supported %s", version);
+
     LOG_INFO("Renderer initialized");
+
+    return 0;
 }
 
 void renderer_deinit() {

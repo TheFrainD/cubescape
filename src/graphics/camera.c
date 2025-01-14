@@ -16,7 +16,8 @@ struct camera {
     float yaw;
     float pitch;
 
-    camera_settings_t settings;
+    float fov;
+    float sensitivity;
 
     mat4s view;
     int view_dirty;
@@ -49,7 +50,7 @@ void camera_update_view(camera_t *camera, vec2s mouse_position) {
         first_mouse = 0;
     }
 
-    vec2s offset = glms_vec2_scale(glms_vec2_sub(mouse_position, last_mouse_position), camera->settings.sensitivity);
+    vec2s offset = glms_vec2_scale(glms_vec2_sub(mouse_position, last_mouse_position), camera->sensitivity);
     last_mouse_position = mouse_position;
 
     camera->pitch = CLAMP(camera->pitch - offset.y, -PI_2 + 0.01f, PI_2 - 0.01f);
@@ -82,9 +83,10 @@ void camera_destroy(camera_t *camera) {
 camera_t *camera_create(camera_settings_t settings) {
     camera_t *camera = malloc(sizeof(camera_t));
     camera->position = GLMS_VEC3_ZERO;
-    camera->settings = settings;
     camera->yaw = -PI_2;
     camera->pitch = 0.0f;
+    camera->fov = settings.fov;
+    camera->sensitivity = settings.sensitivity;
 
     // Initialize front, up, and right vectors
     camera->front = (vec3s){{0.0f, 0.0f, -1.0f}};
@@ -118,20 +120,31 @@ vec3s camera_get_position(camera_t *camera) {
     return camera->position;
 }
 
-camera_settings_t camera_get_settings(camera_t *camera) {
+float camera_get_fov(camera_t *camera) {
     if (camera == NULL) {
-        LOG_ERROR("'camera_get_settings' called with NULL camera");
-        return (camera_settings_t){0};
+        LOG_ERROR("'camera_get_fov' called with NULL camera");
+        return 0.0f;
     }
-    return camera->settings;
+
+    return camera->fov;
 }
 
-void camera_set_settings(camera_t *camera, camera_settings_t settings) {
+float camera_get_sensitivity(camera_t *camera) {
     if (camera == NULL) {
-        LOG_ERROR("'camera_set_settings' called with NULL camera");
+        LOG_ERROR("'camera_get_sensitivity' called with NULL camera");
+        return 0.0f;
+    }
+
+    return camera->sensitivity;
+}
+
+void camera_apply_settings(camera_t *camera, camera_settings_t settings) {
+    if (camera == NULL) {
+        LOG_ERROR("'camera_apply_settings' called with NULL camera");
         return;
     }
-    camera->settings = settings;
+    camera->fov = settings.fov;
+    camera->sensitivity = settings.sensitivity;
 }
 
 mat4s camera_get_view(camera_t *camera) {

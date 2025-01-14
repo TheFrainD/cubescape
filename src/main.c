@@ -1,33 +1,28 @@
+#include <cglm/cglm.h>
 #include <stdio.h>
 
-#include <cglm/cglm.h>
-
-#include "core/log.h"
-#include "core/input.h"
 #include "core/file.h"
-
-#include "graphics/window.h"
-#include "graphics/buffer.h"
-#include "graphics/vertex_array.h"
+#include "core/input.h"
+#include "core/log.h"
+#include "graphics/camera.h"
+#include "graphics/renderer.h"
 #include "graphics/shader.h"
 #include "graphics/shader_program.h"
-#include "graphics/camera.h"
-#include "graphics/image.h"
-#include "graphics/texture.h"
 #include "graphics/tilemap.h"
-#include "graphics/renderer.h"
-
+#include "graphics/window.h"
 #include "world/chunk.h"
 #include "world/world.h"
 #include "world/world_renderer.h"
 
-#define VERTEX_SHADER_PATH "assets/shaders/main.vs"
+#define VERTEX_SHADER_PATH   "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
 
 #define LOG_FILE EXECUTABLE_NAME ".log"
 
-static int is_running = 0;
+static int is_running   = 0;
 static camera_t *camera = NULL;
+static const float horizontal_speed = 7.0f;
+static const float vertical_speed = 5.0f;
 
 void key_callback(key_code_t key) {
     if (key == KEY_ESCAPE) {
@@ -39,29 +34,43 @@ void key_callback(key_code_t key) {
     }
 }
 
-void mouse_callback(double x, double y) {
-    camera_update_view(camera, (vec2s){{ x, y }});
-}
+void mouse_callback(double x, double y) { camera_update_view(camera, (vec2s) {{x, y}}); }
 
 void update() {
-    float velocity = camera_get_settings(camera).speed * window_get_delta_time();
+    float horizontal_velocity  = horizontal_speed * window_get_delta_time();
+
+    if (input_key_pressed(KEY_LEFT_CONTROL)) {
+        horizontal_velocity *= 1.5f;
+    }
+
     vec3s direction = GLMS_VEC3_ZERO_INIT;
     vec3s front = camera_get_front(camera);
     vec3s right = camera_get_right(camera);
 
+    // Zero out the y component to restrict movement to the x and z axes
+    front.y = 0.0f;
+    right.y = 0.0f;
+
     if (input_key_pressed(KEY_W)) {
-        direction = glms_vec3_add(direction, glms_vec3_scale(front, velocity));
+        direction = glms_vec3_add(direction, glms_vec3_scale(front, horizontal_velocity));
     } else if (input_key_pressed(KEY_S)) {
-        direction = glms_vec3_sub(direction, glms_vec3_scale(front, velocity));
+        direction = glms_vec3_sub(direction, glms_vec3_scale(front, horizontal_velocity));
     }
 
     if (input_key_pressed(KEY_A)) {
-        direction = glms_vec3_sub(direction, glms_vec3_scale(right, velocity));
+        direction = glms_vec3_sub(direction, glms_vec3_scale(right, horizontal_velocity));
     } else if (input_key_pressed(KEY_D)) {
-        direction = glms_vec3_add(direction, glms_vec3_scale(right, velocity));
+        direction = glms_vec3_add(direction, glms_vec3_scale(right, horizontal_velocity));
     }
 
-    camera_translate(camera, glms_vec3_scale(glms_normalize(direction), velocity));
+    camera_translate(camera, glms_vec3_scale(glms_normalize(direction), horizontal_velocity));
+
+    float vertical_movement = vertical_speed * window_get_delta_time();
+    if (input_key_pressed(KEY_SPACE)) {
+        camera_translate(camera, (vec3s) {{0.0f, vertical_movement, 0.0f}});
+    } else if (input_key_pressed(KEY_LEFT_SHIFT)) {
+        camera_translate(camera, (vec3s) {{0.0f, -vertical_movement, 0.0f}});
+    }
 }
 
 int main(int argc, char **argv) {
@@ -78,11 +87,15 @@ int main(int argc, char **argv) {
     LOG_INFO("%s starting up...", EXECUTABLE_NAME);
 
     window_settings_t window_settings = {0};
-    window_settings.width = 1280;
-    window_settings.height = 720;
-    window_settings.title = EXECUTABLE_NAME;
-    window_settings.multisample = 4;
-    window_init(window_settings);
+    window_settings.width             = 1280;
+    window_settings.height            = 720;
+    window_settings.title             = EXECUTABLE_NAME;
+    window_settings.multisample       = 4;
+    int result                        = window_init(window_settings);
+    if (result) {
+        LOG_FATAL("Failed to initialize window");
+        return 1;
+    }
 
     input_init();
 
@@ -92,7 +105,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    size_t vertex_shader_size = get_file_size(fp);
+    size_t vertex_shader_size  = get_file_size(fp);
     char *vertex_shader_source = malloc(vertex_shader_size);
     read_file_content(fp, vertex_shader_source, vertex_shader_size);
     fclose(fp);
@@ -103,7 +116,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    size_t fragment_shader_size = get_file_size(fp);
+    size_t fragment_shader_size  = get_file_size(fp);
     char *fragment_shader_source = malloc(fragment_shader_size);
     read_file_content(fp, fragment_shader_source, fragment_shader_size);
     fclose(fp);
@@ -134,37 +147,40 @@ int main(int argc, char **argv) {
     }
 
     camera_settings_t camera_settings = {0};
-    camera_settings.speed = 5.0f;
-    camera_settings.sensitivity = 0.002f;
-    camera_settings.fov = 45.0f;
+    camera_settings.sensitivity       = 0.002f;
+    camera_settings.fov               = 45.0f;
 
     renderer_settings_t renderer_settings = {0};
-    renderer_settings.clear_color = (vec3s){{ 0.2f, 0.3f, 0.3f }};
-    renderer_settings.camera_settings = camera_settings;
-    renderer_settings.near_clip = 0.1f;
-    renderer_settings.far_clip = 1000.0f;
-    renderer_init(renderer_settings);
+    renderer_settings.clear_color         = (vec3s) {{0.2f, 0.3f, 0.3f}};
+    renderer_settings.camera_settings     = camera_settings;
+    renderer_settings.near_clip           = 0.1f;
+    renderer_settings.far_clip            = 1000.0f;
+    result                                = renderer_init(renderer_settings);
+    if (result) {
+        LOG_FATAL("Failed to initialize renderer");
+        return 1;
+    }
 
     camera = renderer_get_camera();
-    camera_set_position(camera, (vec3s){{ 10.0f, 68.0f, 10.0f }});
+    camera_set_position(camera, (vec3s) {{10.0f, 68.0f, 10.0f}});
 
     input_set_cursor_enabled(0);
     input_add_key_pressed_callback(key_callback);
     input_add_mouse_position_callback(mouse_callback);
-    
+
     world_renderer_settings_t world_renderer_settings = {0};
-    world_renderer_settings.tilemap = tilemap;
-    world_renderer_settings.block_shader = shader_program;
-    world_renderer_settings.draw_distance = 2;
-    world_renderer_t *world_renderer = world_renderer_create(world_renderer_settings);
+    world_renderer_settings.tilemap                   = tilemap;
+    world_renderer_settings.block_shader              = shader_program;
+    world_renderer_settings.draw_distance             = 6;
+    world_renderer_t *world_renderer                  = world_renderer_create(world_renderer_settings);
     if (!world_renderer) {
         LOG_FATAL("Failed to create world renderer");
         return 1;
     }
 
     world_settings_t world_settings = {0};
-    world_settings.size = 16;
-    world_t *world = world_create(world_settings);
+    world_settings.size             = 32;
+    world_t *world                  = world_create(world_settings);
     if (!world) {
         LOG_FATAL("Failed to create world");
         return 1;
@@ -180,9 +196,9 @@ int main(int argc, char **argv) {
         update();
 
         world_renderer_prepare(world_renderer, world);
-        
+
         renderer_begin_frame();
-           
+
         world_renderer_render(world_renderer, world, camera_get_position(camera));
 
         renderer_end_frame();
