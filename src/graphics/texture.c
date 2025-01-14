@@ -43,11 +43,11 @@ void texture_set_data(uint32_t texture, const uint8_t *data, int width, int heig
     switch (format) {
         case IMAGE_FORMAT_RGB:
             internal_format = GL_RGB;
-            display_format = GL_RGB;
+            display_format  = GL_RGB;
             break;
         case IMAGE_FORMAT_RGBA:
             internal_format = GL_RGBA;
-            display_format = GL_RGBA;
+            display_format  = GL_RGBA;
             break;
         default:
             LOG_ERROR("Unsupported image format: %d", format);

@@ -77,9 +77,10 @@ int main(int argc, char **argv) {
     LOG_INFO("%s starting up...", EXECUTABLE_NAME);
 
     window_settings_t window_settings = {0};
-    window_settings.width = 800;
-    window_settings.height = 600;
+    window_settings.width = 1280;
+    window_settings.height = 720;
     window_settings.title = EXECUTABLE_NAME;
+    window_settings.multisample = 4;
     window_init(window_settings);
 
     input_init();
@@ -127,9 +128,7 @@ int main(int argc, char **argv) {
     uint32_t tilemap_texture = texture_create();
     texture_set_image(tilemap_texture, tilemap_image);
     texture_set_wrapping(tilemap_texture, TEXTURE_WRAPPING_REPEAT, TEXTURE_WRAPPING_REPEAT);
-    texture_set_filtering(tilemap_texture, TEXTURE_FILTERING_NEAREST_MIPMAP_NEAREST, TEXTURE_FILTERING_NEAREST);
-    texture_generate_mipmaps(tilemap_texture);
-    texture_set_anisotropy(tilemap_texture, renderer_get_state()->max_anisotropy);
+    texture_set_filtering(tilemap_texture, TEXTURE_FILTERING_NEAREST, TEXTURE_FILTERING_NEAREST);
     image_free(tilemap_image);
 
     is_running = 1;
@@ -142,6 +141,8 @@ int main(int argc, char **argv) {
     renderer_settings_t renderer_settings = {0};
     renderer_settings.clear_color = (vec3s){{ 0.2f, 0.3f, 0.3f }};
     renderer_settings.camera_settings = camera_settings;
+    renderer_settings.near_clip = 0.1f;
+    renderer_settings.far_clip = 1000.0f;
     renderer_init(renderer_settings);
 
     camera = renderer_get_camera();
@@ -164,7 +165,8 @@ int main(int argc, char **argv) {
         for (size_t i = 0; i < WORLD_SIZE * WORLD_SIZE; ++i) {
             chunk_t *chunk = world->chunks[i];
             vec3s position = (vec3s){{ chunk->x * CHUNK_SIZE, 0.0f, chunk->y * CHUNK_SIZE }};
-            float distance = glms_vec3_distance(camera_get_position(camera), position);
+            vec3s camera_pos = camera_get_position(camera);
+            float distance = sqrtf(powf(camera_pos.x - position.x, 2) + powf(camera_pos.z - position.z, 2));
             if (distance < draw_distance * CHUNK_SIZE) {
                 renderer_draw_mesh(chunk->mesh, position, GLMS_VEC3_ZERO, GLMS_VEC3_ONE);
             }

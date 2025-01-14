@@ -5,7 +5,10 @@
 typedef struct {
     int width;
     int height;
+    
     const char* title;
+
+    int multisample;
 } window_settings_t;
 
 typedef void(*window_framebuffersize_callback_t)(ivec2s size);

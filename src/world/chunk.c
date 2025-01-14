@@ -1,17 +1,17 @@
 #include "world/chunk.h"
 
-#include <stdlib.h>
-
 #include <glad/glad.h>
+#include <stdlib.h>
 
 #include "core/log.h"
 #include "graphics/buffer.h"
 #include "graphics/vertex_array.h"
 
-#define ADD_VERTEX(vertices, x, y, z, u, v) do { \
-    vertices[vertex_count] = (vertex_t){{{x, y, z}}, {{u, v}}}; \
-    ++vertex_count; \
-} while(0)
+#define ADD_VERTEX(vertices, x, y, z, uv)                      \
+    do {                                                       \
+        vertices[vertex_count] = (vertex_t) {{{x, y, z}}, uv}; \
+        ++vertex_count;                                        \
+    } while (0)
 
 chunk_t *chunk_create(int x, int y, tilemap_t *tilemap) {
     if (tilemap == NULL) {
@@ -20,11 +20,11 @@ chunk_t *chunk_create(int x, int y, tilemap_t *tilemap) {
     }
 
     chunk_t *chunk = malloc(sizeof(chunk_t));
-    chunk->x = x;
-    chunk->y = y;
+    chunk->x       = x;
+    chunk->y       = y;
     chunk->tilemap = tilemap;
-    chunk->blocks = malloc(CHUNK_VOLUME * sizeof(block_id_t));
-    chunk->mesh = mesh_create(NULL, 0, NULL, 0, NULL, -1);
+    chunk->blocks  = malloc(CHUNK_VOLUME * sizeof(block_id_t));
+    chunk->mesh    = mesh_create(NULL, 0, NULL, 0, NULL, -1);
 
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
@@ -86,10 +86,10 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint3
         return;
     }
 
-    vertex_t *vertices = (vertex_t *)malloc(CHUNK_VOLUME * 36 * sizeof(vertex_t));
-    uint32_t *indices = (uint32_t *)malloc(CHUNK_VOLUME * 36 * sizeof(uint32_t));
+    vertex_t *vertices  = (vertex_t *)malloc(CHUNK_VOLUME * 36 * sizeof(vertex_t));
+    uint32_t *indices   = (uint32_t *)malloc(CHUNK_VOLUME * 36 * sizeof(uint32_t));
     size_t vertex_count = 0;
-    size_t index_count = 0;
+    size_t index_count  = 0;
 
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         // Don't render transparent blocks
@@ -101,24 +101,18 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint3
         int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
         int z = i / (CHUNK_SIZE * CHUNK_HEIGHT);
 
-        block_id_t block = chunk->blocks[i];
+        block_id_t block    = chunk->blocks[i];
         block_tiles_t tiles = block_get_tiles(block);
-        int row_size = chunk->tilemap->map_size / chunk->tilemap->tile_size;
 
         // Top face
         if (!block_is_opaque(chunk_get_block(chunk, x, y + 1, z))) {
             tile_id_t tile_id = tiles.up;
+            tile_uv_t uv      = tilemap_get_tile_uv(chunk->tilemap, tile_id);
 
-            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-
-            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
-            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
-
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, u_min, v_max);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, u_max, v_max);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, u_max, v_min);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, u_min, v_min);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, uv.value[0]);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, uv.value[1]);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, uv.value[2]);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, uv.value[3]);
 
             indices[index_count++] = vertex_count;
             indices[index_count++] = vertex_count + 1;
@@ -131,17 +125,12 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint3
         // Bottom face
         if (!block_is_opaque(chunk_get_block(chunk, x, y - 1, z))) {
             tile_id_t tile_id = tiles.bottom;
+            tile_uv_t uv      = tilemap_get_tile_uv(chunk->tilemap, tile_id);
 
-            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-
-            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
-            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
-
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, u_min, v_max);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, u_max, v_max);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, u_max, v_min);
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, u_min, v_min);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, uv.value[0]);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, uv.value[1]);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, uv.value[2]);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, uv.value[3]);
 
             indices[index_count++] = vertex_count;
             indices[index_count++] = vertex_count + 1;
@@ -154,17 +143,12 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint3
         // Front face
         if (!block_is_opaque(chunk_get_block(chunk, x, y, z + 1))) {
             tile_id_t tile_id = tiles.front;
+            tile_uv_t uv      = tilemap_get_tile_uv(chunk->tilemap, tile_id);
 
-            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-
-            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
-            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
-
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, u_min, v_max);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, u_max, v_max);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, u_max, v_min);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, u_min, v_min);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, uv.value[0]);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, uv.value[1]);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, uv.value[2]);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, uv.value[3]);
 
             indices[index_count++] = vertex_count;
             indices[index_count++] = vertex_count + 1;
@@ -177,17 +161,12 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint3
         // Back face
         if (!block_is_opaque(chunk_get_block(chunk, x, y, z - 1))) {
             tile_id_t tile_id = tiles.back;
+            tile_uv_t uv      = tilemap_get_tile_uv(chunk->tilemap, tile_id);
 
-            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-
-            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
-            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
-
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, u_min, v_min);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, u_max, v_min);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, u_max, v_max);
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, u_min, v_max);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, uv.value[0]);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, uv.value[1]);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, uv.value[2]);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, uv.value[3]);
 
             indices[index_count++] = vertex_count;
             indices[index_count++] = vertex_count + 1;
@@ -200,17 +179,12 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint3
         // Left face
         if (!block_is_opaque(chunk_get_block(chunk, x - 1, y, z))) {
             tile_id_t tile_id = tiles.left;
+            tile_uv_t uv      = tilemap_get_tile_uv(chunk->tilemap, tile_id);
 
-            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-
-            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
-            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
-
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, u_min, v_max);
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, u_max, v_max);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, u_max, v_min);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, u_min, v_min);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, uv.value[0]);
+            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, uv.value[1]);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, uv.value[2]);
+            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, uv.value[3]);
 
             indices[index_count++] = vertex_count;
             indices[index_count++] = vertex_count + 1;
@@ -223,17 +197,12 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint3
         // Right face
         if (!block_is_opaque(chunk_get_block(chunk, x + 1, y, z))) {
             tile_id_t tile_id = tiles.right;
+            tile_uv_t uv      = tilemap_get_tile_uv(chunk->tilemap, tile_id);
 
-            float u_min = (tile_id % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-            float u_max = ((tile_id + 1) % chunk->tilemap->tile_size) / (float)chunk->tilemap->tile_size;
-
-            float v_min = (tile_id / row_size) / (float)chunk->tilemap->tile_size;
-            float v_max = ((tile_id + row_size) / row_size) / (float)chunk->tilemap->tile_size;
-
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, u_min, v_max);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, u_max, v_max);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, u_max, v_min);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, u_min, v_min);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, uv.value[0]);
+            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, uv.value[1]);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, uv.value[2]);
+            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, uv.value[3]);
 
             indices[index_count++] = vertex_count;
             indices[index_count++] = vertex_count + 1;
@@ -245,11 +214,11 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, uint3
     }
 
     vertices = (vertex_t *)realloc(vertices, vertex_count * sizeof(vertex_t));
-    indices = (uint32_t *)realloc(indices, index_count * sizeof(uint32_t));
-    
+    indices  = (uint32_t *)realloc(indices, index_count * sizeof(uint32_t));
+
     mesh_set_vertices(chunk->mesh, vertices, vertex_count);
     mesh_set_indices(chunk->mesh, indices, index_count);
-    chunk->mesh->texture = texture;
+    chunk->mesh->texture        = texture;
     chunk->mesh->shader_program = shader_program;
 
     free(vertices);

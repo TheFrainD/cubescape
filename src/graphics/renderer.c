@@ -4,10 +4,10 @@
 
 #include "core/log.h"
 #include "core/math.h"
-#include "graphics/window.h"
 #include "graphics/buffer.h"
-#include "graphics/vertex_array.h"
 #include "graphics/vertex.h"
+#include "graphics/vertex_array.h"
+#include "graphics/window.h"
 
 typedef struct {
     uint32_t vertex_array;
@@ -18,22 +18,21 @@ typedef struct {
 
 static renderer_t renderer;
 
-#define NEAR 0.1f
-#define FAR 100.0f
-
-
 static void set_perspective(ivec2s size) {
-    mat4s projection = glms_perspective(
-        RAD(camera_get_settings(renderer.state.camera).fov), 
-        (float)size.x / (float)size.y, 
-        NEAR, FAR);
+    mat4s projection =
+        glms_perspective(RAD(camera_get_settings(renderer.state.camera).fov), (float)size.x / (float)size.y,
+                         renderer.state.near_clip, renderer.state.far_clip);
     buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, sizeof(mat4) * 2, sizeof(mat4), &projection);
 }
 
 void renderer_init(renderer_settings_t settings) {
     renderer.state.clear_color = settings.clear_color;
+    renderer.state.near_clip   = settings.near_clip;
+    renderer.state.far_clip    = settings.far_clip;
+
     renderer.vertex_array = vertex_array_create();
-    renderer.uniform_buffer = buffer_create(sizeof(mat4) * 3, NULL, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
+    renderer.uniform_buffer =
+        buffer_create(sizeof(mat4) * 3, NULL, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
     renderer.state.camera = camera_create(settings.camera_settings);
 
     set_perspective(window_get_framebuffer_size());
@@ -45,6 +44,10 @@ void renderer_init(renderer_settings_t settings) {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
+
+    glEnable(GL_BLEND);
+
+    glEnable(GL_MULTISAMPLE);
 
     // Default to solid rendering
     renderer.state.wireframe = 0;
@@ -99,11 +102,11 @@ void renderer_draw_mesh(mesh_t *mesh, vec3s position, vec3s rotation, vec3s scal
     mesh_bind(mesh);
 
     mat4s model = glms_mat4_identity();
-    model = glms_translate(model, position);
-    model = glms_rotate(model, rotation.x, (vec3s){{1.0f, 0.0f, 0.0f}});
-    model = glms_rotate(model, rotation.y, (vec3s){{0.0f, 1.0f, 0.0f}});
-    model = glms_rotate(model, rotation.z, (vec3s){{0.0f, 0.0f, 1.0f}});
-    model = glms_scale(model, scale);
+    model       = glms_translate(model, position);
+    model       = glms_rotate(model, rotation.x, (vec3s) {{1.0f, 0.0f, 0.0f}});
+    model       = glms_rotate(model, rotation.y, (vec3s) {{0.0f, 1.0f, 0.0f}});
+    model       = glms_rotate(model, rotation.z, (vec3s) {{0.0f, 0.0f, 1.0f}});
+    model       = glms_scale(model, scale);
 
     buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0, sizeof(mat4), &model);
 
@@ -112,27 +115,19 @@ void renderer_draw_mesh(mesh_t *mesh, vec3s position, vec3s rotation, vec3s scal
     mesh_unbind();
 }
 
-camera_t *renderer_get_camera() {
-    return renderer.state.camera;
-}
+camera_t *renderer_get_camera() { return renderer.state.camera; }
 
-uint32_t renderer_get_uniform_buffer() {
-    return renderer.uniform_buffer;
-}
+uint32_t renderer_get_uniform_buffer() { return renderer.uniform_buffer; }
 
-uint32_t renderer_get_vertex_array() {
-    return renderer.vertex_array;
-}
+uint32_t renderer_get_vertex_array() { return renderer.vertex_array; }
 
 void renderer_bind_vertex_buffer(uint32_t buffer) {
     vertex_array_bind(renderer.vertex_array);
     buffer_bind(buffer, BUFFER_TARGET_ARRAY_BUFFER);
-    vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
-    vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, uv));
+    vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, position));
+    vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, uv));
     buffer_unbind(BUFFER_TARGET_ARRAY_BUFFER);
     vertex_array_unbind();
 }
 
-renderer_state_t *renderer_get_state() {
-    return &renderer.state;
-}
+renderer_state_t *renderer_get_state() { return &renderer.state; }

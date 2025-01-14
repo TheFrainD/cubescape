@@ -20,6 +20,7 @@ typedef struct {
     vec3s clear_color;
 
     camera_t *camera;
+    
     float near_clip;
     float far_clip;
 

@@ -1,10 +1,9 @@
 #include "graphics/window.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "core/log.h"
 
@@ -22,13 +21,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 
     for (size_t i = 0; i < framebuffersize_callback_count; i++) {
-        framebuffersize_callbacks[i]((ivec2s){{width, height}});
+        framebuffersize_callbacks[i]((ivec2s) {{width, height}});
     }
 }
 
-void glfw_error_callback(int error, const char* description) {
-    LOG_ERROR("GLFW error: %s", description);
-}
+void glfw_error_callback(int error, const char* description) { LOG_ERROR("GLFW error: %s", description); }
 
 void window_set_settings(window_settings_t settings) {
     if (!g_window) {
@@ -73,6 +70,7 @@ void window_init(window_settings_t settings) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
 #endif
+    glfwWindowHint(GLFW_SAMPLES, settings.multisample);
 
     g_window = glfwCreateWindow(settings.width, settings.height, settings.title, NULL, NULL);
     if (!g_window) {
@@ -98,11 +96,10 @@ void window_init(window_settings_t settings) {
 
     LOG_INFO("Window initialized: %s (%dx%d)", settings.title, settings.width, settings.height);
     const GLubyte* renderer = glGetString(GL_RENDERER);
-    const GLubyte* version = glGetString(GL_VERSION);
+    const GLubyte* version  = glGetString(GL_VERSION);
     LOG_INFO("Renderer: %s", renderer);
     LOG_INFO("OpenGL version supported %s", version);
 }
-
 
 void window_deinit() {
     if (g_window) {
@@ -114,9 +111,7 @@ void window_deinit() {
     }
 }
 
-int window_should_close() {
-    return g_window ? glfwWindowShouldClose(g_window) : 1;
-}
+int window_should_close() { return g_window ? glfwWindowShouldClose(g_window) : 1; }
 
 void window_swap_buffers() {
     if (!g_window) {
@@ -126,24 +121,20 @@ void window_swap_buffers() {
     glfwSwapBuffers(g_window);
 }
 
-void window_poll_events() {
-    glfwPollEvents();
-}
+void window_poll_events() { glfwPollEvents(); }
 
 void window_update_delta_time() {
     float current_frame = glfwGetTime();
-    delta_time = current_frame - last_frame;
-    last_frame = current_frame;
+    delta_time          = current_frame - last_frame;
+    last_frame          = current_frame;
 }
 
-float window_get_delta_time() {
-    return delta_time;
-}
+float window_get_delta_time() { return delta_time; }
 
 ivec2s window_get_framebuffer_size() {
     if (!g_window) {
         LOG_ERROR("'window_get_framebuffer_size' failed: no window created");
-        return (ivec2s){{0, 0}};
+        return (ivec2s) {{0, 0}};
     }
 
     ivec2s size = {0};
@@ -154,7 +145,7 @@ ivec2s window_get_framebuffer_size() {
 ivec2s window_get_size() {
     if (!g_window) {
         LOG_ERROR("'window_get_size' failed: no window created");
-        return (ivec2s){{0, 0}};
+        return (ivec2s) {{0, 0}};
     }
 
     ivec2s size = {0};
