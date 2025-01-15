@@ -4,11 +4,13 @@
 #include "graphics/buffer.h"
 #include "graphics/renderer.h"
 #include "graphics/texture.h"
+#include "graphics/vertex_array.h"
 
 struct mesh_private_data {
     size_t vertex_count;
     size_t index_count;
 
+    uint32_t vertex_array;
     uint32_t vertex_buffer;
     uint32_t index_buffer;
 };
@@ -23,12 +25,18 @@ mesh_t *mesh_create(vertex_t *vertices, size_t vertex_count, uint32_t *indices, 
     mesh->private_data->vertex_count = vertex_count;
     mesh->private_data->index_count  = index_count;
 
+    mesh->private_data->vertex_array = vertex_array_create();
     mesh->private_data->vertex_buffer =
         buffer_create(vertex_count * sizeof(vertex_t), vertices, BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ARRAY_BUFFER);
     mesh->private_data->index_buffer = buffer_create(index_count * sizeof(uint32_t), indices, BUFFER_USAGE_DYNAMIC_DRAW,
                                                      BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
 
-    renderer_bind_vertex_buffer(mesh->private_data->vertex_buffer);
+    vertex_array_bind(mesh->private_data->vertex_array);
+    buffer_bind(mesh->private_data->vertex_buffer, BUFFER_TARGET_ARRAY_BUFFER);
+    vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, position));
+    vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, uv));
+    buffer_unbind(BUFFER_TARGET_ARRAY_BUFFER);
+    vertex_array_unbind();
 
     return mesh;
 }
@@ -43,6 +51,7 @@ void mesh_destroy(mesh_t *mesh) {
 
     buffer_destroy(&mesh->private_data->vertex_buffer);
     buffer_destroy(&mesh->private_data->index_buffer);
+    vertex_array_destroy(&mesh->private_data->vertex_array);
     free(mesh->private_data);
     free(mesh);
 }
@@ -98,6 +107,7 @@ void mesh_bind(mesh_t *mesh) {
     }
 
     shader_program_use(mesh->shader_program);
+    vertex_array_bind(mesh->private_data->vertex_array);
     buffer_bind(mesh->private_data->vertex_buffer, BUFFER_TARGET_ARRAY_BUFFER);
     buffer_bind(mesh->private_data->index_buffer, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
     texture_bind(mesh->texture, 0);
@@ -106,6 +116,7 @@ void mesh_bind(mesh_t *mesh) {
 void mesh_unbind() {
     buffer_unbind(BUFFER_TARGET_ARRAY_BUFFER);
     buffer_unbind(BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
+    vertex_array_unbind();
 }
 
 size_t mesh_get_vertex_count(mesh_t *mesh) {

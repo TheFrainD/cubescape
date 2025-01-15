@@ -10,7 +10,6 @@
 #include "graphics/window.h"
 
 typedef struct {
-    uint32_t vertex_array;
     uint32_t uniform_buffer;
 
     renderer_state_t state;
@@ -29,7 +28,6 @@ int renderer_init(renderer_settings_t settings) {
     renderer.state.near_clip   = settings.near_clip;
     renderer.state.far_clip    = settings.far_clip;
 
-    renderer.vertex_array = vertex_array_create();
     renderer.uniform_buffer =
         buffer_create(sizeof(mat4) * 3, NULL, BUFFER_USAGE_STATIC_DRAW, BUFFER_TARGET_UNIFORM_BUFFER);
     renderer.state.camera = camera_create(settings.camera_settings);
@@ -65,7 +63,6 @@ int renderer_init(renderer_settings_t settings) {
 }
 
 void renderer_deinit() {
-    vertex_array_destroy(&renderer.vertex_array);
     buffer_destroy(&renderer.uniform_buffer);
     camera_destroy(renderer.state.camera);
 
@@ -87,8 +84,6 @@ void renderer_begin_frame() {
         buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, sizeof(mat4), sizeof(mat4), &view);
         camera_view_reset(renderer.state.camera);
     }
-
-    vertex_array_bind(renderer.vertex_array);
 }
 
 void renderer_end_frame() {
@@ -124,16 +119,5 @@ void renderer_draw_mesh(mesh_t *mesh, vec3s position, vec3s rotation, vec3s scal
 camera_t *renderer_get_camera() { return renderer.state.camera; }
 
 uint32_t renderer_get_uniform_buffer() { return renderer.uniform_buffer; }
-
-uint32_t renderer_get_vertex_array() { return renderer.vertex_array; }
-
-void renderer_bind_vertex_buffer(uint32_t buffer) {
-    vertex_array_bind(renderer.vertex_array);
-    buffer_bind(buffer, BUFFER_TARGET_ARRAY_BUFFER);
-    vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, position));
-    vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, uv));
-    buffer_unbind(BUFFER_TARGET_ARRAY_BUFFER);
-    vertex_array_unbind();
-}
 
 renderer_state_t *renderer_get_state() { return &renderer.state; }
