@@ -85,10 +85,10 @@ tile_uv_t tilemap_get_tile_uv(tilemap_t *tilemap, int tile_id) {
     float v_max = (((tile_id / row_size) + 1) / (float)tilemap->tile_size) - pixel_size;
 
     tile_uv_t uv = {0};
-    uv.value[0]  = (vec2s) {{u_min, v_max}};
-    uv.value[1]  = (vec2s) {{u_max, v_max}};
-    uv.value[2]  = (vec2s) {{u_max, v_min}};
-    uv.value[3]  = (vec2s) {{u_min, v_min}};
+    uv.value[0]  = (vec2s) {{u_max, v_max}};
+    uv.value[1]  = (vec2s) {{u_max, v_min}};
+    uv.value[2]  = (vec2s) {{u_min, v_min}};
+    uv.value[3]  = (vec2s) {{u_min, v_max}};
 
     return uv;
 }

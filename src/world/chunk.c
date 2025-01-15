@@ -7,39 +7,18 @@
 #include "graphics/buffer.h"
 #include "graphics/vertex_array.h"
 
-#define ADD_VERTEX(vertices, x, y, z, uv)                      \
-    do {                                                       \
-        vertices[vertex_count] = (vertex_t) {{{x, y, z}}, uv}; \
-        ++vertex_count;                                        \
+#define ADD_VERTEX(vertex)               \
+    do {                                 \
+        vertices[vertex_count] = vertex; \
+        ++vertex_count;                  \
     } while (0)
 
 chunk_t *chunk_create(ivec2s position) {
-    chunk_t *chunk = malloc(sizeof(chunk_t));
+    chunk_t *chunk  = malloc(sizeof(chunk_t));
     chunk->position = position;
-    chunk->blocks  = malloc(CHUNK_VOLUME * sizeof(block_id_t));
-    chunk->mesh    = mesh_create(NULL, 0, NULL, 0, NULL, -1);
-    chunk->dirty   = 1;
-
-    for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-        int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
-        if (y > 64) {
-            chunk->blocks[i] = BLOCK_ID_AIR;
-            continue;
-        } else if (y > 63) {
-            chunk->blocks[i] = BLOCK_ID_GRASS;
-            continue;
-        } else if (y > 59) {
-            chunk->blocks[i] = BLOCK_ID_DIRT;
-            continue;
-        } else if (y > 54) {
-            chunk->blocks[i] = BLOCK_ID_COBBLESTONE;
-            continue;
-        }
-        chunk->blocks[i] = BLOCK_ID_STONE;
-    }
-
-    LOG_TRACE("Created chunk at (%d, %d)", position.x, position.y);
-
+    chunk->blocks   = malloc(CHUNK_VOLUME * sizeof(block_id_t));
+    chunk->mesh     = mesh_create(NULL, 0, NULL, 0, NULL, -1);
+    chunk->dirty    = 1;
     return chunk;
 }
 
@@ -49,7 +28,8 @@ block_id_t chunk_get_block(chunk_t *chunk, ivec3s position) {
         return BLOCK_ID_AIR;
     }
 
-    if (position.x < 0 || position.x >= CHUNK_SIZE || position.y < 0 || position.y >= CHUNK_HEIGHT || position.z < 0 || position.z >= CHUNK_SIZE) {
+    if (position.x < 0 || position.x >= CHUNK_SIZE || position.y < 0 || position.y >= CHUNK_HEIGHT || position.z < 0 ||
+        position.z >= CHUNK_SIZE) {
         return BLOCK_ID_AIR;
     }
 
@@ -62,12 +42,13 @@ void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block) {
         return;
     }
 
-    if (position.x < 0 || position.x >= CHUNK_SIZE || position.y < 0 || position.y >= CHUNK_HEIGHT || position.z < 0 || position.z >= CHUNK_SIZE) {
+    if (position.x < 0 || position.x >= CHUNK_SIZE || position.y < 0 || position.y >= CHUNK_HEIGHT || position.z < 0 ||
+        position.z >= CHUNK_SIZE) {
         return;
     }
 
     chunk->blocks[position.x + position.y * CHUNK_SIZE + position.z * (CHUNK_SIZE * CHUNK_HEIGHT)] = block;
-    chunk->dirty = 1;
+    chunk->dirty                                                                                   = 1;
 }
 
 void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap) {
@@ -97,114 +78,71 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
         int z = i / (CHUNK_SIZE * CHUNK_HEIGHT);
 
         block_id_t block    = chunk->blocks[i];
-        block_tiles_t tiles = block_get_tiles(block);
+        block_faces_t faces = block_get_faces(block, (vec3s) {{x, y, z}}, tilemap);
+        int face_count      = 0;
 
         // Top face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s){{x, y + 1, z}}))) {
-            tile_id_t tile_id = tiles.up;
-            tile_uv_t uv      = tilemap_get_tile_uv(tilemap, tile_id);
-
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, uv.value[0]);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, uv.value[1]);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, uv.value[2]);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, uv.value[3]);
-
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 1;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count + 3;
+        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x, y + 1, z}}))) {
+            block_face_data_t face = faces.values[BLOCK_FACE_TOP];
+            for (int j = 0; j < 4; ++j) {
+                ADD_VERTEX(face.vertices[j]);
+            }
+            ++face_count;
         }
 
         // Bottom face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s){{x, y - 1, z}}))) {
-            tile_id_t tile_id = tiles.bottom;
-            tile_uv_t uv      = tilemap_get_tile_uv(tilemap, tile_id);
-
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, uv.value[0]);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, uv.value[1]);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, uv.value[2]);
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, uv.value[3]);
-
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 1;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count + 3;
+        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x, y - 1, z}}))) {
+            block_face_data_t face = faces.values[BLOCK_FACE_BOTTOM];
+            for (int j = 0; j < 4; ++j) {
+                ADD_VERTEX(face.vertices[j]);
+            }
+            ++face_count;
         }
 
         // Front face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s){{x, y, z + 1}}))) {
-            tile_id_t tile_id = tiles.front;
-            tile_uv_t uv      = tilemap_get_tile_uv(tilemap, tile_id);
-
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, uv.value[0]);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, uv.value[1]);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, uv.value[2]);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, uv.value[3]);
-
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 1;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count + 3;
+        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x, y, z + 1}}))) {
+            block_face_data_t face = faces.values[BLOCK_FACE_FRONT];
+            for (int j = 0; j < 4; ++j) {
+                ADD_VERTEX(face.vertices[j]);
+            }
+            ++face_count;
         }
 
         // Back face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s){{x, y, z - 1}}))) {
-            tile_id_t tile_id = tiles.back;
-            tile_uv_t uv      = tilemap_get_tile_uv(tilemap, tile_id);
-
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, uv.value[0]);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, uv.value[1]);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, uv.value[2]);
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, uv.value[3]);
-
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 1;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count + 3;
+        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x, y, z - 1}}))) {
+            block_face_data_t face = faces.values[BLOCK_FACE_BACK];
+            for (int j = 0; j < 4; ++j) {
+                ADD_VERTEX(face.vertices[j]);
+            }
+            ++face_count;
         }
 
         // Left face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s){{x - 1, y, z}}))) {
-            tile_id_t tile_id = tiles.left;
-            tile_uv_t uv      = tilemap_get_tile_uv(tilemap, tile_id);
-
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z - 0.5f, uv.value[0]);
-            ADD_VERTEX(vertices, x - 0.5f, y - 0.5f, z + 0.5f, uv.value[1]);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z + 0.5f, uv.value[2]);
-            ADD_VERTEX(vertices, x - 0.5f, y + 0.5f, z - 0.5f, uv.value[3]);
-
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 1;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count + 3;
+        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x - 1, y, z}}))) {
+            block_face_data_t face = faces.values[BLOCK_FACE_LEFT];
+            for (int j = 0; j < 4; ++j) {
+                ADD_VERTEX(face.vertices[j]);
+            }
+            ++face_count;
         }
 
         // Right face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s){{x + 1, y, z}}))) {
-            tile_id_t tile_id = tiles.right;
-            tile_uv_t uv      = tilemap_get_tile_uv(tilemap, tile_id);
+        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x + 1, y, z}}))) {
+            block_face_data_t face = faces.values[BLOCK_FACE_RIGHT];
+            for (int j = 0; j < 4; ++j) {
+                ADD_VERTEX(face.vertices[j]);
+            }
+            ++face_count;
+        }
 
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z + 0.5f, uv.value[0]);
-            ADD_VERTEX(vertices, x + 0.5f, y - 0.5f, z - 0.5f, uv.value[1]);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z - 0.5f, uv.value[2]);
-            ADD_VERTEX(vertices, x + 0.5f, y + 0.5f, z + 0.5f, uv.value[3]);
-
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 1;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count;
-            indices[index_count++] = vertex_count + 2;
-            indices[index_count++] = vertex_count + 3;
+        int t = vertex_count - 4 * face_count;
+        for (int j = 0; j < face_count; ++j) {
+            indices[index_count++] = t + j * 4 + 0;
+            indices[index_count++] = t + j * 4 + 1;
+            indices[index_count++] = t + j * 4 + 2;
+            indices[index_count++] = t + j * 4 + 2;
+            indices[index_count++] = t + j * 4 + 3;
+            indices[index_count++] = t + j * 4 + 0;
         }
     }
 
