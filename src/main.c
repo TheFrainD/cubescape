@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
     }
 
     world_settings_t world_settings = {0};
-    world_settings.size             = 32;
+    world_settings.size             = 8;
     world_t *world                  = world_create(world_settings);
     if (!world) {
         LOG_FATAL("Failed to create world");
