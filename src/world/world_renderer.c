@@ -1,6 +1,7 @@
 #include "world/world_renderer.h"
 
 #include "core/log.h"
+#include "core/profiling.h"
 #include "graphics/renderer.h"
 
 struct world_renderer_state {
@@ -39,11 +40,21 @@ void world_renderer_prepare(world_renderer_t *renderer, world_t *world) {
         return;
     }
 
+    int profile_id = profiling_begin("Mesh generation");
+    int rendered   = 0;
+
     for (size_t i = 0; i < world->size * world->size; ++i) {
         chunk_t *chunk = world->chunks[i];
         if (chunk->dirty) {
+            rendered = 1;
             chunk_generate_mesh(chunk, renderer->state->block_shader, renderer->state->tilemap);
         }
+    }
+
+    if (rendered) {
+        profiling_end(profile_id);
+    } else {
+        profiling_cancel(profile_id);
     }
 }
 

@@ -1,11 +1,18 @@
 #include "world/block.h"
 
+#include "core/log.h"
+
 #define BLOCK_TILE_UNIFORM(BLOCK_ID, TILE_ID) \
     case BLOCK_ID:                            \
         for (int i = 0; i < 6; ++i) {         \
             tiles.values[i] = TILE_ID;        \
         }                                     \
         break;
+
+#define U_MIN (((tile_id % tilemap->tile_size) / (float)tilemap->tile_size) + pixel_size)
+#define V_MIN ((tile_id / row_size) / (float)tilemap->tile_size + pixel_size)
+#define U_MAX ((((tile_id % tilemap->tile_size) + 1) / (float)tilemap->tile_size) - pixel_size)
+#define V_MAX ((((tile_id / row_size) + 1) / (float)tilemap->tile_size) - pixel_size)
 
 int block_is_opaque(block_id_t block) { return block != BLOCK_ID_AIR; }
 
@@ -30,75 +37,87 @@ block_tiles_t block_get_tiles(block_id_t block) {
     return tiles;
 }
 
-block_faces_t block_get_faces(block_id_t block, vec3s position, tilemap_t *tilemap) {
-    block_faces_t faces = {0};
+void block_get_faces(block_id_t block, vec3s position, tilemap_t *tilemap, block_faces_t *faces) {
+    if (tilemap == NULL) {
+        LOG_ERROR("'block_get_faces' called with NULL tilemap");
+        return;
+    }
+
+    if (faces == NULL) {
+        LOG_ERROR("'block_get_faces' called with NULL faces");
+        return;
+    }
+
     block_tiles_t tiles = block_get_tiles(block);
 
+    // Tilemap parameters
+    float pixel_size = 1.0f / tilemap->map_size;
+    int row_size     = tilemap->map_size / tilemap->tile_size;
+    tile_id_t tile_id;
+
     // Top face
-    tile_uv_t uv = tilemap_get_tile_uv(tilemap, tiles.values[BLOCK_FACE_TOP]);
-    faces.values[BLOCK_FACE_TOP].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), uv.value[0]};
-    faces.values[BLOCK_FACE_TOP].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), uv.value[1]};
-    faces.values[BLOCK_FACE_TOP].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), uv.value[2]};
-    faces.values[BLOCK_FACE_TOP].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), uv.value[3]};
+    tile_id = tiles.values[BLOCK_FACE_TOP];
+    faces->values[BLOCK_FACE_TOP].vertices[0] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
+    faces->values[BLOCK_FACE_TOP].vertices[1] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+    faces->values[BLOCK_FACE_TOP].vertices[2] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+    faces->values[BLOCK_FACE_TOP].vertices[3] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
 
     // Bottom face
-    uv = tilemap_get_tile_uv(tilemap, tiles.values[BLOCK_FACE_BOTTOM]);
-    faces.values[BLOCK_FACE_BOTTOM].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), uv.value[0]};
-    faces.values[BLOCK_FACE_BOTTOM].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), uv.value[1]};
-    faces.values[BLOCK_FACE_BOTTOM].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), uv.value[2]};
-    faces.values[BLOCK_FACE_BOTTOM].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), uv.value[3]};
+    tile_id = tiles.values[BLOCK_FACE_BOTTOM];
+    faces->values[BLOCK_FACE_BOTTOM].vertices[0] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+    faces->values[BLOCK_FACE_BOTTOM].vertices[1] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+    faces->values[BLOCK_FACE_BOTTOM].vertices[2] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+    faces->values[BLOCK_FACE_BOTTOM].vertices[3] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
 
     // Front face
-    uv = tilemap_get_tile_uv(tilemap, tiles.values[BLOCK_FACE_FRONT]);
-    faces.values[BLOCK_FACE_FRONT].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), uv.value[0]};
-    faces.values[BLOCK_FACE_FRONT].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), uv.value[1]};
-    faces.values[BLOCK_FACE_FRONT].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), uv.value[2]};
-    faces.values[BLOCK_FACE_FRONT].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), uv.value[3]};
+    tile_id = tiles.values[BLOCK_FACE_FRONT];
+    faces->values[BLOCK_FACE_FRONT].vertices[0] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
+    faces->values[BLOCK_FACE_FRONT].vertices[1] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+    faces->values[BLOCK_FACE_FRONT].vertices[2] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+    faces->values[BLOCK_FACE_FRONT].vertices[3] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
 
     // Back face
-    uv = tilemap_get_tile_uv(tilemap, tiles.values[BLOCK_FACE_BACK]);
-    faces.values[BLOCK_FACE_BACK].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), uv.value[0]};
-    faces.values[BLOCK_FACE_BACK].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), uv.value[1]};
-    faces.values[BLOCK_FACE_BACK].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), uv.value[2]};
-    faces.values[BLOCK_FACE_BACK].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), uv.value[3]};
+    tile_id = tiles.values[BLOCK_FACE_BACK];
+    faces->values[BLOCK_FACE_BACK].vertices[0] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+    faces->values[BLOCK_FACE_BACK].vertices[1] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+    faces->values[BLOCK_FACE_BACK].vertices[2] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+    faces->values[BLOCK_FACE_BACK].vertices[3] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
 
     // Left face
-    uv = tilemap_get_tile_uv(tilemap, tiles.values[BLOCK_FACE_LEFT]);
-    faces.values[BLOCK_FACE_LEFT].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), uv.value[0]};
-    faces.values[BLOCK_FACE_LEFT].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), uv.value[1]};
-    faces.values[BLOCK_FACE_LEFT].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), uv.value[2]};
-    faces.values[BLOCK_FACE_LEFT].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), uv.value[3]};
+    tile_id = tiles.values[BLOCK_FACE_LEFT];
+    faces->values[BLOCK_FACE_LEFT].vertices[0] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+    faces->values[BLOCK_FACE_LEFT].vertices[1] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+    faces->values[BLOCK_FACE_LEFT].vertices[2] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+    faces->values[BLOCK_FACE_LEFT].vertices[3] =
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
 
     // Right face
-    uv = tilemap_get_tile_uv(tilemap, tiles.values[BLOCK_FACE_RIGHT]);
-    faces.values[BLOCK_FACE_RIGHT].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), uv.value[0]};
-    faces.values[BLOCK_FACE_RIGHT].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), uv.value[1]};
-    faces.values[BLOCK_FACE_RIGHT].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), uv.value[2]};
-    faces.values[BLOCK_FACE_RIGHT].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), uv.value[3]};
-
-    return faces;
+    tile_id = tiles.values[BLOCK_FACE_RIGHT];
+    faces->values[BLOCK_FACE_RIGHT].vertices[0] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+    faces->values[BLOCK_FACE_RIGHT].vertices[1] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+    faces->values[BLOCK_FACE_RIGHT].vertices[2] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+    faces->values[BLOCK_FACE_RIGHT].vertices[3] =
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
 }

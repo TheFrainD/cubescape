@@ -4,6 +4,7 @@
 #include "core/file.h"
 #include "core/input.h"
 #include "core/log.h"
+#include "core/profiling.h"
 #include "graphics/camera.h"
 #include "graphics/renderer.h"
 #include "graphics/shader.h"
@@ -19,10 +20,10 @@
 
 #define LOG_FILE EXECUTABLE_NAME ".log"
 
-static int is_running   = 0;
-static camera_t *camera = NULL;
+static int is_running               = 0;
+static camera_t *camera             = NULL;
 static const float horizontal_speed = 7.0f;
-static const float vertical_speed = 5.0f;
+static const float vertical_speed   = 5.0f;
 
 void key_callback(key_code_t key) {
     if (key == KEY_ESCAPE) {
@@ -37,15 +38,15 @@ void key_callback(key_code_t key) {
 void mouse_callback(double x, double y) { camera_update_view(camera, (vec2s) {{x, y}}); }
 
 void update() {
-    float horizontal_velocity  = horizontal_speed * window_get_delta_time();
+    float horizontal_velocity = horizontal_speed * window_get_delta_time();
 
     if (input_key_pressed(KEY_LEFT_CONTROL)) {
         horizontal_velocity *= 1.5f;
     }
 
     vec3s direction = GLMS_VEC3_ZERO_INIT;
-    vec3s front = camera_get_front(camera);
-    vec3s right = camera_get_right(camera);
+    vec3s front     = camera_get_front(camera);
+    vec3s right     = camera_get_right(camera);
 
     // Zero out the y component to restrict movement to the x and z axes
     front.y = 0.0f;
@@ -74,7 +75,7 @@ void update() {
 }
 
 int main(int argc, char **argv) {
-    logger_set_level(LOG_LEVEL_INFO);
+    logger_set_level(LOG_LEVEL_DEBUG);
 
     // Log to file
     FILE *log_fp = fopen(LOG_FILE, "w");
@@ -86,12 +87,18 @@ int main(int argc, char **argv) {
 
     LOG_INFO("%s starting up...", EXECUTABLE_NAME);
 
+    int result = profiling_init();
+    if (result) {
+        LOG_FATAL("Failed to initialize profiling");
+        return 1;
+    }
+
     window_settings_t window_settings = {0};
     window_settings.width             = 1280;
     window_settings.height            = 720;
     window_settings.title             = EXECUTABLE_NAME;
     window_settings.multisample       = 4;
-    int result                        = window_init(window_settings);
+    result                            = window_init(window_settings);
     if (result) {
         LOG_FATAL("Failed to initialize window");
         return 1;
@@ -211,6 +218,7 @@ int main(int argc, char **argv) {
 
     renderer_deinit();
     window_deinit();
+    profiling_deinit();
 
     fclose(log_fp);
     return 0;

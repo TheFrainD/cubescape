@@ -2,16 +2,43 @@
 
 #include <glad/glad.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "core/log.h"
 #include "graphics/buffer.h"
 #include "graphics/vertex_array.h"
 
-#define ADD_VERTEX(vertex)               \
-    do {                                 \
-        vertices[vertex_count] = vertex; \
-        ++vertex_count;                  \
-    } while (0)
+static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position) {
+    ivec3s adjacent_position;
+
+    switch (face) {
+        case BLOCK_FACE_TOP:
+            adjacent_position = (ivec3s) {{position.x, position.y + 1, position.z}};
+            break;
+        case BLOCK_FACE_BOTTOM:
+            adjacent_position = (ivec3s) {{position.x, position.y - 1, position.z}};
+            break;
+        case BLOCK_FACE_FRONT:
+            adjacent_position = (ivec3s) {{position.x, position.y, position.z + 1}};
+            break;
+        case BLOCK_FACE_BACK:
+            adjacent_position = (ivec3s) {{position.x, position.y, position.z - 1}};
+            break;
+        case BLOCK_FACE_LEFT:
+            adjacent_position = (ivec3s) {{position.x - 1, position.y, position.z}};
+            break;
+        case BLOCK_FACE_RIGHT:
+            adjacent_position = (ivec3s) {{position.x + 1, position.y, position.z}};
+            break;
+    }
+
+    if (adjacent_position.x < 0 || adjacent_position.x >= CHUNK_SIZE || adjacent_position.y < 0 ||
+        adjacent_position.y >= CHUNK_HEIGHT || adjacent_position.z < 0 || adjacent_position.z >= CHUNK_SIZE) {
+        return 1;
+    }
+
+    return !block_is_opaque(chunk_get_block(chunk, adjacent_position));
+}
 
 chunk_t *chunk_create(ivec2s position) {
     chunk_t *chunk  = malloc(sizeof(chunk_t));
@@ -67,6 +94,7 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
     size_t vertex_count = 0;
     size_t index_count  = 0;
 
+    block_faces_t *faces = (block_faces_t *)malloc(sizeof(block_faces_t));
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         // Don't render transparent blocks
         if (!block_is_opaque(chunk->blocks[i])) {
@@ -77,74 +105,26 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
         int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
         int z = i / (CHUNK_SIZE * CHUNK_HEIGHT);
 
-        block_id_t block    = chunk->blocks[i];
-        block_faces_t faces = block_get_faces(block, (vec3s) {{x, y, z}}, tilemap);
-        int face_count      = 0;
+        block_id_t block = chunk->blocks[i];
+        block_get_faces(block, (vec3s) {{x, y, z}}, tilemap, faces);
 
-        // Top face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x, y + 1, z}}))) {
-            block_face_data_t face = faces.values[BLOCK_FACE_TOP];
-            for (int j = 0; j < 4; ++j) {
-                ADD_VERTEX(face.vertices[j]);
+        for (int j = 0; j < 6; ++j) {
+            if (!should_render_face(chunk, j, (ivec3s) {{x, y, z}})) {
+                continue;
             }
-            ++face_count;
-        }
 
-        // Bottom face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x, y - 1, z}}))) {
-            block_face_data_t face = faces.values[BLOCK_FACE_BOTTOM];
-            for (int j = 0; j < 4; ++j) {
-                ADD_VERTEX(face.vertices[j]);
-            }
-            ++face_count;
-        }
+            memcpy(&vertices[vertex_count], faces->values[j].vertices, 4 * sizeof(vertex_t));
+            vertex_count += 4;
 
-        // Front face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x, y, z + 1}}))) {
-            block_face_data_t face = faces.values[BLOCK_FACE_FRONT];
-            for (int j = 0; j < 4; ++j) {
-                ADD_VERTEX(face.vertices[j]);
-            }
-            ++face_count;
-        }
-
-        // Back face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x, y, z - 1}}))) {
-            block_face_data_t face = faces.values[BLOCK_FACE_BACK];
-            for (int j = 0; j < 4; ++j) {
-                ADD_VERTEX(face.vertices[j]);
-            }
-            ++face_count;
-        }
-
-        // Left face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x - 1, y, z}}))) {
-            block_face_data_t face = faces.values[BLOCK_FACE_LEFT];
-            for (int j = 0; j < 4; ++j) {
-                ADD_VERTEX(face.vertices[j]);
-            }
-            ++face_count;
-        }
-
-        // Right face
-        if (!block_is_opaque(chunk_get_block(chunk, (ivec3s) {{x + 1, y, z}}))) {
-            block_face_data_t face = faces.values[BLOCK_FACE_RIGHT];
-            for (int j = 0; j < 4; ++j) {
-                ADD_VERTEX(face.vertices[j]);
-            }
-            ++face_count;
-        }
-
-        int t = vertex_count - 4 * face_count;
-        for (int j = 0; j < face_count; ++j) {
-            indices[index_count++] = t + j * 4 + 0;
-            indices[index_count++] = t + j * 4 + 1;
-            indices[index_count++] = t + j * 4 + 2;
-            indices[index_count++] = t + j * 4 + 2;
-            indices[index_count++] = t + j * 4 + 3;
-            indices[index_count++] = t + j * 4 + 0;
+            indices[index_count++] = vertex_count - 4;
+            indices[index_count++] = vertex_count - 3;
+            indices[index_count++] = vertex_count - 2;
+            indices[index_count++] = vertex_count - 2;
+            indices[index_count++] = vertex_count - 1;
+            indices[index_count++] = vertex_count - 4;
         }
     }
+    free(faces);
 
     vertices = (vertex_t *)realloc(vertices, vertex_count * sizeof(vertex_t));
     indices  = (uint32_t *)realloc(indices, index_count * sizeof(uint32_t));

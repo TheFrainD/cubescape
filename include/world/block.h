@@ -64,11 +64,12 @@ block_tiles_t block_get_tiles(block_id_t block);
 
 /**
  * @brief Retrieves the faces for a block.
- * 
+ *
  * This function calculates the faces for the specified block at the given position.
- * 
+ *
  * @param block The block to retrieve the faces for.
- * 
- * @return block_faces_t The faces for the block.
+ * @param position The position of the block.
+ * @param tilemap The tilemap to use for the block.
+ * @param faces The faces for the block.
  */
-block_faces_t block_get_faces(block_id_t block, vec3s position, tilemap_t *tilemap);
+void block_get_faces(block_id_t block, vec3s position, tilemap_t *tilemap, block_faces_t *faces);
