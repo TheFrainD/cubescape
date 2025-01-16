@@ -36,6 +36,7 @@ mesh_t *mesh_create(const vertex_t *const vertices, size_t vertex_count, const u
     buffer_bind(mesh->private_data->vertex_buffer);
     vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, position));
     vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, uv));
+    vertex_array_attrib(2, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, tint));
     buffer_unbind(mesh->private_data->vertex_buffer);
     vertex_array_unbind();
 
