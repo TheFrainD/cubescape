@@ -10,7 +10,7 @@
 #include "graphics/window.h"
 
 typedef struct {
-    uint32_t uniform_buffer;
+    buffer_t *uniform_buffer;
 
     renderer_state_t state;
 } renderer_t;
@@ -20,7 +20,7 @@ static renderer_t renderer;
 static void set_perspective(ivec2s size) {
     mat4s projection = glms_perspective(RAD(camera_get_fov(renderer.state.camera)), (float)size.x / (float)size.y,
                                         renderer.state.near_clip, renderer.state.far_clip);
-    buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, sizeof(mat4) * 2, sizeof(mat4), &projection);
+    buffer_sub_data(renderer.uniform_buffer, sizeof(mat4) * 2, sizeof(mat4), &projection);
 }
 
 int renderer_init(renderer_settings_t settings) {
@@ -63,7 +63,7 @@ int renderer_init(renderer_settings_t settings) {
 }
 
 void renderer_deinit() {
-    buffer_destroy(&renderer.uniform_buffer);
+    buffer_destroy(renderer.uniform_buffer);
     camera_destroy(renderer.state.camera);
 
     CUBELOG_INFO("Renderer deinitialized");
@@ -81,7 +81,7 @@ void renderer_begin_frame() {
 
     if (camera_view_changed(renderer.state.camera)) {
         mat4s view = camera_get_view(renderer.state.camera);
-        buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, sizeof(mat4), sizeof(mat4), &view);
+        buffer_sub_data(renderer.uniform_buffer, sizeof(mat4), sizeof(mat4), &view);
         camera_view_reset(renderer.state.camera);
     }
 }
@@ -91,13 +91,13 @@ void renderer_end_frame() {
     window_swap_buffers();
 }
 
-void renderer_draw_mesh(mesh_t *mesh, vec3s position, vec3s rotation, vec3s scale) {
+void renderer_draw_mesh(const mesh_t *const mesh, vec3s position, vec3s rotation, vec3s scale) {
     if (!mesh) {
         CUBELOG_ERROR("'renderer_draw_mesh' called with NULL mesh");
         return;
     }
 
-    buffer_bind_base(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0);
+    buffer_bind_base(renderer.uniform_buffer, 0);
     shader_program_bind_uniform_block(mesh->shader_program, "Matrices", 0);
 
     mesh_bind(mesh);
@@ -109,15 +109,13 @@ void renderer_draw_mesh(mesh_t *mesh, vec3s position, vec3s rotation, vec3s scal
     model       = glms_rotate(model, rotation.z, (vec3s) {{0.0f, 0.0f, 1.0f}});
     model       = glms_scale(model, scale);
 
-    buffer_sub_data(renderer.uniform_buffer, BUFFER_TARGET_UNIFORM_BUFFER, 0, sizeof(mat4), &model);
+    buffer_sub_data(renderer.uniform_buffer, 0, sizeof(mat4), &model);
 
     glDrawElements(GL_TRIANGLES, mesh_get_index_count(mesh), GL_UNSIGNED_INT, 0);
 
-    mesh_unbind();
+    mesh_unbind(mesh);
 }
 
 camera_t *renderer_get_camera() { return renderer.state.camera; }
-
-uint32_t renderer_get_uniform_buffer() { return renderer.uniform_buffer; }
 
 renderer_state_t *renderer_get_state() { return &renderer.state; }

@@ -1,6 +1,5 @@
 #include "graphics/camera.h"
 
-#include <cubegl/buffer.h>
 #include <cubelog/cubelog.h>
 
 #include "core/input.h"

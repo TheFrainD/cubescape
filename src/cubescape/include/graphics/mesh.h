@@ -5,11 +5,6 @@
 
 #include "graphics/vertex.h"
 
-#define MESH_EMPTY_INIT                          \
-    do {                                         \
-        mesh_create(NULL, 0, NULL, 0, NULL, -1); \
-    } while (0)
-
 typedef struct mesh_private_data mesh_private_data_t;
 
 typedef struct {
@@ -33,8 +28,8 @@ typedef struct {
  *
  * @return mesh_t* A pointer to the newly created mesh object.
  */
-mesh_t *mesh_create(vertex_t *vertices, size_t vertex_count, uint32_t *indices, size_t index_count,
-                    shader_program_t *shader_program, uint32_t texture);
+mesh_t *mesh_create(const vertex_t *const vertices, size_t vertex_count, const uint32_t *const indices,
+                    size_t index_count, shader_program_t *shader_program, uint32_t texture);
 
 /**
  * @brief Destroys the specified mesh.
@@ -54,7 +49,7 @@ void mesh_destroy(mesh_t *mesh);
  * @param vertices An array of vertices.
  * @param vertex_count The number of vertices in the array.
  */
-void mesh_set_vertices(mesh_t *mesh, vertex_t *vertices, size_t vertex_count);
+void mesh_set_vertices(const mesh_t *mesh, const vertex_t *const vertices, size_t vertex_count);
 
 /**
  * @brief Sets the indices of the specified mesh.
@@ -65,7 +60,7 @@ void mesh_set_vertices(mesh_t *mesh, vertex_t *vertices, size_t vertex_count);
  * @param indices An array of indices.
  * @param index_count The number of indices in the array.
  */
-void mesh_set_indices(mesh_t *mesh, uint32_t *indices, size_t index_count);
+void mesh_set_indices(const mesh_t *mesh, const uint32_t *const indices, size_t index_count);
 
 /**
  * @brief Binds the specified mesh for rendering.
@@ -74,14 +69,16 @@ void mesh_set_indices(mesh_t *mesh, uint32_t *indices, size_t index_count);
  *
  * @param mesh A pointer to the mesh object to bind.
  */
-void mesh_bind(mesh_t *mesh);
+void mesh_bind(const mesh_t *const mesh);
 
 /**
  * @brief Unbinds the currently bound mesh.
  *
  * This function unbinds the currently bound mesh.
+ *
+ * @param mesh A pointer to the mesh object to unbind.
  */
-void mesh_unbind();
+void mesh_unbind(const mesh_t *const mesh);
 
 /**
  * @brief Returns the number of vertices in the specified mesh.
@@ -92,7 +89,7 @@ void mesh_unbind();
  *
  * @return size_t The number of vertices in the mesh.
  */
-size_t mesh_get_vertex_count(mesh_t *mesh);
+size_t mesh_get_vertex_count(const mesh_t *const mesh);
 
 /**
  * @brief Returns the number of indices in the specified mesh.
@@ -103,4 +100,4 @@ size_t mesh_get_vertex_count(mesh_t *mesh);
  *
  * @return size_t The number of indices in the mesh.
  */
-size_t mesh_get_index_count(mesh_t *mesh);
+size_t mesh_get_index_count(const mesh_t *const mesh);

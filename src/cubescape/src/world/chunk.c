@@ -1,6 +1,5 @@
 #include "world/chunk.h"
 
-#include <cubegl/buffer.h>
 #include <cubegl/vertex_array.h>
 #include <cubelog/cubelog.h>
 #include <glad/glad.h>
