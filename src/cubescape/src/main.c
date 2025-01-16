@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
     }
 
     world_settings_t world_settings = {0};
-    world_settings.size             = 4;
+    world_settings.size             = 16;
     world                           = world_create(world_settings);
     if (!world) {
         CUBELOG_FATAL("Failed to create world");

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core/math.h"
 #include "world/world.h"
 
 static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position) {
@@ -168,15 +169,13 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
             continue;
         }
 
-        int x = i % CHUNK_SIZE;
-        int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
-        int z = i / (CHUNK_SIZE * CHUNK_HEIGHT);
-
+        ivec3s block_position =
+            (ivec3s) {{i % CHUNK_SIZE, (i / CHUNK_SIZE) % CHUNK_HEIGHT, i / (CHUNK_SIZE * CHUNK_HEIGHT)}};
         block_id_t block = chunk->blocks[i];
-        block_get_faces(block, (vec3s) {{x, y, z}}, tilemap, &faces);
+        block_get_faces(block, IVEC3S_TO_VEC3S(block_position), tilemap, &faces);
 
         for (int j = 0; j < 6; ++j) {
-            if (!should_render_face(chunk, j, (ivec3s) {{x, y, z}})) {
+            if (!should_render_face(chunk, j, block_position)) {
                 continue;
             }
 
