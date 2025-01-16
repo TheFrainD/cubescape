@@ -1,11 +1,10 @@
 #include "graphics/window.h"
 
 #include <GLFW/glfw3.h>
+#include <cubelog/cubelog.h>
 #include <glad/glad.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "core/log.h"
 
 #define CALLBACK_ARRAY_SIZE 64
 
@@ -25,11 +24,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     }
 }
 
-void glfw_error_callback(int error, const char* description) { LOG_ERROR("GLFW error: %s", description); }
+void glfw_error_callback(int error, const char* description) { CUBELOG_ERROR("GLFW error: %s", description); }
 
 void window_set_settings(window_settings_t settings) {
     if (!g_window) {
-        LOG_ERROR("'window_set_settings' failed: no window created");
+        CUBELOG_ERROR("'window_set_settings' failed: no window created");
         return;
     }
     glfwSetWindowSize(g_window, settings.width, settings.height);
@@ -39,7 +38,7 @@ void window_set_settings(window_settings_t settings) {
 window_settings_t window_get_settings() {
     window_settings_t settings = {0};
     if (!g_window) {
-        LOG_ERROR("'window_get_settings' failed: no window created");
+        CUBELOG_ERROR("'window_get_settings' failed: no window created");
         return settings;
     }
     glfwGetWindowSize(g_window, &settings.width, &settings.height);
@@ -49,7 +48,7 @@ window_settings_t window_get_settings() {
 
 void window_set_swap_interval(int interval) {
     if (!g_window) {
-        LOG_ERROR("'window_set_swap_interval' failed: no window created");
+        CUBELOG_ERROR("'window_set_swap_interval' failed: no window created");
         return;
     }
     glfwSwapInterval(interval);
@@ -59,7 +58,7 @@ int window_init(window_settings_t settings) {
     glfwSetErrorCallback(glfw_error_callback);
 
     if (!glfwInit()) {
-        LOG_FATAL("Failed to initialize GLFW");
+        CUBELOG_FATAL("Failed to initialize GLFW");
         return 1;
     }
 
@@ -74,7 +73,7 @@ int window_init(window_settings_t settings) {
 
     g_window = glfwCreateWindow(settings.width, settings.height, settings.title, NULL, NULL);
     if (!g_window) {
-        LOG_FATAL("Failed to create GLFW window");
+        CUBELOG_FATAL("Failed to create GLFW window");
         glfwTerminate();
         return 1;
     }
@@ -85,7 +84,7 @@ int window_init(window_settings_t settings) {
     glfwSwapInterval(0);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        LOG_FATAL("Failed to initialize GLAD");
+        CUBELOG_FATAL("Failed to initialize GLAD");
         glfwTerminate();
         return 1;
     }
@@ -94,7 +93,7 @@ int window_init(window_settings_t settings) {
     glfwGetFramebufferSize(g_window, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
-    LOG_INFO("Window initialized: %s (%dx%d)", settings.title, settings.width, settings.height);
+    CUBELOG_INFO("Window initialized: %s (%dx%d)", settings.title, settings.width, settings.height);
 
     return 0;
 }
@@ -105,7 +104,7 @@ void window_deinit() {
         glfwTerminate();
         g_window = NULL;
 
-        LOG_INFO("Window deinitialized");
+        CUBELOG_INFO("Window deinitialized");
     }
 }
 
@@ -113,7 +112,7 @@ int window_should_close() { return g_window ? glfwWindowShouldClose(g_window) : 
 
 void window_swap_buffers() {
     if (!g_window) {
-        LOG_ERROR("'window_swap_buffers' failed: no window created");
+        CUBELOG_ERROR("'window_swap_buffers' failed: no window created");
         return;
     }
     glfwSwapBuffers(g_window);
@@ -131,7 +130,7 @@ float window_get_delta_time() { return delta_time; }
 
 ivec2s window_get_framebuffer_size() {
     if (!g_window) {
-        LOG_ERROR("'window_get_framebuffer_size' failed: no window created");
+        CUBELOG_ERROR("'window_get_framebuffer_size' failed: no window created");
         return (ivec2s) {{0, 0}};
     }
 
@@ -142,7 +141,7 @@ ivec2s window_get_framebuffer_size() {
 
 ivec2s window_get_size() {
     if (!g_window) {
-        LOG_ERROR("'window_get_size' failed: no window created");
+        CUBELOG_ERROR("'window_get_size' failed: no window created");
         return (ivec2s) {{0, 0}};
     }
 
@@ -153,7 +152,7 @@ ivec2s window_get_size() {
 
 void window_set_size(ivec2s size) {
     if (!g_window) {
-        LOG_ERROR("'window_set_size' failed: no window created");
+        CUBELOG_ERROR("'window_set_size' failed: no window created");
         return;
     }
     glfwSetWindowSize(g_window, size.x, size.y);

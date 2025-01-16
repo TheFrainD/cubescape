@@ -1,12 +1,12 @@
 #include "graphics/renderer.h"
 
+#include <cubegl/buffer.h>
+#include <cubegl/vertex_array.h>
+#include <cubelog/cubelog.h>
 #include <glad/glad.h>
 
-#include "core/log.h"
 #include "core/math.h"
-#include "graphics/buffer.h"
 #include "graphics/vertex.h"
-#include "graphics/vertex_array.h"
 #include "graphics/window.h"
 
 typedef struct {
@@ -54,10 +54,10 @@ int renderer_init(renderer_settings_t settings) {
 
     const GLubyte *renderer = glGetString(GL_RENDERER);
     const GLubyte *version  = glGetString(GL_VERSION);
-    LOG_INFO("Renderer: %s", renderer);
-    LOG_INFO("OpenGL version supported %s", version);
+    CUBELOG_INFO("Renderer: %s", renderer);
+    CUBELOG_INFO("OpenGL version supported %s", version);
 
-    LOG_INFO("Renderer initialized");
+    CUBELOG_INFO("Renderer initialized");
 
     return 0;
 }
@@ -66,7 +66,7 @@ void renderer_deinit() {
     buffer_destroy(&renderer.uniform_buffer);
     camera_destroy(renderer.state.camera);
 
-    LOG_INFO("Renderer deinitialized");
+    CUBELOG_INFO("Renderer deinitialized");
 }
 
 void renderer_begin_frame() {
@@ -93,7 +93,7 @@ void renderer_end_frame() {
 
 void renderer_draw_mesh(mesh_t *mesh, vec3s position, vec3s rotation, vec3s scale) {
     if (!mesh) {
-        LOG_ERROR("'renderer_draw_mesh' called with NULL mesh");
+        CUBELOG_ERROR("'renderer_draw_mesh' called with NULL mesh");
         return;
     }
 

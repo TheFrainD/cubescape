@@ -1,8 +1,7 @@
 #include "core/input.h"
 
 #include <GLFW/glfw3.h>
-
-#include "core/log.h"
+#include <cubelog/cubelog.h>
 
 #define CALLBACK_ARRAY_SIZE 64
 
@@ -59,7 +58,7 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 static void mouse_position_callback(GLFWwindow* window, double x, double y) {
     input_manager.mouse_x = x;
     input_manager.mouse_y = y;
-    
+
     for (size_t i = 0; i < input_manager.mouse_position_callback_count; i++) {
         input_manager.mouse_position_callbacks[i](x, y);
     }
@@ -83,10 +82,10 @@ void input_init() {
         input_manager.mouse_buttons[i] = GLFW_RELEASE;
     }
 
-    input_manager.mouse_x = 0.0;
-    input_manager.mouse_y = 0.0;
-    input_manager.scroll_x = 0.0;
-    input_manager.scroll_y = 0.0;
+    input_manager.mouse_x                       = 0.0;
+    input_manager.mouse_y                       = 0.0;
+    input_manager.scroll_x                      = 0.0;
+    input_manager.scroll_y                      = 0.0;
     input_manager.mouse_position_callback_count = 0;
 
     glfwSetKeyCallback(g_window, key_callback);
@@ -95,15 +94,11 @@ void input_init() {
     glfwSetScrollCallback(g_window, mouse_scroll_callback);
 }
 
-int input_key_pressed(key_code_t key) {
-    return input_manager.keys[key] == GLFW_PRESS;
-}
+int input_key_pressed(key_code_t key) { return input_manager.keys[key] == GLFW_PRESS; }
 
-int input_mouse_button_pressed(mouse_button_code_t button) {
-    return input_manager.mouse_buttons[button] == GLFW_PRESS;
-}
+int input_mouse_button_pressed(mouse_button_code_t button) { return input_manager.mouse_buttons[button] == GLFW_PRESS; }
 
-void input_get_mouse_position(double *x, double *y) {
+void input_get_mouse_position(double* x, double* y) {
     if (x) {
         *x = input_manager.mouse_x;
     }
@@ -112,7 +107,7 @@ void input_get_mouse_position(double *x, double *y) {
     }
 }
 
-void input_get_mouse_scroll(double *x, double *y) {
+void input_get_mouse_scroll(double* x, double* y) {
     if (x) {
         *x = input_manager.scroll_x;
     }

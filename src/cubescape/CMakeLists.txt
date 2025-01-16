@@ -12,7 +12,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE EXECUTABLE_NAME="${PROJECT_NAME}")
 
-target_link_libraries(${PROJECT_NAME} glfw glad cglm stb)
+target_link_libraries(${PROJECT_NAME} glfw glad cglm stb cubelog cubegl)
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror -Wno-missing-braces)
 

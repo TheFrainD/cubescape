@@ -1,20 +1,18 @@
-#include "graphics/shader_program.h"
+#include "shader_program.h"
 
+#include <cubelog/cubelog.h>
+#include <glad/glad.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <glad/glad.h>
-
-#include "core/log.h"
-
-struct shader_program{
+struct shader_program {
     uint32_t id;
     char *uniform_block_indeces[UNIFROM_BLOCK_INDEX_SIZE];
 };
 
 static void print_info_log(uint32_t program, const char *message) {
     GLint length;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+    glGetProgramiv(program, GL_INFO_CUBELOG_LENGTH, &length);
 
     if (length == 0) {
         return;
@@ -23,14 +21,14 @@ static void print_info_log(uint32_t program, const char *message) {
     char *info_log = malloc(length);
     glGetProgramInfoLog(program, length, &length, info_log);
 
-    LOG_ERROR("%s: %s", message, info_log);
+    CUBELOG_ERROR("%s: %s", message, info_log);
 
     free(info_log);
 }
 
 shader_program_t *shader_program_create() {
     shader_program_t *program = malloc(sizeof(shader_program_t));
-    program->id = glCreateProgram();
+    program->id               = glCreateProgram();
     if (program->id == 0) {
         free(program);
         return NULL;
@@ -38,17 +36,17 @@ shader_program_t *shader_program_create() {
 
     memset(program->uniform_block_indeces, 0, sizeof(program->uniform_block_indeces));
 
-    LOG_TRACE("Created shader program with ID: %d", program->id);
+    CUBELOG_TRACE("Created shader program with ID: %d", program->id);
     return program;
 }
 
 void shader_program_destroy(shader_program_t *program) {
     if (program == NULL) {
-        LOG_ERROR("'shader_program_destroy' called with NULL program");
+        CUBELOG_ERROR("'shader_program_destroy' called with NULL program");
         return;
     }
 
-    LOG_TRACE("Destroying shader program with ID: %d", program->id);
+    CUBELOG_TRACE("Destroying shader program with ID: %d", program->id);
 
     glDeleteProgram(program->id);
 
@@ -63,7 +61,7 @@ void shader_program_destroy(shader_program_t *program) {
 
 void shader_program_attach_shader(shader_program_t *program, uint32_t shader) {
     if (program == NULL) {
-        LOG_ERROR("'shader_program_attach_shader' called with NULL program");
+        CUBELOG_ERROR("'shader_program_attach_shader' called with NULL program");
         return;
     }
     glAttachShader(program->id, shader);
@@ -71,7 +69,7 @@ void shader_program_attach_shader(shader_program_t *program, uint32_t shader) {
 
 void shader_program_link(shader_program_t *program) {
     if (program == NULL) {
-        LOG_ERROR("'shader_program_link' called with NULL program");
+        CUBELOG_ERROR("'shader_program_link' called with NULL program");
         return;
     }
 
@@ -87,7 +85,7 @@ void shader_program_link(shader_program_t *program) {
 
 void shader_program_use(shader_program_t *program) {
     if (program == NULL) {
-        LOG_ERROR("'shader_program_use' called with NULL program");
+        CUBELOG_ERROR("'shader_program_use' called with NULL program");
         return;
     }
 
@@ -96,7 +94,7 @@ void shader_program_use(shader_program_t *program) {
 
 uint32_t shader_program_get_uniform_block_index(shader_program_t *program, const char *name) {
     if (program == NULL) {
-        LOG_ERROR("'shader_program_get_uniform_block_index' called with NULL program");
+        CUBELOG_ERROR("'shader_program_get_uniform_block_index' called with NULL program");
         return GL_INVALID_INDEX;
     }
 
@@ -108,24 +106,24 @@ uint32_t shader_program_get_uniform_block_index(shader_program_t *program, const
 
     uint32_t index = glGetUniformBlockIndex(program->id, name);
     if (index == GL_INVALID_INDEX) {
-        LOG_ERROR("Uniform block '%s' not found", name);
+        CUBELOG_ERROR("Uniform block '%s' not found", name);
         return GL_INVALID_INDEX;
     }
 
     if (program->uniform_block_indeces[index]) {
         free(program->uniform_block_indeces[index]);
-        LOG_WARN("Uniform block index %d was overwritten", index);
+        CUBELOG_WARN("Uniform block index %d was overwritten", index);
     }
 
     program->uniform_block_indeces[index] = strdup(name);
-    LOG_DEBUG("Uniform block '%s' index: %d", name, index);
+    CUBELOG_DEBUG("Uniform block '%s' index: %d", name, index);
 
     return index;
 }
 
 void shader_program_bind_uniform_block(shader_program_t *program, const char *name, uint32_t binding_point) {
     if (program == NULL) {
-        LOG_ERROR("'shader_program_bind_uniform_block' called with NULL program");
+        CUBELOG_ERROR("'shader_program_bind_uniform_block' called with NULL program");
         return;
     }
 

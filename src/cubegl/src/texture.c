@@ -1,19 +1,18 @@
-#include "graphics/texture.h"
+#include "texture.h"
 
+#include <cubelog/cubelog.h>
 #include <glad/glad.h>
-
-#include "core/log.h"
 
 uint32_t texture_create() {
     uint32_t texture;
     glGenTextures(1, &texture);
-    LOG_TRACE("Created texture with ID: %d", texture);
+    CUBELOG_TRACE("Created texture with ID: %d", texture);
     return texture;
 }
 
 void texture_bind(uint32_t texture, uint32_t slot) {
     if (texture == 0) {
-        LOG_ERROR("'texture_bind' called with 0 texture");
+        CUBELOG_ERROR("'texture_bind' called with 0 texture");
         return;
     }
 
@@ -28,12 +27,12 @@ void texture_unbind(uint32_t slot) {
 
 void texture_set_data(uint32_t texture, const uint8_t *data, int width, int height, image_format_t format) {
     if (texture == 0) {
-        LOG_ERROR("'texture_set_data' called with 0 texture");
+        CUBELOG_ERROR("'texture_set_data' called with 0 texture");
         return;
     }
 
     if (data == NULL) {
-        LOG_ERROR("'texture_set_data' called with NULL data");
+        CUBELOG_ERROR("'texture_set_data' called with NULL data");
         return;
     }
 
@@ -50,7 +49,7 @@ void texture_set_data(uint32_t texture, const uint8_t *data, int width, int heig
             display_format  = GL_RGBA;
             break;
         default:
-            LOG_ERROR("Unsupported image format: %d", format);
+            CUBELOG_ERROR("Unsupported image format: %d", format);
             return;
     }
 
@@ -61,12 +60,12 @@ void texture_set_data(uint32_t texture, const uint8_t *data, int width, int heig
 
 void texture_set_image(uint32_t texture, image_t *image) {
     if (texture == 0) {
-        LOG_ERROR("'texture_set_image' called with 0 texture");
+        CUBELOG_ERROR("'texture_set_image' called with 0 texture");
         return;
     }
 
     if (image == NULL) {
-        LOG_ERROR("'texture_set_image' called with NULL image");
+        CUBELOG_ERROR("'texture_set_image' called with NULL image");
         return;
     }
 
@@ -75,7 +74,7 @@ void texture_set_image(uint32_t texture, image_t *image) {
 
 void texture_set_wrapping(uint32_t texture, texture_wrapping_t s, texture_wrapping_t t) {
     if (texture == 0) {
-        LOG_ERROR("'texture_set_wrapping' called with 0 texture");
+        CUBELOG_ERROR("'texture_set_wrapping' called with 0 texture");
         return;
     }
 
@@ -87,7 +86,7 @@ void texture_set_wrapping(uint32_t texture, texture_wrapping_t s, texture_wrappi
 
 void texture_set_filtering(uint32_t texture, texture_filtering_t min, texture_filtering_t mag) {
     if (texture == 0) {
-        LOG_ERROR("'texture_set_filtering' called with 0 texture");
+        CUBELOG_ERROR("'texture_set_filtering' called with 0 texture");
         return;
     }
 
@@ -99,7 +98,7 @@ void texture_set_filtering(uint32_t texture, texture_filtering_t min, texture_fi
 
 void texture_generate_mipmaps(uint32_t texture) {
     if (texture == 0) {
-        LOG_ERROR("'texture_generate_mipmaps' called with 0 texture");
+        CUBELOG_ERROR("'texture_generate_mipmaps' called with 0 texture");
         return;
     }
 
@@ -110,7 +109,7 @@ void texture_generate_mipmaps(uint32_t texture) {
 
 void texture_set_anisotropy(uint32_t texture, float anisotropy) {
     if (texture == 0) {
-        LOG_ERROR("'texture_set_anisotropy' called with 0 texture");
+        CUBELOG_ERROR("'texture_set_anisotropy' called with 0 texture");
         return;
     }
 
@@ -121,15 +120,15 @@ void texture_set_anisotropy(uint32_t texture, float anisotropy) {
 
 void texture_destroy(uint32_t *texture) {
     if (texture == NULL) {
-        LOG_ERROR("'texture_destroy' called with NULL texture");
+        CUBELOG_ERROR("'texture_destroy' called with NULL texture");
         return;
     }
 
     if (*texture == 0) {
-        LOG_ERROR("'texture_destroy' called with 0 texture");
+        CUBELOG_ERROR("'texture_destroy' called with 0 texture");
         return;
     }
 
-    LOG_TRACE("Deleting texture with ID: %d", *texture);
+    CUBELOG_TRACE("Deleting texture with ID: %d", *texture);
     glDeleteTextures(1, texture);
 }

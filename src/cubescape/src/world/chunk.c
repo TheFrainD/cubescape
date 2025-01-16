@@ -1,12 +1,11 @@
 #include "world/chunk.h"
 
+#include <cubegl/buffer.h>
+#include <cubegl/vertex_array.h>
+#include <cubelog/cubelog.h>
 #include <glad/glad.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "core/log.h"
-#include "graphics/buffer.h"
-#include "graphics/vertex_array.h"
 
 static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position, chunk_t **neighbors) {
     ivec3s adjacent_position;
@@ -84,7 +83,7 @@ chunk_t *chunk_create(ivec2s position) {
 
 block_id_t chunk_get_block(chunk_t *chunk, ivec3s position) {
     if (chunk == NULL) {
-        LOG_ERROR("'chunk_get_block' called with NULL chunk");
+        CUBELOG_ERROR("'chunk_get_block' called with NULL chunk");
         return BLOCK_ID_AIR;
     }
 
@@ -98,7 +97,7 @@ block_id_t chunk_get_block(chunk_t *chunk, ivec3s position) {
 
 void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block) {
     if (chunk == NULL) {
-        LOG_ERROR("'chunk_set_block' called with NULL chunk");
+        CUBELOG_ERROR("'chunk_set_block' called with NULL chunk");
         return;
     }
 
@@ -113,12 +112,12 @@ void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block) {
 
 void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap, chunk_t **neighbors) {
     if (chunk == NULL) {
-        LOG_ERROR("'chunk_generate_mesh' called with NULL chunk");
+        CUBELOG_ERROR("'chunk_generate_mesh' called with NULL chunk");
         return;
     }
 
     if (shader_program == NULL) {
-        LOG_ERROR("'chunk_generate_mesh' called with NULL shader program");
+        CUBELOG_ERROR("'chunk_generate_mesh' called with NULL shader program");
         return;
     }
 
@@ -173,7 +172,7 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
 
 void chunk_destroy(chunk_t *chunk) {
     if (chunk == NULL) {
-        LOG_ERROR("'chunk_destroy' called with NULL chunk");
+        CUBELOG_ERROR("'chunk_destroy' called with NULL chunk");
         return;
     }
 

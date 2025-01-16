@@ -1,8 +1,7 @@
 #include "world/world.h"
 
+#include <cubelog/cubelog.h>
 #include <stdlib.h>
-
-#include "core/log.h"
 
 world_t *world_create(world_settings_t settings) {
     world_t *world = malloc(sizeof(world_t));
@@ -39,7 +38,7 @@ world_t *world_create(world_settings_t settings) {
 
 void world_destroy(world_t *world) {
     if (world == NULL) {
-        LOG_ERROR("'world_destroy' called with NULL world");
+        CUBELOG_ERROR("'world_destroy' called with NULL world");
         return;
     }
 
@@ -53,7 +52,7 @@ void world_destroy(world_t *world) {
 
 chunk_t *world_get_chunk(world_t *world, int x, int y) {
     if (world == NULL) {
-        LOG_ERROR("'world_get_chunk' called with NULL world");
+        CUBELOG_ERROR("'world_get_chunk' called with NULL world");
         return NULL;
     }
 

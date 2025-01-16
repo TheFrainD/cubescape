@@ -1,24 +1,23 @@
 #include <cglm/cglm.h>
+#include <cubegl/shader.h>
+#include <cubegl/shader_program.h>
+#include <cubelog/cubelog.h>
 #include <stdio.h>
 
 #include "core/file.h"
 #include "core/input.h"
-#include "core/log.h"
 #include "core/profiling.h"
 #include "graphics/camera.h"
 #include "graphics/renderer.h"
-#include "graphics/shader.h"
-#include "graphics/shader_program.h"
 #include "graphics/tilemap.h"
 #include "graphics/window.h"
-#include "world/chunk.h"
 #include "world/world.h"
 #include "world/world_renderer.h"
 
 #define VERTEX_SHADER_PATH   "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
 
-#define LOG_FILE EXECUTABLE_NAME ".log"
+#define CUBELOG_FILE EXECUTABLE_NAME ".log"
 
 static int is_running               = 0;
 static camera_t *camera             = NULL;
@@ -75,21 +74,21 @@ void update() {
 }
 
 int main(int argc, char **argv) {
-    logger_set_level(LOG_LEVEL_DEBUG);
+    cubelog_set_level(CUBELOG_LEVEL_DEBUG);
 
     // Log to file
-    FILE *log_fp = fopen(LOG_FILE, "w");
+    FILE *log_fp = fopen(CUBELOG_FILE, "w");
     if (log_fp) {
-        logger_set_fp(log_fp, LOG_LEVEL_TRACE);
+        cubelog_set_fp(log_fp, CUBELOG_LEVEL_TRACE);
     } else {
-        LOG_WARN("Failed to open log file: %s", LOG_FILE);
+        CUBELOG_WARN("Failed to open log file: %s", CUBELOG_FILE);
     }
 
-    LOG_INFO("%s starting up...", EXECUTABLE_NAME);
+    CUBELOG_INFO("%s starting up...", EXECUTABLE_NAME);
 
     int result = profiling_init();
     if (result) {
-        LOG_FATAL("Failed to initialize profiling");
+        CUBELOG_FATAL("Failed to initialize profiling");
         return 1;
     }
 
@@ -100,7 +99,7 @@ int main(int argc, char **argv) {
     window_settings.multisample       = 4;
     result                            = window_init(window_settings);
     if (result) {
-        LOG_FATAL("Failed to initialize window");
+        CUBELOG_FATAL("Failed to initialize window");
         return 1;
     }
 
@@ -108,7 +107,7 @@ int main(int argc, char **argv) {
 
     FILE *fp = fopen(VERTEX_SHADER_PATH, "r");
     if (!fp) {
-        LOG_FATAL("Failed to open file: %s", VERTEX_SHADER_PATH);
+        CUBELOG_FATAL("Failed to open file: %s", VERTEX_SHADER_PATH);
         return 1;
     }
 
@@ -119,7 +118,7 @@ int main(int argc, char **argv) {
 
     fp = fopen(FRAGMENT_SHADER_PATH, "r");
     if (!fp) {
-        LOG_FATAL("Failed to open file: %s", FRAGMENT_SHADER_PATH);
+        CUBELOG_FATAL("Failed to open file: %s", FRAGMENT_SHADER_PATH);
         return 1;
     }
 
@@ -136,7 +135,7 @@ int main(int argc, char **argv) {
 
     shader_program_t *shader_program = shader_program_create();
     if (!shader_program) {
-        LOG_FATAL("Failed to create shader program");
+        CUBELOG_FATAL("Failed to create shader program");
         return 1;
     }
 
@@ -149,7 +148,7 @@ int main(int argc, char **argv) {
 
     tilemap_t *tilemap = tilemap_load("assets/tilemaps/default.tilemap");
     if (!tilemap) {
-        LOG_FATAL("Failed to load tilemap");
+        CUBELOG_FATAL("Failed to load tilemap");
         return 1;
     }
 
@@ -164,7 +163,7 @@ int main(int argc, char **argv) {
     renderer_settings.far_clip            = 1000.0f;
     result                                = renderer_init(renderer_settings);
     if (result) {
-        LOG_FATAL("Failed to initialize renderer");
+        CUBELOG_FATAL("Failed to initialize renderer");
         return 1;
     }
 
@@ -181,15 +180,15 @@ int main(int argc, char **argv) {
     world_renderer_settings.draw_distance             = 6;
     world_renderer_t *world_renderer                  = world_renderer_create(world_renderer_settings);
     if (!world_renderer) {
-        LOG_FATAL("Failed to create world renderer");
+        CUBELOG_FATAL("Failed to create world renderer");
         return 1;
     }
 
     world_settings_t world_settings = {0};
-    world_settings.size             = 8;
+    world_settings.size             = 32;
     world_t *world                  = world_create(world_settings);
     if (!world) {
-        LOG_FATAL("Failed to create world");
+        CUBELOG_FATAL("Failed to create world");
         return 1;
     }
 

@@ -1,19 +1,18 @@
 #include "graphics/tilemap.h"
 
+#include <cubegl/image.h>
+#include <cubegl/texture.h>
+#include <cubelog/cubelog.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "core/log.h"
-#include "graphics/image.h"
-#include "graphics/texture.h"
 
 tilemap_t *tilemap_load(const char *filename) {
     tilemap_t *tilemap = malloc(sizeof(tilemap_t));
 
     FILE *file = fopen(filename, "r");
     if (!file) {
-        LOG_ERROR("Failed to open file: %s", filename);
+        CUBELOG_ERROR("Failed to open file: %s", filename);
         return NULL;
     }
 
@@ -55,7 +54,7 @@ tilemap_t *tilemap_load(const char *filename) {
 
 void tilemap_free(tilemap_t *tilemap) {
     if (tilemap == NULL) {
-        LOG_ERROR("'tilemap_free' called with NULL tilemap");
+        CUBELOG_ERROR("'tilemap_free' called with NULL tilemap");
         return;
     }
 

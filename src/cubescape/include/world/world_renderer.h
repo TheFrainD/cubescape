@@ -1,6 +1,7 @@
 #pragma once
 
-#include "graphics/shader_program.h"
+#include <cubegl/shader_program.h>
+
 #include "graphics/tilemap.h"
 #include "world/world.h"
 
@@ -36,9 +37,9 @@ void world_renderer_destroy(world_renderer_t *renderer);
 
 /**
  * @brief Prepares the specified world for rendering.
- * 
+ *
  * This function prepares the specified world for rendering by generating the meshes for each chunk.
- * 
+ *
  * @param renderer A pointer to the world renderer object.
  */
 void world_renderer_prepare(world_renderer_t *renderer, world_t *world);

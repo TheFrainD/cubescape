@@ -1,6 +1,6 @@
 #include "world/block.h"
 
-#include "core/log.h"
+#include <cubelog/cubelog.h>
 
 #define BLOCK_TILE_UNIFORM(BLOCK_ID, TILE_ID) \
     case BLOCK_ID:                            \
@@ -39,12 +39,12 @@ block_tiles_t block_get_tiles(block_id_t block) {
 
 void block_get_faces(block_id_t block, vec3s position, tilemap_t *tilemap, block_faces_t *faces) {
     if (tilemap == NULL) {
-        LOG_ERROR("'block_get_faces' called with NULL tilemap");
+        CUBELOG_ERROR("'block_get_faces' called with NULL tilemap");
         return;
     }
 
     if (faces == NULL) {
-        LOG_ERROR("'block_get_faces' called with NULL faces");
+        CUBELOG_ERROR("'block_get_faces' called with NULL faces");
         return;
     }
 

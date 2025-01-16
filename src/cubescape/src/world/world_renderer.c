@@ -1,6 +1,7 @@
 #include "world/world_renderer.h"
 
-#include "core/log.h"
+#include <cubelog/cubelog.h>
+
 #include "core/profiling.h"
 #include "graphics/renderer.h"
 
@@ -21,7 +22,7 @@ world_renderer_t *world_renderer_create(world_renderer_settings_t settings) {
 
 void world_renderer_destroy(world_renderer_t *renderer) {
     if (renderer == NULL) {
-        LOG_ERROR("'world_renderer_destroy' called with NULL renderer");
+        CUBELOG_ERROR("'world_renderer_destroy' called with NULL renderer");
         return;
     }
 
@@ -31,12 +32,12 @@ void world_renderer_destroy(world_renderer_t *renderer) {
 
 void world_renderer_prepare(world_renderer_t *renderer, world_t *world) {
     if (renderer == NULL) {
-        LOG_ERROR("'world_renderer_prepare' called with NULL renderer");
+        CUBELOG_ERROR("'world_renderer_prepare' called with NULL renderer");
         return;
     }
 
     if (world == NULL) {
-        LOG_ERROR("'world_renderer_prepare' called with NULL world");
+        CUBELOG_ERROR("'world_renderer_prepare' called with NULL world");
         return;
     }
 
@@ -67,12 +68,12 @@ void world_renderer_prepare(world_renderer_t *renderer, world_t *world) {
 
 void world_renderer_render(world_renderer_t *renderer, world_t *world, vec3s camera_position) {
     if (renderer == NULL) {
-        LOG_ERROR("'world_renderer_render' called with NULL renderer");
+        CUBELOG_ERROR("'world_renderer_render' called with NULL renderer");
         return;
     }
 
     if (world == NULL) {
-        LOG_ERROR("'world_renderer_render' called with NULL world");
+        CUBELOG_ERROR("'world_renderer_render' called with NULL world");
         return;
     }
 

@@ -1,4 +1,4 @@
-#include "core/log.h"
+#include "cubelog.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -12,9 +12,9 @@ static const char *level_fg[] = {
     "37", "36", "32", "33", "31", "35"
 };
 
-static int stdout_log_level = LOG_LEVEL_INFO;
+static int stdout_log_level = CUBELOG_LEVEL_INFO;
 
-void logger_set_level(int level) {
+void cubelog_set_level(int level) {
     if (level >= 0 && level <= 5) {
         stdout_log_level = level;
     }
@@ -23,12 +23,12 @@ void logger_set_level(int level) {
 static FILE *log_fp = NULL;
 static int fp_log_level = 0;
 
-void logger_set_fp(FILE *fp, int level) {
+void cubelog_set_fp(FILE *fp, int level) {
     log_fp = fp;
     fp_log_level = level;
 }
 
-void logger_log(int level, const char *file, int line, const char *fmt, ...) {
+void cubelog_log(int level, const char *file, int line, const char *fmt, ...) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
     char buf[64];

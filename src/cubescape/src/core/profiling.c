@@ -1,12 +1,11 @@
 #include "core/profiling.h"
 
+#include <cubelog/cubelog.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#include "core/log.h"
 
 #ifdef PROFILING_ENABLED
 typedef struct {
@@ -36,7 +35,7 @@ static void profile_delete(int id) {
 int profiling_init() {
     profiles = (profile_t *)malloc(PROFILES_BASE_SIZE * sizeof(profile_t));
     if (profiles == NULL) {
-        LOG_ERROR("Failed to allocate memory for profiles.\n");
+        CUBELOG_ERROR("Failed to allocate memory for profiles.\n");
         return -1;
     }
 
@@ -70,21 +69,19 @@ int profiling_begin(const char *format, ...) {
 
 void profiling_end(int id) {
     if (id < 0 || id >= profile_count) {
-        LOG_ERROR("Invalid profile id: %d", id);
+        CUBELOG_ERROR("Invalid profile id: %d", id);
         return;
     }
 
     clock_t end_time    = clock();
     double elapsed_time = ((double)(end_time - profiles[id].start_time)) / CLOCKS_PER_SEC;
 
-    LOG_DEBUG("Profile [%d]: %s - Elapsed time: %.6f seconds", id, profiles[id].description, elapsed_time);
+    CUBELOG_DEBUG("Profile [%d]: %s - Elapsed time: %.6f seconds", id, profiles[id].description, elapsed_time);
 
     profile_delete(id);
 }
 
-void profiling_cancel(int id) {
-    profile_delete(id);
-}
+void profiling_cancel(int id) { profile_delete(id); }
 
 #else
 int profiling_init() { return 0; }
