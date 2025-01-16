@@ -11,9 +11,9 @@
 #include "graphics/renderer.h"
 #include "graphics/tilemap.h"
 #include "graphics/window.h"
+#include "world/ray.h"
 #include "world/world.h"
 #include "world/world_renderer.h"
-#include "world/ray.h"
 
 #define VERTEX_SHADER_PATH   "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
@@ -38,8 +38,8 @@ void key_callback(key_code_t key) {
 
 void mouse_button_callback(mouse_button_code_t button) {
     ivec3s hit_block = {0};
-    ivec3s hit_face   = {0};
-    ray_t ray = {camera_get_position(camera), camera_get_front(camera)};
+    ivec3s hit_face  = {0};
+    ray_t ray        = {camera_get_position(camera), camera_get_front(camera)};
 
     if (!ray_cast(world, ray, 30.0f, &hit_block, &hit_face)) {
         return;
@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
     }
 
     world_settings_t world_settings = {0};
-    world_settings.size             = 16;
+    world_settings.size             = 8;
     world                           = world_create(world_settings);
     if (!world) {
         CUBELOG_FATAL("Failed to create world");
