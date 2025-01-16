@@ -48,14 +48,7 @@ void world_renderer_prepare(world_renderer_t *renderer, world_t *world) {
         chunk_t *chunk = world->chunks[i];
         if (chunk->dirty) {
             rendered = 1;
-
-            chunk_t *neighbors[4];
-            neighbors[CHUNK_NEIGHBOR_FRONT] = world_get_chunk(world, chunk->position.x, chunk->position.y + 1);
-            neighbors[CHUNK_NEIGHBOR_BACK]  = world_get_chunk(world, chunk->position.x, chunk->position.y - 1);
-            neighbors[CHUNK_NEIGHBOR_LEFT]  = world_get_chunk(world, chunk->position.x - 1, chunk->position.y);
-            neighbors[CHUNK_NEIGHBOR_RIGHT] = world_get_chunk(world, chunk->position.x + 1, chunk->position.y);
-
-            chunk_generate_mesh(chunk, renderer->state->block_shader, renderer->state->tilemap, neighbors);
+            chunk_generate_mesh(chunk, renderer->state->block_shader, renderer->state->tilemap);
         }
     }
 

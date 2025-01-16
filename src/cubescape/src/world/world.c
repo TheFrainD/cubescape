@@ -10,7 +10,7 @@ world_t *world_create(world_settings_t settings) {
 
     for (int x = 0; x < world->size; x++) {
         for (int y = 0; y < world->size; y++) {
-            chunk_t *chunk                     = chunk_create((ivec2s) {{x, y}});
+            chunk_t *chunk                     = chunk_create((ivec2s) {{x, y}}, world);
             world->chunks[x + y * world->size] = chunk;
 
             for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
