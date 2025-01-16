@@ -156,9 +156,6 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
         }
     }
 
-    vertices = (vertex_t *)realloc(vertices, vertex_count * sizeof(vertex_t));
-    indices  = (uint32_t *)realloc(indices, index_count * sizeof(uint32_t));
-
     mesh_set_vertices(chunk->mesh, vertices, vertex_count);
     mesh_set_indices(chunk->mesh, indices, index_count);
     free(vertices);

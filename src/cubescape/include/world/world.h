@@ -40,3 +40,31 @@ void world_destroy(world_t *world);
  * @return chunk_t* The chunk at the specified position.
  */
 chunk_t *world_get_chunk(world_t *world, int x, int y);
+
+/**
+ * @brief Converts a world position to a block position.
+ *
+ * @param world_pos The world position to convert.
+ *
+ * @return ivec3s The block position.
+ */
+ivec3s world_to_block(vec3s world_pos);
+
+/**
+ * @brief Retrieves the block at the specified position in the world.
+ * 
+ * @param world The world to retrieve the block from.
+ * @param position The position of the block.
+ * 
+ * @return block_id_t The block at the specified position.
+ */
+block_id_t world_get_block(world_t *world, ivec3s position);
+
+/**
+ * @brief Sets the block at the specified position in the world.
+ * 
+ * @param world The world to set the block in.
+ * @param position The position of the block.
+ * @param block The block to set.
+ */
+void world_set_block(world_t *world, ivec3s position, block_id_t block);

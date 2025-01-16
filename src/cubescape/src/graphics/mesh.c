@@ -69,12 +69,7 @@ void mesh_set_vertices(const mesh_t *mesh, const vertex_t *const vertices, size_
         return;
     }
 
-    if (vertex_count != mesh->private_data->vertex_count) {
-        buffer_data(mesh->private_data->vertex_buffer, vertex_count * sizeof(vertex_t), vertices);
-    } else {
-        buffer_sub_data(mesh->private_data->vertex_buffer, 0, vertex_count * sizeof(vertex_t), vertices);
-    }
-
+    buffer_data(mesh->private_data->vertex_buffer, vertex_count * sizeof(vertex_t), vertices);
     mesh->private_data->vertex_count = vertex_count;
 }
 
@@ -89,12 +84,7 @@ void mesh_set_indices(const mesh_t *mesh, const uint32_t *const indices, size_t 
         return;
     }
 
-    if (index_count != mesh->private_data->index_count) {
-        buffer_data(mesh->private_data->index_buffer, index_count * sizeof(uint32_t), indices);
-    } else {
-        buffer_sub_data(mesh->private_data->index_buffer, 0, index_count * sizeof(uint32_t), indices);
-    }
-
+    buffer_data(mesh->private_data->index_buffer, index_count * sizeof(uint32_t), indices);
     mesh->private_data->index_count = index_count;
 }
 

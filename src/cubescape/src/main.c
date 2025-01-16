@@ -13,6 +13,7 @@
 #include "graphics/window.h"
 #include "world/world.h"
 #include "world/world_renderer.h"
+#include "world/ray.h"
 
 #define VERTEX_SHADER_PATH   "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
@@ -21,6 +22,7 @@
 
 static int is_running               = 0;
 static camera_t *camera             = NULL;
+static world_t *world               = NULL;
 static const float horizontal_speed = 7.0f;
 static const float vertical_speed   = 5.0f;
 
@@ -71,6 +73,16 @@ void update() {
     } else if (input_key_pressed(KEY_LEFT_SHIFT)) {
         camera_translate(camera, (vec3s) {{0.0f, -vertical_movement, 0.0f}});
     }
+
+    ivec3s hit_block = {0};
+    ivec3s hit_face   = {0};
+    ray_t ray = {camera_get_position(camera), camera_get_front(camera)};
+
+    if (ray_cast(world, ray, 10.0f, &hit_block, &hit_face)) {
+        if (input_mouse_button_pressed(MOUSE_BUTTON_LEFT)) {
+            world_set_block(world, hit_block, BLOCK_ID_AIR);
+        }
+    }
 }
 
 int main(int argc, char **argv) {
@@ -93,8 +105,8 @@ int main(int argc, char **argv) {
     }
 
     window_settings_t window_settings = {0};
-    window_settings.width             = 1280;
-    window_settings.height            = 720;
+    window_settings.width             = 800;
+    window_settings.height            = 600;
     window_settings.title             = EXECUTABLE_NAME;
     window_settings.multisample       = 4;
     result                            = window_init(window_settings);
@@ -186,7 +198,7 @@ int main(int argc, char **argv) {
 
     world_settings_t world_settings = {0};
     world_settings.size             = 32;
-    world_t *world                  = world_create(world_settings);
+    world                           = world_create(world_settings);
     if (!world) {
         CUBELOG_FATAL("Failed to create world");
         return 1;
