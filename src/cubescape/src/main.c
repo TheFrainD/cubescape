@@ -13,6 +13,7 @@
 #include "graphics/window.h"
 #include "world/world.h"
 #include "world/world_renderer.h"
+#include "world/ray.h"
 
 #define VERTEX_SHADER_PATH   "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
@@ -21,6 +22,7 @@
 
 static int is_running               = 0;
 static camera_t *camera             = NULL;
+static world_t *world               = NULL;
 static const float horizontal_speed = 7.0f;
 static const float vertical_speed   = 5.0f;
 
@@ -31,6 +33,22 @@ void key_callback(key_code_t key) {
 
     if (key == KEY_F1) {
         renderer_get_state()->wireframe = !renderer_get_state()->wireframe;
+    }
+}
+
+void mouse_button_callback(mouse_button_code_t button) {
+    ivec3s hit_block = {0};
+    ivec3s hit_face   = {0};
+    ray_t ray = {camera_get_position(camera), camera_get_front(camera)};
+
+    if (!ray_cast(world, ray, 30.0f, &hit_block, &hit_face)) {
+        return;
+    }
+
+    if (input_mouse_button_pressed(MOUSE_BUTTON_LEFT)) {
+        world_set_block(world, hit_block, BLOCK_ID_AIR);
+    } else if (input_mouse_button_pressed(MOUSE_BUTTON_RIGHT)) {
+        world_set_block(world, glms_ivec3_add(hit_block, hit_face), BLOCK_ID_COBBLESTONE);
     }
 }
 
@@ -93,8 +111,8 @@ int main(int argc, char **argv) {
     }
 
     window_settings_t window_settings = {0};
-    window_settings.width             = 1280;
-    window_settings.height            = 720;
+    window_settings.width             = 800;
+    window_settings.height            = 600;
     window_settings.title             = EXECUTABLE_NAME;
     window_settings.multisample       = 4;
     result                            = window_init(window_settings);
@@ -173,6 +191,7 @@ int main(int argc, char **argv) {
     input_set_cursor_enabled(0);
     input_add_key_pressed_callback(key_callback);
     input_add_mouse_position_callback(mouse_callback);
+    input_add_mouse_button_pressed_callback(mouse_button_callback);
 
     world_renderer_settings_t world_renderer_settings = {0};
     world_renderer_settings.tilemap                   = tilemap;
@@ -185,8 +204,8 @@ int main(int argc, char **argv) {
     }
 
     world_settings_t world_settings = {0};
-    world_settings.size             = 32;
-    world_t *world                  = world_create(world_settings);
+    world_settings.size             = 4;
+    world                           = world_create(world_settings);
     if (!world) {
         CUBELOG_FATAL("Failed to create world");
         return 1;

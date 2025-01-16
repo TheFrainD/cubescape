@@ -58,66 +58,66 @@ void block_get_faces(block_id_t block, vec3s position, tilemap_t *tilemap, block
     // Top face
     tile_id = tiles.values[BLOCK_FACE_TOP];
     faces->values[BLOCK_FACE_TOP].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}, (vec3s){{1.0f, 1.0f, 1.0f}}};
     faces->values[BLOCK_FACE_TOP].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}, (vec3s){{1.0f, 1.0f, 1.0f}}};
     faces->values[BLOCK_FACE_TOP].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}, (vec3s){{1.0f, 1.0f, 1.0f}}};
     faces->values[BLOCK_FACE_TOP].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}, (vec3s){{1.0f, 1.0f, 1.0f}}};
 
     // Bottom face
     tile_id = tiles.values[BLOCK_FACE_BOTTOM];
     faces->values[BLOCK_FACE_BOTTOM].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}, (vec3s){{0.5f, 0.5f, 0.5f}}};
     faces->values[BLOCK_FACE_BOTTOM].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}, (vec3s){{0.5f, 0.5f, 0.5f}}};
     faces->values[BLOCK_FACE_BOTTOM].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}, (vec3s){{0.5f, 0.5f, 0.5f}}};
     faces->values[BLOCK_FACE_BOTTOM].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}, (vec3s){{0.5f, 0.5f, 0.5f}}};
 
     // Front face
     tile_id = tiles.values[BLOCK_FACE_FRONT];
     faces->values[BLOCK_FACE_FRONT].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}, (vec3s){{0.65f, 0.65f, 0.65f}}};
     faces->values[BLOCK_FACE_FRONT].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MIN}}, (vec3s){{0.65f, 0.65f, 0.65f}}};
     faces->values[BLOCK_FACE_FRONT].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MIN}}, (vec3s){{0.65f, 0.65f, 0.65f}}};
     faces->values[BLOCK_FACE_FRONT].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}, (vec3s){{0.65f, 0.65f, 0.65f}}};
 
     // Back face
     tile_id = tiles.values[BLOCK_FACE_BACK];
     faces->values[BLOCK_FACE_BACK].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MAX}}, (vec3s){{0.65f, 0.65f, 0.65f}}};
     faces->values[BLOCK_FACE_BACK].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}, (vec3s){{0.65f, 0.65f, 0.65f}}};
     faces->values[BLOCK_FACE_BACK].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}, (vec3s){{0.65f, 0.65f, 0.65f}}};
     faces->values[BLOCK_FACE_BACK].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MAX}}, (vec3s){{0.65f, 0.65f, 0.65f}}};
 
     // Left face
     tile_id = tiles.values[BLOCK_FACE_LEFT];
     faces->values[BLOCK_FACE_LEFT].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MAX}}, (vec3s){{0.8f, 0.8f, 0.8f}}};
     faces->values[BLOCK_FACE_LEFT].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MIN, V_MIN}}, (vec3s){{0.8f, 0.8f, 0.8f}}};
     faces->values[BLOCK_FACE_LEFT].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MIN}}, (vec3s){{0.8f, 0.8f, 0.8f}}};
     faces->values[BLOCK_FACE_LEFT].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{0.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MAX, V_MAX}}, (vec3s){{0.8f, 0.8f, 0.8f}}};
 
     // Right face
     tile_id = tiles.values[BLOCK_FACE_RIGHT];
     faces->values[BLOCK_FACE_RIGHT].vertices[0] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MAX}}, (vec3s){{0.8f, 0.8f, 0.8f}}};
     faces->values[BLOCK_FACE_RIGHT].vertices[1] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 0.0f}}, position), (vec2s) {{U_MIN, V_MIN}}, (vec3s){{0.8f, 0.8f, 0.8f}}};
     faces->values[BLOCK_FACE_RIGHT].vertices[2] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MIN}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 1.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MIN}}, (vec3s){{0.8f, 0.8f, 0.8f}}};
     faces->values[BLOCK_FACE_RIGHT].vertices[3] =
-        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}};
+        (vertex_t) {glms_vec3_add((vec3s) {{1.0f, 0.0f, 1.0f}}, position), (vec2s) {{U_MAX, V_MAX}}, (vec3s){{0.8f, 0.8f, 0.8f}}};
 }

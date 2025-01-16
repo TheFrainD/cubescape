@@ -15,24 +15,19 @@ typedef struct {
     ivec2s position;
     block_id_t *blocks;
     mesh_t *mesh;
+    void *world;
     int dirty;
 } chunk_t;
-
-enum chunk_neighbor {
-    CHUNK_NEIGHBOR_FRONT,
-    CHUNK_NEIGHBOR_BACK,
-    CHUNK_NEIGHBOR_LEFT,
-    CHUNK_NEIGHBOR_RIGHT,
-};
 
 /**
  * @brief Creates a new chunk.
  *
  * @param position The position of the chunk.
+ * @param world The world the chunk belongs to.
  *
  * @return chunk_t* The created chunk.
  */
-chunk_t *chunk_create(ivec2s position);
+chunk_t *chunk_create(ivec2s position, void *world);
 
 /**
  * @brief Retrieves the block at the specified position in the chunk.
@@ -59,9 +54,8 @@ void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block);
  * @param chunk The chunk to generate the mesh for.
  * @param shader_program The shader program to use for the mesh.
  * @param tilemap The tilemap to use for the mesh.
- * @param neighbors The neighboring chunks.
  */
-void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap, chunk_t **neighbors);
+void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap);
 
 /**
  * @brief Destroys the chunk and releases any associated resources.
