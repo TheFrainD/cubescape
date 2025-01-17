@@ -16,3 +16,7 @@
 #define LERP(a, b, t)      ((a) + (t) * ((b) - (a)))
 #define NLERP(a, b, t)     LERP(a, b, t)
 #define SLERP(a, b, t) ((a) + (t) * ((b) - (a))
+
+// clang-format off
+#define IVEC3S_TO_VEC3S(v) (vec3s) {{(v).x, (v).y, (v).z}}
+// clang-format on

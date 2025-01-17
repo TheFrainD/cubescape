@@ -13,3 +13,7 @@ add_subdirectory(cglm)
 # stb_image
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/stb)
+
+# FastNoiseLite
+add_library(FastNoiseLite INTERFACE)
+target_include_directories(FastNoiseLite INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/FastNoiseLite/C)

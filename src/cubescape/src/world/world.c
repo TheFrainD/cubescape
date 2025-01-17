@@ -3,36 +3,29 @@
 #include <cubelog/cubelog.h>
 #include <stdlib.h>
 
+#include "world/generator.h"
+#include "world/noise/combined_noise.h"
+#include "world/noise/octave_noise.h"
+#include "world/noise/perlin_noise.h"
+
 world_t *world_create(world_settings_t settings) {
     world_t *world = malloc(sizeof(world_t));
     world->size    = settings.size;
     world->chunks  = malloc(world->size * world->size * sizeof(chunk_t *));
 
-    for (int x = 0; x < world->size; x++) {
-        for (int y = 0; y < world->size; y++) {
-            chunk_t *chunk                     = chunk_create((ivec2s) {{x, y}}, world);
-            world->chunks[x + y * world->size] = chunk;
+    world_generator_parameters_t generator_parameters = {0};
+    generator_parameters.height                       = 64;
+    generator_parameters.water_level                  = 32;
+    world_generator_t *generator                      = world_generator_create(generator_parameters);
 
-            for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-                int y = (i / CHUNK_SIZE) % CHUNK_HEIGHT;
-                if (y > 64) {
-                    chunk->blocks[i] = BLOCK_ID_AIR;
-                    continue;
-                } else if (y > 63) {
-                    chunk->blocks[i] = BLOCK_ID_GRASS;
-                    continue;
-                } else if (y > 59) {
-                    chunk->blocks[i] = BLOCK_ID_DIRT;
-                    continue;
-                } else if (y > 54) {
-                    chunk->blocks[i] = BLOCK_ID_COBBLESTONE;
-                    continue;
-                }
-                chunk->blocks[i] = BLOCK_ID_STONE;
-            }
-        }
+    for (size_t i = 0; i < world->size * world->size; ++i) {
+        ivec2s chunk_pos = (ivec2s) {{i % world->size, i / world->size}};
+        chunk_t *chunk   = chunk_create(chunk_pos, world);
+        world->chunks[i] = chunk;
+        world_generator_generate(generator, chunk);
     }
 
+    world_generator_destroy(generator);
     return world;
 }
 
