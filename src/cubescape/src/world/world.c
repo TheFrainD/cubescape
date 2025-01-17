@@ -3,6 +3,9 @@
 #include <cubelog/cubelog.h>
 #include <stdlib.h>
 
+#include "world/generator.h"
+#include "world/noise/combined_noise.h"
+#include "world/noise/octave_noise.h"
 #include "world/noise/perlin_noise.h"
 
 world_t *world_create(world_settings_t settings) {
@@ -10,54 +13,19 @@ world_t *world_create(world_settings_t settings) {
     world->size    = settings.size;
     world->chunks  = malloc(world->size * world->size * sizeof(chunk_t *));
 
-    perlin_noise_t *noise = perlin_noise_create(rand());
+    world_generator_parameters_t generator_parameters = {0};
+    generator_parameters.height                       = 64;
+    generator_parameters.water_level                  = 32;
+    world_generator_t *generator                      = world_generator_create(generator_parameters);
 
     for (size_t i = 0; i < world->size * world->size; ++i) {
         ivec2s chunk_pos = (ivec2s) {{i % world->size, i / world->size}};
         chunk_t *chunk   = chunk_create(chunk_pos, world);
         world->chunks[i] = chunk;
-
-        for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-            ivec3s block_position =
-                (ivec3s) {{i % CHUNK_SIZE, (i / CHUNK_SIZE) % CHUNK_HEIGHT, i / (CHUNK_SIZE * CHUNK_HEIGHT)}};
-            ivec3s world_position = (ivec3s) {{chunk_pos.x * CHUNK_SIZE + block_position.x, block_position.y,
-                                               chunk_pos.y * CHUNK_SIZE + block_position.z}};
-
-            vec2s noise_sample = (vec2s) {{world_position.x, world_position.z}};
-            float height       = perlin_noise_compute((noise_t *)noise, noise_sample.x * 1.0f, noise_sample.y * 1.0f) +
-                           0.5f * perlin_noise_compute((noise_t *)noise, noise_sample.x * 2.0f, noise_sample.y * 2.0f) +
-                           0.25f * perlin_noise_compute((noise_t *)noise, noise_sample.x * 4.0f, noise_sample.y * 4.0f);
-
-            height = (height + 1.0f) * 0.5f;   // Normalize height to be between 0 and 1
-            height = 30 + height * (80 - 30);  // Map height to be between 30 and 80
-
-            if (block_position.y > height) {
-                chunk->blocks[i] = BLOCK_ID_AIR;
-                continue;
-            }
-            chunk->blocks[i] = BLOCK_ID_STONE;
-        }
-
-        for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
-            ivec3s block_position =
-                (ivec3s) {{i % CHUNK_SIZE, (i / CHUNK_SIZE) % CHUNK_HEIGHT, i / (CHUNK_SIZE * CHUNK_HEIGHT)}};
-            ivec3s dirt_position = glms_ivec3_add(block_position, (ivec3s) {{0, 1, 0}});
-
-            if (chunk->blocks[i] != BLOCK_ID_STONE || chunk_get_block(chunk, dirt_position) != BLOCK_ID_AIR) {
-                continue;
-            }
-
-            for (int i = 0; i < 4; ++i) {
-                chunk_set_block(chunk, dirt_position, BLOCK_ID_DIRT);
-                dirt_position = glms_ivec3_add(dirt_position, (ivec3s) {{0, 1, 0}});
-            }
-
-            chunk_set_block(chunk, dirt_position, BLOCK_ID_GRASS);
-        }
+        world_generator_generate(generator, chunk);
     }
 
-    perlin_noise_destroy(noise);
-
+    world_generator_destroy(generator);
     return world;
 }
 

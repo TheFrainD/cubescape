@@ -16,7 +16,8 @@ perlin_noise_t *perlin_noise_create(int seed) {
 }
 
 float perlin_noise_compute(noise_t *noise, float x, float y) {
-    return fnlGetNoise2D(((fnl_state *)((perlin_noise_t *)noise)->noise), x, y);
+    float raw_noise = fnlGetNoise2D(((fnl_state *)((perlin_noise_t *)noise)->noise), x, y);
+    return (raw_noise + 1.0f) * 128.0f;
 }
 
 void perlin_noise_destroy(perlin_noise_t *noise) {
