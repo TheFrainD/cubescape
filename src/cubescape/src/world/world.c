@@ -1,18 +1,16 @@
 #include "world/world.h"
 
-#define FNL_IMPL
-
-#include <FastNoiseLite.h>
 #include <cubelog/cubelog.h>
 #include <stdlib.h>
+
+#include "world/noise/perlin_noise.h"
 
 world_t *world_create(world_settings_t settings) {
     world_t *world = malloc(sizeof(world_t));
     world->size    = settings.size;
     world->chunks  = malloc(world->size * world->size * sizeof(chunk_t *));
 
-    fnl_state noise  = fnlCreateState();
-    noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
+    perlin_noise_t *noise = perlin_noise_create(rand());
 
     for (size_t i = 0; i < world->size * world->size; ++i) {
         ivec2s chunk_pos = (ivec2s) {{i % world->size, i / world->size}};
@@ -26,9 +24,9 @@ world_t *world_create(world_settings_t settings) {
                                                chunk_pos.y * CHUNK_SIZE + block_position.z}};
 
             vec2s noise_sample = (vec2s) {{world_position.x, world_position.z}};
-            float height       = fnlGetNoise2D(&noise, noise_sample.x * 1.0f, noise_sample.y * 1.0f) +
-                           0.5f * fnlGetNoise2D(&noise, noise_sample.x * 2.0f, noise_sample.y * 2.0f) +
-                           0.25f * fnlGetNoise2D(&noise, noise_sample.x * 4.0f, noise_sample.y * 4.0f);
+            float height       = perlin_noise_compute((noise_t *)noise, noise_sample.x * 1.0f, noise_sample.y * 1.0f) +
+                           0.5f * perlin_noise_compute((noise_t *)noise, noise_sample.x * 2.0f, noise_sample.y * 2.0f) +
+                           0.25f * perlin_noise_compute((noise_t *)noise, noise_sample.x * 4.0f, noise_sample.y * 4.0f);
 
             height = (height + 1.0f) * 0.5f;   // Normalize height to be between 0 and 1
             height = 30 + height * (80 - 30);  // Map height to be between 30 and 80
@@ -57,6 +55,8 @@ world_t *world_create(world_settings_t settings) {
             chunk_set_block(chunk, dirt_position, BLOCK_ID_GRASS);
         }
     }
+
+    perlin_noise_destroy(noise);
 
     return world;
 }

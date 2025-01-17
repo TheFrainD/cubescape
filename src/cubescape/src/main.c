@@ -3,6 +3,7 @@
 #include <cubegl/shader_program.h>
 #include <cubelog/cubelog.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "core/file.h"
 #include "core/input.h"
@@ -92,6 +93,8 @@ void update() {
 }
 
 int main(int argc, char **argv) {
+    srand(time(NULL));
+
     cubelog_set_level(CUBELOG_LEVEL_DEBUG);
 
     // Log to file
