@@ -15,13 +15,14 @@
 #include "world/ray.h"
 #include "world/world.h"
 #include "world/world_renderer.h"
+#include "world/generator.h"
 
 #define VERTEX_SHADER_PATH   "assets/shaders/main.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
 
 #define CUBELOG_FILE EXECUTABLE_NAME ".log"
 
-static int is_running               = 0;
+static bool is_running               = false;
 static camera_t *camera             = NULL;
 static world_t *world               = NULL;
 static const float horizontal_speed = 7.0f;
@@ -214,7 +215,14 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    is_running = 1;
+    world_generator_parameters_t generator_parameters = {0};
+    generator_parameters.height = 64;
+    generator_parameters.water_level = 32;
+    world_generator_t *generator = world_generator_create(generator_parameters);
+
+    world_generator_generate(generator, world);
+
+    is_running = true;
 
     while (is_running) {
         is_running &= !window_should_close();
@@ -223,17 +231,18 @@ int main(int argc, char **argv) {
         window_update_delta_time();
         update();
 
-        world_renderer_prepare(world_renderer, world);
+        // world_renderer_prepare(world_renderer, world);
 
         renderer_begin_frame();
 
-        world_renderer_render(world_renderer, world, camera_get_position(camera));
+        // world_renderer_render(world_renderer, world, camera_get_position(camera));
 
         renderer_end_frame();
     }
 
-    world_destroy(world);
+    world_generator_destroy(generator);
     world_renderer_destroy(world_renderer);
+    world_destroy(world);
     shader_program_destroy(shader_program);
     tilemap_free(tilemap);
 

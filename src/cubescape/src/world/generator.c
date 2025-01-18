@@ -4,31 +4,19 @@
 
 #include "core/math.h"
 
-world_generator_t *world_generator_create(world_generator_parameters_t parameters) {
-    world_generator_t *generator = malloc(sizeof(world_generator_t));
-    generator->parameters        = parameters;
-    generator->noise_scale       = 1.3f;
+struct world_generator_thread_args {
+    world_generator_t *generator;
+    world_t *world;
+};
 
-    for (int i = 0; i < 4; ++i) {
-        generator->octave_noise[i] = octave_noise_create(8);
-    }
-    generator->combined_noise1 =
-        combined_noise_create((noise_t *)generator->octave_noise[0], (noise_t *)generator->octave_noise[1]);
-    generator->combined_noise2 =
-        combined_noise_create((noise_t *)generator->octave_noise[1], (noise_t *)generator->octave_noise[2]);
-    generator->octave_noise_misc = octave_noise_create(6);
-
-    return generator;
-}
-
-void world_generator_generate(world_generator_t *generator, chunk_t *chunk) {
+void world_generator_generate_chunk(world_generator_t *generator, chunk_t *chunk) {
     if (generator == NULL) {
-        CUBELOG_ERROR("'world_generator_generate' called with NULL generator");
+        CUBELOG_ERROR("'world_generator_generate_chunk' called with NULL generator");
         return;
     }
 
     if (chunk == NULL) {
-        CUBELOG_ERROR("'world_generator_generate' called with NULL chunk");
+        CUBELOG_ERROR("'world_generator_generate_chunk' called with NULL chunk");
         return;
     }
 
@@ -83,14 +71,90 @@ void world_generator_generate(world_generator_t *generator, chunk_t *chunk) {
 
         chunk_set_block(chunk, dirt_position, BLOCK_ID_GRASS);
     }
+
+    chunk->is_generated = true;
+}
+
+void *world_generator_thread(void *arg) {
+    struct world_generator_thread_args *args = (struct world_generator_thread_args *)arg;
+    world_generator_t *generator             = args->generator;
+    world_t *world                           = args->world;
+
+    size_t i = 0;
+    chunk_t *chunk;
+
+    while (1) {
+        pthread_mutex_lock(&generator->mutex);
+        if (generator->shoud_terminate) {
+            pthread_mutex_unlock(&generator->mutex);
+            break;
+        }
+        pthread_mutex_unlock(&generator->mutex);
+
+        if (i >= world->size * world->size) {
+            i = 0;
+        }
+
+        chunk = world->chunks[i++];
+        if (chunk->is_generated) {
+            continue;
+        }
+
+        world_generator_generate_chunk(generator, chunk);
+    }
+
+    free(args);
+    pthread_exit(NULL);
+}
+
+world_generator_t *world_generator_create(world_generator_parameters_t parameters) {
+    world_generator_t *generator = malloc(sizeof(world_generator_t));
+    generator->parameters        = parameters;
+    generator->noise_scale       = 1.3f;
+
+    for (int i = 0; i < 4; ++i) {
+        generator->octave_noise[i] = octave_noise_create(8);
+    }
+    generator->combined_noise1 =
+        combined_noise_create((noise_t *)generator->octave_noise[0], (noise_t *)generator->octave_noise[1]);
+    generator->combined_noise2 =
+        combined_noise_create((noise_t *)generator->octave_noise[1], (noise_t *)generator->octave_noise[2]);
+    generator->octave_noise_misc = octave_noise_create(6);
+
+    generator->shoud_terminate = false;
+    pthread_mutex_init(&generator->mutex, NULL);
+
+    return generator;
+}
+
+void world_generator_generate(world_generator_t *generator, world_t *world) {
+    if (generator == NULL) {
+        CUBELOG_ERROR("'world_generator_generate' called with NULL generator");
+        return;
+    }
+
+    if (world == NULL) {
+        CUBELOG_ERROR("'world_generator_generate' called with NULL world");
+        return;
+    }
+
+    struct world_generator_thread_args *args = malloc(sizeof(struct world_generator_thread_args));
+    args->generator                          = generator;
+    args->world                              = world;
+    pthread_create(&generator->thread, NULL, world_generator_thread, args);
 }
 
 void world_generator_destroy(world_generator_t *generator) {
+    generator->shoud_terminate = true;
+    pthread_join(generator->thread, NULL);
+    pthread_mutex_destroy(&generator->mutex);
+
     for (int i = 0; i < 4; ++i) {
         octave_noise_destroy(generator->octave_noise[i]);
     }
     combined_noise_destroy(generator->combined_noise1);
     combined_noise_destroy(generator->combined_noise2);
     octave_noise_destroy(generator->octave_noise_misc);
+
     free(generator);
 }

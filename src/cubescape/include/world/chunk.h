@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "graphics/mesh.h"
 #include "graphics/tilemap.h"
@@ -16,7 +17,10 @@ typedef struct {
     block_id_t *blocks;
     mesh_t *mesh;
     void *world;
-    int dirty;
+    
+    bool mesh_needs_update;
+    bool is_generated;
+    bool mesh_updated;
 } chunk_t;
 
 /**

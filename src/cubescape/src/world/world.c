@@ -13,19 +13,12 @@ world_t *world_create(world_settings_t settings) {
     world->size    = settings.size;
     world->chunks  = malloc(world->size * world->size * sizeof(chunk_t *));
 
-    world_generator_parameters_t generator_parameters = {0};
-    generator_parameters.height                       = 64;
-    generator_parameters.water_level                  = 32;
-    world_generator_t *generator                      = world_generator_create(generator_parameters);
-
     for (size_t i = 0; i < world->size * world->size; ++i) {
         ivec2s chunk_pos = (ivec2s) {{i % world->size, i / world->size}};
         chunk_t *chunk   = chunk_create(chunk_pos, world);
         world->chunks[i] = chunk;
-        world_generator_generate(generator, chunk);
     }
-
-    world_generator_destroy(generator);
+    
     return world;
 }
 

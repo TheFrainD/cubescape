@@ -46,7 +46,7 @@ void world_renderer_prepare(world_renderer_t *renderer, world_t *world) {
 
     for (size_t i = 0; i < world->size * world->size; ++i) {
         chunk_t *chunk = world->chunks[i];
-        if (chunk->dirty) {
+        if (chunk->mesh_needs_update && chunk->is_generated) {
             rendered = 1;
             chunk_generate_mesh(chunk, renderer->state->block_shader, renderer->state->tilemap);
         }
@@ -72,6 +72,10 @@ void world_renderer_render(world_renderer_t *renderer, world_t *world, vec3s cam
 
     for (size_t i = 0; i < world->size * world->size; ++i) {
         chunk_t *chunk = world->chunks[i];
+
+        if (!chunk->is_generated || !chunk->mesh) {
+            continue;
+        }
 
         vec3s position = (vec3s) {{chunk->position.x * CHUNK_SIZE, 0.0f, chunk->position.y * CHUNK_SIZE}};
         float closest_x =
