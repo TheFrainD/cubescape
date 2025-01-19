@@ -1,17 +1,23 @@
+#include <pthread.h>
+#include <stdio.h>
+#include <time.h>
+#include <string.h>
+
 #include <cglm/cglm.h>
+
 #include <cubegl/shader.h>
 #include <cubegl/shader_program.h>
 #include <cubelog/cubelog.h>
-#include <stdio.h>
-#include <time.h>
 
 #include "core/file.h"
 #include "core/input.h"
 #include "core/profiling.h"
+
 #include "graphics/camera.h"
 #include "graphics/renderer.h"
 #include "graphics/tilemap.h"
 #include "graphics/window.h"
+
 #include "world/ray.h"
 #include "world/world.h"
 #include "world/world_renderer.h"
@@ -26,6 +32,91 @@ static camera_t *camera             = NULL;
 static world_t *world               = NULL;
 static const float horizontal_speed = 7.0f;
 static const float vertical_speed   = 5.0f;
+
+struct world_gen_task {
+    pthread_t thread;
+    chunk_t *chunk;
+    bool busy : 1;
+};
+
+static struct world_gen_task world_gen_task_pool[10];
+
+void *world_gen_thread(void *arg) {
+    struct world_gen_task *task = arg;
+    chunk_t *chunk              = task->chunk;
+
+    CUBELOG_INFO("Generating chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
+
+    for (int x = 0; x < CHUNK_SIZE; ++x) {
+        for (int z = 0; z < CHUNK_SIZE; ++z) {
+            for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+                if (y < 50) {
+                    chunk_set_block(chunk, (ivec3s) {{x, y, z}}, BLOCK_ID_STONE);
+                } else {
+                    chunk_set_block(chunk, (ivec3s) {{x, y, z}}, BLOCK_ID_AIR);
+                }
+            }
+        }
+    }
+
+    chunk->flags.generated = true;
+    chunk->flags.generating = false;
+    task->busy = false;
+    return NULL;
+}
+
+void world_gen_execute(chunk_t *chunk) {
+    for (size_t i = 0; i < 10; ++i) {
+        struct world_gen_task *task = &world_gen_task_pool[i];
+        if (task->busy) {
+            continue;
+        }
+        task->chunk = chunk;
+        task->busy  = true;
+        chunk->flags.generating = true;
+        pthread_create(&task->thread, NULL, world_gen_thread, task);
+        return;
+    }
+}
+
+struct mesh_gen_task {
+    pthread_t thread;
+    chunk_t *chunk;
+    shader_program_t *shader_program;
+    tilemap_t *tilemap;
+    bool busy : 1;
+};
+
+void *mesh_gen_thread(void *arg) {
+    struct mesh_gen_task *task = arg;
+    chunk_t *chunk             = task->chunk;
+
+    CUBELOG_INFO("Generating mesh for chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
+
+    chunk_generate_mesh(chunk, task->shader_program, task->tilemap);
+    chunk->flags.mesh_generating = false;
+
+    task->busy = false;
+    return NULL;
+}
+
+static struct mesh_gen_task mesh_gen_task_pool[10];
+
+void chunk_generate_mesh_async(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap) {
+    for (size_t i = 0; i < 10; ++i) {
+        struct mesh_gen_task *task = &mesh_gen_task_pool[i];
+        if (task->busy) {
+            continue;
+        }
+        task->chunk = chunk;
+        task->shader_program = shader_program;
+        task->tilemap = tilemap;
+        task->busy  = true;
+        chunk->flags.mesh_generating = true;
+        pthread_create(&task->thread, NULL, mesh_gen_thread, task);
+        return;
+    }
+}
 
 void key_callback(key_code_t key) {
     if (key == KEY_ESCAPE) {
@@ -96,6 +187,8 @@ int main(int argc, char **argv) {
     srand(time(NULL));
 
     cubelog_set_level(CUBELOG_LEVEL_DEBUG);
+
+    memset(world_gen_task_pool, 0, sizeof(world_gen_task_pool));
 
     // Log to file
     FILE *log_fp = fopen(CUBELOG_FILE, "w");
@@ -196,25 +289,34 @@ int main(int argc, char **argv) {
     input_add_mouse_position_callback(mouse_callback);
     input_add_mouse_button_pressed_callback(mouse_button_callback);
 
-    world_renderer_settings_t world_renderer_settings = {0};
-    world_renderer_settings.tilemap                   = tilemap;
-    world_renderer_settings.block_shader              = shader_program;
-    world_renderer_settings.draw_distance             = 6;
-    world_renderer_t *world_renderer                  = world_renderer_create(world_renderer_settings);
-    if (!world_renderer) {
-        CUBELOG_FATAL("Failed to create world renderer");
-        return 1;
-    }
+    // world_renderer_settings_t world_renderer_settings = {0};
+    // world_renderer_settings.tilemap                   = tilemap;
+    // world_renderer_settings.block_shader              = shader_program;
+    // world_renderer_settings.draw_distance             = 6;
+    // world_renderer_t *world_renderer                  = world_renderer_create(world_renderer_settings);
+    // if (!world_renderer) {
+    //     CUBELOG_FATAL("Failed to create world renderer");
+    //     return 1;
+    // }
 
     world_settings_t world_settings = {0};
-    world_settings.size             = 8;
+    world_settings.size             = 1;
     world                           = world_create(world_settings);
     if (!world) {
         CUBELOG_FATAL("Failed to create world");
         return 1;
     }
 
-    is_running = 1;
+    // world_generator_parameters_t generator_parameters = {0};
+    // generator_parameters.height = 64;
+    // generator_parameters.water_level = 32;
+    // world_generator_t *generator = world_generator_create(generator_parameters);
+
+    // world_generator_generate(generator, world);
+
+    chunk_t *chunk = chunk_create((ivec2s) {{0, 0}}, world);
+
+    is_running = true;
 
     while (is_running) {
         is_running &= !window_should_close();
@@ -223,17 +325,38 @@ int main(int argc, char **argv) {
         window_update_delta_time();
         update();
 
-        world_renderer_prepare(world_renderer, world);
+        // world_renderer_prepare(world_renderer, world);
 
         renderer_begin_frame();
 
-        world_renderer_render(world_renderer, world, camera_get_position(camera));
+        if (!chunk->flags.generated) {
+            world_gen_execute(chunk);
+        }
+
+        if (chunk->flags.dirty && chunk->flags.generated && !chunk->flags.mesh_generating) {
+            chunk_generate_mesh_async(chunk, shader_program, tilemap);
+        }
+
+        if (chunk->mesh) {
+            if (chunk->mesh->flags.ready_to_upload) {
+                mesh_upload(chunk->mesh);
+            }
+
+            if (chunk->mesh->flags.uploaded) {
+                renderer_draw_mesh(chunk->mesh, (vec3s) {{0.0f, 0.0f, 0.0f}}, (vec3s) {{0.0f, 0.0f, 0.0f}},
+                                   (vec3s) {{10.0f, 1.0f, 10.0f}});
+            }
+        }
+
+        // world_renderer_render(world_renderer, world, camera_get_position(camera));
 
         renderer_end_frame();
     }
 
+    // world_generator_destroy(generator);
+    // world_renderer_destroy(world_renderer);
     world_destroy(world);
-    world_renderer_destroy(world_renderer);
+    // world_renderer_destroy(world_renderer);
     shader_program_destroy(shader_program);
     tilemap_free(tilemap);
 

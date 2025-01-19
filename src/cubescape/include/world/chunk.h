@@ -5,18 +5,26 @@
 
 #include "graphics/mesh.h"
 #include "graphics/tilemap.h"
+
 #include "world/block.h"
 
 #define CHUNK_SIZE   16
 #define CHUNK_HEIGHT 256
 #define CHUNK_VOLUME (CHUNK_SIZE * CHUNK_SIZE * CHUNK_HEIGHT)
 
+struct chunk_flags {
+    bool dirty : 1;
+    bool generated : 1;
+    bool generating : 1;
+    bool mesh_generating: 1;
+};
+
 typedef struct {
     ivec2s position;
     block_id_t *blocks;
     mesh_t *mesh;
     void *world;
-    int dirty;
+    struct chunk_flags flags;
 } chunk_t;
 
 /**

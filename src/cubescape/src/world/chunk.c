@@ -1,12 +1,15 @@
 #include "world/chunk.h"
 
-#include <cubegl/vertex_array.h>
-#include <cubelog/cubelog.h>
-#include <glad/glad.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <glad/glad.h>
+
+#include <cubegl/vertex_array.h>
+#include <cubelog/cubelog.h>
+
 #include "core/math.h"
+
 #include "world/world.h"
 
 static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position) {
@@ -85,9 +88,13 @@ chunk_t *chunk_create(ivec2s position, void *world) {
     chunk_t *chunk  = malloc(sizeof(chunk_t));
     chunk->position = position;
     chunk->blocks   = malloc(CHUNK_VOLUME * sizeof(block_id_t));
-    chunk->mesh     = mesh_create(NULL, CHUNK_VOLUME * 24, NULL, CHUNK_VOLUME * 36, NULL, -1);
+    chunk->mesh     = NULL;
     chunk->world    = world;
-    chunk->dirty    = 1;
+
+    chunk->flags.dirty      = true;
+    chunk->flags.generated  = false;
+    chunk->flags.generating = false;
+    chunk->flags.mesh_generating = false;
     return chunk;
 }
 
@@ -118,30 +125,30 @@ void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block) {
 
     chunk->blocks[position.x + position.y * CHUNK_SIZE + position.z * (CHUNK_SIZE * CHUNK_HEIGHT)] = block;
 
-    chunk->dirty      = 1;
-    chunk_t *neighbor = NULL;
+    chunk->flags.dirty = 1;
+    chunk_t *neighbor  = NULL;
     if (position.x == 0) {
         neighbor = world_get_chunk((world_t *)chunk->world, chunk->position.x - 1, chunk->position.y);
         if (neighbor != NULL) {
-            neighbor->dirty = 1;
+            neighbor->flags.dirty = 1;
         }
     }
     if (position.x == CHUNK_SIZE - 1) {
         neighbor = world_get_chunk((world_t *)chunk->world, chunk->position.x + 1, chunk->position.y);
         if (neighbor != NULL) {
-            neighbor->dirty = 1;
+            neighbor->flags.dirty = 1;
         }
     }
     if (position.z == 0) {
         neighbor = world_get_chunk((world_t *)chunk->world, chunk->position.x, chunk->position.y - 1);
         if (neighbor != NULL) {
-            neighbor->dirty = 1;
+            neighbor->flags.dirty = 1;
         }
     }
     if (position.z == CHUNK_SIZE - 1) {
         neighbor = world_get_chunk((world_t *)chunk->world, chunk->position.x, chunk->position.y + 1);
         if (neighbor != NULL) {
-            neighbor->dirty = 1;
+            neighbor->flags.dirty = 1;
         }
     }
 }
@@ -191,14 +198,19 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
         }
     }
 
-    mesh_set_vertices(chunk->mesh, vertices, vertex_count);
-    mesh_set_indices(chunk->mesh, indices, index_count);
+    if (chunk->mesh == NULL) {
+        chunk->mesh = mesh_create(vertices, vertex_count, indices, index_count, shader_program, tilemap->texture);
+    } else {
+        mesh_set_vertices(chunk->mesh, vertices, vertex_count);
+        mesh_set_indices(chunk->mesh, indices, index_count);
+        chunk->mesh->texture        = tilemap->texture;
+        chunk->mesh->shader_program = shader_program;
+    }
+
     free(vertices);
     free(indices);
 
-    chunk->mesh->texture        = tilemap->texture;
-    chunk->mesh->shader_program = shader_program;
-    chunk->dirty                = 0;
+    chunk->flags.dirty = false;
 }
 
 void chunk_destroy(chunk_t *chunk) {

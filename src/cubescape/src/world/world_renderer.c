@@ -46,7 +46,7 @@ void world_renderer_prepare(world_renderer_t *renderer, world_t *world) {
 
     for (size_t i = 0; i < world->size * world->size; ++i) {
         chunk_t *chunk = world->chunks[i];
-        if (chunk->dirty) {
+        if (chunk->flags.dirty && chunk->flags.generated) {
             rendered = 1;
             chunk_generate_mesh(chunk, renderer->state->block_shader, renderer->state->tilemap);
         }
