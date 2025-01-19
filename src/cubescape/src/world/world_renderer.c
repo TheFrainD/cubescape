@@ -48,7 +48,10 @@ void world_renderer_prepare(world_renderer_t *renderer, world_t *world) {
         chunk_t *chunk = world->chunks[i];
         if (chunk->mesh_needs_update && chunk->is_generated) {
             rendered = 1;
-            chunk_generate_mesh(chunk, renderer->state->block_shader, renderer->state->tilemap);
+            chunk_generate_mesh_data(chunk, renderer->state->block_shader, renderer->state->tilemap);
+            if (chunk->mesh->state & MESH_STATE_READY_TO_UPLOAD) {
+                mesh_upload(chunk->mesh);
+            }
         }
     }
 

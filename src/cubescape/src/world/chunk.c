@@ -148,14 +148,14 @@ void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block) {
     }
 }
 
-void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap) {
+void chunk_generate_mesh_data(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap) {
     if (chunk == NULL) {
-        CUBELOG_ERROR("'chunk_generate_mesh' called with NULL chunk");
+        CUBELOG_ERROR("'chunk_generate_mesh_data' called with NULL chunk");
         return;
     }
 
     if (shader_program == NULL) {
-        CUBELOG_ERROR("'chunk_generate_mesh' called with NULL shader program");
+        CUBELOG_ERROR("'chunk_generate_mesh_data' called with NULL shader program");
         return;
     }
 

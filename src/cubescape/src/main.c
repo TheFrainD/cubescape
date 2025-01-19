@@ -231,11 +231,11 @@ int main(int argc, char **argv) {
         window_update_delta_time();
         update();
 
-        // world_renderer_prepare(world_renderer, world);
+        world_renderer_prepare(world_renderer, world);
 
         renderer_begin_frame();
 
-        // world_renderer_render(world_renderer, world, camera_get_position(camera));
+        world_renderer_render(world_renderer, world, camera_get_position(camera));
 
         renderer_end_frame();
     }
