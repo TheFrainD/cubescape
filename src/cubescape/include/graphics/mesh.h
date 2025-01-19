@@ -1,17 +1,33 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include <cglm/struct.h>
+
+#include <cubegl/buffer.h>
 #include <cubegl/shader_program.h>
 
 #include "graphics/vertex.h"
 
-typedef struct mesh_private_data mesh_private_data_t;
+struct mesh_flags {
+    bool ready_to_upload : 1;
+    bool uploaded : 1;
+};
 
 typedef struct {
+    vertex_t *vertices;
+    size_t vertex_count;
+
+    uint32_t *indices;
+    size_t index_count;
+
+    uint32_t vertex_array;
+    buffer_t *vertex_buffer;
+    buffer_t *index_buffer;
     shader_program_t *shader_program;
     uint32_t texture;
 
-    mesh_private_data_t *private_data;
+    struct mesh_flags flags;
 } mesh_t;
 
 /**
@@ -25,11 +41,10 @@ typedef struct {
  * @param index_count The number of indices in the array.
  * @param shader_program The shader program to use when rendering the mesh.
  * @param texture The texture to use when rendering the mesh.
- *
  * @return mesh_t* A pointer to the newly created mesh object.
  */
-mesh_t *mesh_create(const vertex_t *const vertices, size_t vertex_count, const uint32_t *const indices,
-                    size_t index_count, shader_program_t *shader_program, uint32_t texture);
+mesh_t *mesh_create(const vertex_t *vertices, size_t vertex_count, const uint32_t *indices, size_t index_count,
+                    shader_program_t *shader_program, uint32_t texture);
 
 /**
  * @brief Destroys the specified mesh.
@@ -49,7 +64,7 @@ void mesh_destroy(mesh_t *mesh);
  * @param vertices An array of vertices.
  * @param vertex_count The number of vertices in the array.
  */
-void mesh_set_vertices(const mesh_t *mesh, const vertex_t *const vertices, size_t vertex_count);
+void mesh_set_vertices(mesh_t *mesh, const vertex_t *vertices, size_t vertex_count);
 
 /**
  * @brief Sets the indices of the specified mesh.
@@ -60,7 +75,7 @@ void mesh_set_vertices(const mesh_t *mesh, const vertex_t *const vertices, size_
  * @param indices An array of indices.
  * @param index_count The number of indices in the array.
  */
-void mesh_set_indices(const mesh_t *mesh, const uint32_t *const indices, size_t index_count);
+void mesh_set_indices(mesh_t *mesh, const uint32_t *indices, size_t index_count);
 
 /**
  * @brief Binds the specified mesh for rendering.
@@ -69,7 +84,7 @@ void mesh_set_indices(const mesh_t *mesh, const uint32_t *const indices, size_t 
  *
  * @param mesh A pointer to the mesh object to bind.
  */
-void mesh_bind(const mesh_t *const mesh);
+void mesh_bind(const mesh_t *mesh);
 
 /**
  * @brief Unbinds the currently bound mesh.
@@ -78,26 +93,13 @@ void mesh_bind(const mesh_t *const mesh);
  *
  * @param mesh A pointer to the mesh object to unbind.
  */
-void mesh_unbind(const mesh_t *const mesh);
+void mesh_unbind(const mesh_t *mesh);
 
 /**
- * @brief Returns the number of vertices in the specified mesh.
+ * @brief Uploads the mesh to the GPU.
  *
- * This function returns the number of vertices in the specified mesh object.
+ * This function uploads the mesh to the GPU.
  *
- * @param mesh A pointer to the mesh object.
- *
- * @return size_t The number of vertices in the mesh.
+ * @param mesh A pointer to the mesh object to upload.
  */
-size_t mesh_get_vertex_count(const mesh_t *const mesh);
-
-/**
- * @brief Returns the number of indices in the specified mesh.
- *
- * This function returns the number of indices in the specified mesh object.
- *
- * @param mesh A pointer to the mesh object.
- *
- * @return size_t The number of indices in the mesh.
- */
-size_t mesh_get_index_count(const mesh_t *const mesh);
+void mesh_upload(mesh_t *mesh);

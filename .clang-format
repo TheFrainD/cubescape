@@ -22,3 +22,24 @@ SpaceAfterTemplateKeyword: 'true'
 SpaceBeforeAssignmentOperators: 'true'
 SpaceBeforeCpp11BracedList: 'true'
 TabWidth: '4'
+IncludeCategories:
+  - Regex: '^<pthread\.h>'
+    Priority: 1
+  - Regex: '^<time\.h>'
+    Priority: 1
+  - Regex: '^<string\.h>'
+    Priority: 1
+  - Regex: '^<std.*\.h>'
+    Priority: 1
+  - Regex: '^<cube.*\.h>'
+    Priority: 3
+  - Regex: '^<.*\.h>'
+    Priority: 2
+  - Regex: '^"core/.*\.h"'
+    Priority: 4
+  - Regex: '^"graphics/.*\.h"'
+    Priority: 5
+  - Regex: '^"world/.*\.h"'
+    Priority: 6
+  - Regex: '^".*\.h"'
+    Priority: 7

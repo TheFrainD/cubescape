@@ -1,44 +1,36 @@
 #include "graphics/mesh.h"
 
-#include <cubegl/buffer.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <cubegl/texture.h>
 #include <cubegl/vertex_array.h>
 #include <cubelog/cubelog.h>
 
 #include "graphics/renderer.h"
 
-struct mesh_private_data {
-    size_t vertex_count;
-    size_t index_count;
+#define READY_TO_UPLOAD (mesh->vertices && mesh->indices && mesh->vertex_count > 0 && mesh->index_count > 0)
 
-    uint32_t vertex_array;
-    buffer_t *vertex_buffer;
-    buffer_t *index_buffer;
-};
-
-mesh_t *mesh_create(const vertex_t *const vertices, size_t vertex_count, const uint32_t *const indices,
-                    size_t index_count, shader_program_t *shader_program, uint32_t texture) {
+mesh_t *mesh_create(const vertex_t *vertices, size_t vertex_count, const uint32_t *indices, size_t index_count,
+                    shader_program_t *shader_program, uint32_t texture) {
     mesh_t *mesh         = malloc(sizeof(mesh_t));
     mesh->shader_program = shader_program;
     mesh->texture        = texture;
+    mesh->flags.uploaded = false;
 
-    mesh->private_data               = malloc(sizeof(mesh_private_data_t));
-    mesh->private_data->vertex_count = vertex_count;
-    mesh->private_data->index_count  = index_count;
+    mesh->vertices = vertex_count != 0 ? malloc(vertex_count * sizeof(vertex_t)) : NULL;
+    if (vertices != NULL) {
+        memcpy(mesh->vertices, vertices, vertex_count * sizeof(vertex_t));
+    }
+    mesh->vertex_count = vertex_count;
 
-    mesh->private_data->vertex_array = vertex_array_create();
-    mesh->private_data->vertex_buffer =
-        buffer_create(vertex_count * sizeof(vertex_t), vertices, BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ARRAY_BUFFER);
-    mesh->private_data->index_buffer = buffer_create(index_count * sizeof(uint32_t), indices, BUFFER_USAGE_DYNAMIC_DRAW,
-                                                     BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
+    mesh->indices = index_count != 0 ? malloc(index_count * sizeof(uint32_t)) : NULL;
+    if (indices != NULL) {
+        memcpy(mesh->indices, indices, index_count * sizeof(uint32_t));
+    }
+    mesh->index_count = index_count;
 
-    vertex_array_bind(mesh->private_data->vertex_array);
-    buffer_bind(mesh->private_data->vertex_buffer);
-    vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, position));
-    vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, uv));
-    vertex_array_attrib(2, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, tint));
-    buffer_unbind(mesh->private_data->vertex_buffer);
-    vertex_array_unbind();
+    mesh->flags.ready_to_upload = READY_TO_UPLOAD;
 
     return mesh;
 }
@@ -49,16 +41,26 @@ void mesh_destroy(mesh_t *mesh) {
         return;
     }
 
-    CUBELOG_TRACE("Destroying mesh");
+    if (mesh->vertices) {
+        free(mesh->vertices);
+    }
+    if (mesh->indices) {
+        free(mesh->indices);
+    }
+    if (mesh->vertex_buffer) {
+        buffer_destroy(mesh->vertex_buffer);
+    }
+    if (mesh->index_buffer) {
+        buffer_destroy(mesh->index_buffer);
+    }
+    if (mesh->vertex_array) {
+        vertex_array_destroy(&mesh->vertex_array);
+    }
 
-    buffer_destroy(mesh->private_data->vertex_buffer);
-    buffer_destroy(mesh->private_data->index_buffer);
-    vertex_array_destroy(&mesh->private_data->vertex_array);
-    free(mesh->private_data);
     free(mesh);
 }
 
-void mesh_set_vertices(const mesh_t *mesh, const vertex_t *const vertices, size_t vertex_count) {
+void mesh_set_vertices(mesh_t *mesh, const vertex_t *vertices, size_t vertex_count) {
     if (!mesh) {
         CUBELOG_ERROR("'mesh_set_vertices' called with NULL mesh");
         return;
@@ -69,11 +71,19 @@ void mesh_set_vertices(const mesh_t *mesh, const vertex_t *const vertices, size_
         return;
     }
 
-    buffer_data(mesh->private_data->vertex_buffer, vertex_count * sizeof(vertex_t), vertices);
-    mesh->private_data->vertex_count = vertex_count;
+    if (mesh->vertices == NULL) {
+        mesh->vertices = malloc(vertex_count * sizeof(vertex_t));
+    } else if (vertex_count > mesh->vertex_count) {
+        mesh->vertices = realloc(mesh->vertices, vertex_count * sizeof(vertex_t));
+    }
+
+    mesh->vertex_count = vertex_count;
+    memcpy(mesh->vertices, vertices, vertex_count * sizeof(vertex_t));
+
+    mesh->flags.ready_to_upload = READY_TO_UPLOAD;
 }
 
-void mesh_set_indices(const mesh_t *mesh, const uint32_t *const indices, size_t index_count) {
+void mesh_set_indices(mesh_t *mesh, const uint32_t *indices, size_t index_count) {
     if (!mesh) {
         CUBELOG_ERROR("'mesh_set_indices' called with NULL mesh");
         return;
@@ -84,41 +94,69 @@ void mesh_set_indices(const mesh_t *mesh, const uint32_t *const indices, size_t 
         return;
     }
 
-    buffer_data(mesh->private_data->index_buffer, index_count * sizeof(uint32_t), indices);
-    mesh->private_data->index_count = index_count;
+    if (mesh->indices == NULL) {
+        mesh->indices = malloc(index_count * sizeof(uint32_t));
+    } else if (index_count > mesh->index_count) {
+        mesh->indices = realloc(mesh->indices, index_count * sizeof(uint32_t));
+    }
+
+    mesh->index_count = index_count;
+    memcpy(mesh->indices, indices, index_count * sizeof(uint32_t));
+
+    mesh->flags.ready_to_upload = READY_TO_UPLOAD;
 }
 
-void mesh_bind(const mesh_t *const mesh) {
+void mesh_bind(const mesh_t *mesh) {
     if (!mesh) {
         CUBELOG_ERROR("'mesh_bind' called with NULL mesh");
         return;
     }
 
     shader_program_use(mesh->shader_program);
-    vertex_array_bind(mesh->private_data->vertex_array);
-    buffer_bind(mesh->private_data->vertex_buffer);
-    buffer_bind(mesh->private_data->index_buffer);
+    vertex_array_bind(mesh->vertex_array);
+    buffer_bind(mesh->vertex_buffer);
+    buffer_bind(mesh->index_buffer);
     texture_bind(mesh->texture, 0);
 }
 
-void mesh_unbind(const mesh_t *const mesh) {
-    buffer_unbind(mesh->private_data->vertex_buffer);
-    buffer_unbind(mesh->private_data->index_buffer);
+void mesh_unbind(const mesh_t *mesh) {
+    buffer_unbind(mesh->vertex_buffer);
+    buffer_unbind(mesh->index_buffer);
     vertex_array_unbind();
 }
 
-size_t mesh_get_vertex_count(const mesh_t *const mesh) {
+void mesh_upload(mesh_t *mesh) {
     if (!mesh) {
-        CUBELOG_ERROR("'mesh_get_vertex_count' called with NULL mesh");
-        return 0;
+        CUBELOG_ERROR("'mesh_upload' called with NULL mesh");
+        return;
     }
-    return mesh->private_data->vertex_count;
-}
 
-size_t mesh_get_index_count(const mesh_t *const mesh) {
-    if (!mesh) {
-        CUBELOG_ERROR("'mesh_get_index_count' called with NULL mesh");
-        return 0;
+    if (mesh->vertex_buffer) {
+        buffer_data(mesh->vertex_buffer, mesh->vertex_count * sizeof(vertex_t), mesh->vertices);
+    } else {
+        mesh->vertex_buffer = buffer_create(mesh->vertex_count * sizeof(vertex_t), mesh->vertices,
+                                            BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ARRAY_BUFFER);
     }
-    return mesh->private_data->index_count;
+
+    if (mesh->index_buffer) {
+        buffer_data(mesh->index_buffer, mesh->index_count * sizeof(uint32_t), mesh->indices);
+    } else {
+        mesh->index_buffer = buffer_create(mesh->index_count * sizeof(uint32_t), mesh->indices,
+                                           BUFFER_USAGE_DYNAMIC_DRAW, BUFFER_TARGET_ELEMENT_ARRAY_BUFFER);
+    }
+
+    if (mesh->vertex_array == 0) {
+        mesh->vertex_array = vertex_array_create();
+
+        vertex_array_bind(mesh->vertex_array);
+        buffer_bind(mesh->vertex_buffer);
+        vertex_array_attrib(0, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, position));
+        vertex_array_attrib(1, 2, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, uv));
+        vertex_array_attrib(2, 3, VERTEX_ARRAY_DATA_TYPE_FLOAT, sizeof(vertex_t), (void *)offsetof(vertex_t, tint));
+        buffer_unbind(mesh->vertex_buffer);
+        vertex_array_unbind();
+    }
+
+    mesh->flags.uploaded        = true;
+    mesh->flags.ready_to_upload = false;
 }

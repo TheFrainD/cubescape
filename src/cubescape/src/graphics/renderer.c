@@ -91,7 +91,7 @@ void renderer_end_frame() {
     window_swap_buffers();
 }
 
-void renderer_draw_mesh(const mesh_t *const mesh, vec3s position, vec3s rotation, vec3s scale) {
+void renderer_draw_mesh(const mesh_t *mesh, vec3s position, vec3s rotation, vec3s scale) {
     if (!mesh) {
         CUBELOG_ERROR("'renderer_draw_mesh' called with NULL mesh");
         return;
@@ -111,7 +111,7 @@ void renderer_draw_mesh(const mesh_t *const mesh, vec3s position, vec3s rotation
 
     buffer_sub_data(renderer.uniform_buffer, 0, sizeof(mat4), &model);
 
-    glDrawElements(GL_TRIANGLES, mesh_get_index_count(mesh), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, mesh->index_count, GL_UNSIGNED_INT, 0);
 
     mesh_unbind(mesh);
 }

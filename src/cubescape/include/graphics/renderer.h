@@ -68,7 +68,7 @@ void renderer_end_frame();
  * @param rotation The rotation of the mesh.
  * @param scale The scale of the mesh.
  */
-void renderer_draw_mesh(const mesh_t *const mesh, vec3s position, vec3s rotation, vec3s scale);
+void renderer_draw_mesh(const mesh_t *mesh, vec3s position, vec3s rotation, vec3s scale);
 
 /**
  * @brief Returns the vertex array used by the renderer.
