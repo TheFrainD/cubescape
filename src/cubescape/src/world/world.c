@@ -1,31 +1,14 @@
 #include "world/world.h"
 
-#include <cubelog/cubelog.h>
 #include <stdlib.h>
 
+#include <cubelog/cubelog.h>
+
 #include "world/generator.h"
-#include "world/noise/combined_noise.h"
-#include "world/noise/octave_noise.h"
-#include "world/noise/perlin_noise.h"
 
 world_t *world_create(world_settings_t settings) {
     world_t *world = malloc(sizeof(world_t));
-    world->size    = settings.size;
-    world->chunks  = malloc(world->size * world->size * sizeof(chunk_t *));
-
-    world_generator_parameters_t generator_parameters = {0};
-    generator_parameters.height                       = 64;
-    generator_parameters.water_level                  = 32;
-    world_generator_t *generator                      = world_generator_create(generator_parameters);
-
-    for (size_t i = 0; i < world->size * world->size; ++i) {
-        ivec2s chunk_pos = (ivec2s) {{i % world->size, i / world->size}};
-        chunk_t *chunk   = chunk_create(chunk_pos, world);
-        world->chunks[i] = chunk;
-        world_generator_generate(generator, chunk);
-    }
-
-    world_generator_destroy(generator);
+    world->chunks  = llist_create();
     return world;
 }
 
@@ -35,25 +18,28 @@ void world_destroy(world_t *world) {
         return;
     }
 
-    for (size_t i = 0; i < world->size * world->size; ++i) {
-        chunk_destroy(world->chunks[i]);
+    LLIST_FOREACH(world->chunks, node) {
+        chunk_t *chunk = node->data;
+        chunk_destroy(chunk);
     }
-
-    free(world->chunks);
+    llist_destroy(world->chunks);
     free(world);
 }
 
-chunk_t *world_get_chunk(world_t *world, int x, int y) {
+chunk_t *world_get_chunk(world_t *world, ivec2s index) {
     if (world == NULL) {
         CUBELOG_ERROR("'world_get_chunk' called with NULL world");
         return NULL;
     }
 
-    if (x < 0 || x >= world->size || y < 0 || y >= world->size) {
-        return NULL;
+    LLIST_FOREACH(world->chunks, node) {
+        chunk_t *chunk = node->data;
+        if (glms_ivec2_eqv(chunk->position, index)) {
+            return chunk;
+        }
     }
 
-    return world->chunks[x + y * world->size];
+    return NULL;
 }
 
 block_id_t world_get_block(world_t *world, ivec3s position) {
@@ -62,9 +48,9 @@ block_id_t world_get_block(world_t *world, ivec3s position) {
         return BLOCK_ID_AIR;
     }
 
-    ivec3s chunk_position = (ivec3s) {{position.x / CHUNK_SIZE, position.y / CHUNK_HEIGHT, position.z / CHUNK_SIZE}};
+    ivec2s index = (ivec2s) {{position.x / CHUNK_SIZE, position.z / CHUNK_SIZE}};
 
-    chunk_t *chunk = world_get_chunk(world, chunk_position.x, chunk_position.z);
+    chunk_t *chunk = world_get_chunk(world, index);
     if (chunk == NULL) {
         return BLOCK_ID_AIR;
     }
@@ -83,13 +69,29 @@ void world_set_block(world_t *world, ivec3s position, block_id_t block) {
         return;
     }
 
-    ivec3s chunk_position = (ivec3s) {{position.x / CHUNK_SIZE, position.y / CHUNK_HEIGHT, position.z / CHUNK_SIZE}};
+    ivec2s index = (ivec2s) {{position.x / CHUNK_SIZE, position.z / CHUNK_SIZE}};
 
-    chunk_t *chunk = world_get_chunk(world, chunk_position.x, chunk_position.z);
+    chunk_t *chunk = world_get_chunk(world, index);
     if (chunk == NULL) {
         return;
     }
 
     ivec3s block_position = (ivec3s) {{position.x % CHUNK_SIZE, position.y % CHUNK_HEIGHT, position.z % CHUNK_SIZE}};
     chunk_set_block(chunk, block_position, block);
+}
+
+chunk_t *world_add_chunk(world_t *world, ivec2s index) {
+    if (world == NULL) {
+        CUBELOG_ERROR("'world_add_chunk' called with NULL world");
+        return NULL;
+    }
+
+    if (world_get_chunk(world, index) != NULL) {
+        CUBELOG_WARN("Chunk at position (%d, %d) already exists", index.x, index.y);
+        return NULL;
+    }
+
+    chunk_t *chunk = chunk_create(index, world);
+    llist_append(world->chunks, chunk);
+    return chunk;
 }

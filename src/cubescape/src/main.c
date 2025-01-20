@@ -34,6 +34,9 @@ static camera_t *camera             = NULL;
 static world_t *world               = NULL;
 static const float horizontal_speed = 7.0f;
 static const float vertical_speed   = 5.0f;
+static const int draw_distance      = 6;
+
+#define MAX_THREADS 100
 
 struct world_gen_task {
     pthread_t thread;
@@ -41,7 +44,7 @@ struct world_gen_task {
     bool busy : 1;
 };
 
-static struct world_gen_task world_gen_task_pool[10];
+static struct world_gen_task world_gen_task_pool[MAX_THREADS];
 
 void *world_gen_thread(void *arg) {
     struct world_gen_task *task = arg;
@@ -68,7 +71,7 @@ void *world_gen_thread(void *arg) {
 }
 
 void world_gen_execute(chunk_t *chunk) {
-    for (size_t i = 0; i < 10; ++i) {
+    for (size_t i = 0; i < MAX_THREADS; ++i) {
         struct world_gen_task *task = &world_gen_task_pool[i];
         if (task->busy) {
             continue;
@@ -102,10 +105,10 @@ void *mesh_gen_thread(void *arg) {
     return NULL;
 }
 
-static struct mesh_gen_task mesh_gen_task_pool[10];
+static struct mesh_gen_task mesh_gen_task_pool[MAX_THREADS];
 
 void chunk_generate_mesh_async(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap) {
-    for (size_t i = 0; i < 10; ++i) {
+    for (size_t i = 0; i < MAX_THREADS; ++i) {
         struct mesh_gen_task *task = &mesh_gen_task_pool[i];
         if (task->busy) {
             continue;
@@ -316,13 +319,6 @@ int main(int argc, char **argv) {
 
     // world_generator_generate(generator, world);
 
-    llist_t *chunks = llist_create();
-    for (int x = 0; x < 3; ++x) {
-        for (int y = 0; y < 3; ++y) {
-            llist_append(chunks, chunk_create((ivec2s) {{x, y}}, world));
-        }
-    }
-
     is_running = true;
 
     while (is_running) {
@@ -336,26 +332,38 @@ int main(int argc, char **argv) {
 
         renderer_begin_frame();
 
-        LLIST_FOREACH(chunks, node) {
-            chunk_t *chunk = node->data;
+        vec3s camera_position = camera_get_position(camera);
+        ivec2s index          = (ivec2s) {
+            {camera_position.x >= 0 ? (camera_position.x / CHUNK_SIZE) : (camera_position.x / CHUNK_SIZE - 1),
+             camera_position.z >= 0 ? (camera_position.z / CHUNK_SIZE) : (camera_position.z / CHUNK_SIZE - 1)}};
 
-            if (!chunk->flags.generated) {
-                world_gen_execute(chunk);
-            }
-
-            if (chunk->flags.dirty && chunk->flags.generated && !chunk->flags.mesh_generating) {
-                chunk_generate_mesh_async(chunk, shader_program, tilemap);
-            }
-
-            if (chunk->mesh) {
-                if (chunk->mesh->flags.ready_to_upload) {
-                    mesh_upload(chunk->mesh);
+        for (int x = index.x - draw_distance; x <= index.x + draw_distance; ++x) {
+            for (int z = index.y - draw_distance; z <= index.y + draw_distance; ++z) {
+                ivec2s chunk_index = (ivec2s) {{x, z}};
+                chunk_t *chunk     = world_get_chunk(world, chunk_index);
+                if (!chunk) {
+                    chunk = world_add_chunk(world, chunk_index);
                 }
 
-                if (chunk->mesh->flags.uploaded) {
-                    vec3s position = (vec3s) {{chunk->position.x * CHUNK_SIZE, 0.0f, chunk->position.y * CHUNK_SIZE}};
-                    renderer_draw_mesh(chunk->mesh, position, (vec3s) {{0.0f, 0.0f, 0.0f}},
-                                       (vec3s) {{1.0f, 1.0f, 1.0f}});
+                if (!chunk->flags.generated) {
+                    world_gen_execute(chunk);
+                }
+
+                if (chunk->flags.dirty && chunk->flags.generated && !chunk->flags.mesh_generating) {
+                    chunk_generate_mesh_async(chunk, shader_program, tilemap);
+                }
+
+                if (chunk->mesh) {
+                    if (chunk->mesh->flags.ready_to_upload) {
+                        mesh_upload(chunk->mesh);
+                    }
+
+                    if (chunk->mesh->flags.uploaded) {
+                        vec3s position =
+                            (vec3s) {{chunk->position.x * CHUNK_SIZE, 0.0f, chunk->position.y * CHUNK_SIZE}};
+                        renderer_draw_mesh(chunk->mesh, position, (vec3s) {{0.0f, 0.0f, 0.0f}},
+                                           (vec3s) {{1.0f, 1.0f, 1.0f}});
+                    }
                 }
             }
         }
@@ -365,9 +373,13 @@ int main(int argc, char **argv) {
         renderer_end_frame();
     }
 
+    for (size_t i = 0; i < MAX_THREADS; ++i) {
+        pthread_join(world_gen_task_pool[i].thread, NULL);
+        pthread_join(mesh_gen_task_pool[i].thread, NULL);
+    }
+
     // world_generator_destroy(generator);
     // world_renderer_destroy(world_renderer);
-    llist_destroy(chunks);
     world_destroy(world);
     // world_renderer_destroy(world_renderer);
     shader_program_destroy(shader_program);

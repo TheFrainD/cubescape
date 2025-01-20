@@ -2,11 +2,12 @@
 
 #include <cglm/struct.h>
 
+#include "collections/llist.h"
+
 #include "world/chunk.h"
 
 typedef struct {
-    chunk_t **chunks;
-    int size;
+    llist_t *chunks;
 } world_t;
 
 typedef struct {
@@ -35,11 +36,10 @@ void world_destroy(world_t *world);
  * @brief Retrieves the chunk at the specified position in the world.
  *
  * @param world The world to retrieve the chunk from.
- * @param x The x-coordinate of the chunk.
- * @param y The y-coordinate of the chunk.
+ * @param index The index of the chunk.
  * @return chunk_t* The chunk at the specified position.
  */
-chunk_t *world_get_chunk(world_t *world, int x, int y);
+chunk_t *world_get_chunk(world_t *world, ivec2s index);
 
 /**
  * @brief Converts a world position to a block position.
@@ -52,19 +52,28 @@ ivec3s world_to_block(vec3s world_pos);
 
 /**
  * @brief Retrieves the block at the specified position in the world.
- * 
+ *
  * @param world The world to retrieve the block from.
  * @param position The position of the block.
- * 
+ *
  * @return block_id_t The block at the specified position.
  */
 block_id_t world_get_block(world_t *world, ivec3s position);
 
 /**
  * @brief Sets the block at the specified position in the world.
- * 
+ *
  * @param world The world to set the block in.
  * @param position The position of the block.
  * @param block The block to set.
  */
 void world_set_block(world_t *world, ivec3s position, block_id_t block);
+
+/**
+ * @brief Adds a chunk to the world.
+ *
+ * @param world The world to add the chunk to.
+ * @param index The index of the chunk.
+ * @return chunk_t* The added chunk.
+ */
+chunk_t *world_add_chunk(world_t *world, ivec2s index);

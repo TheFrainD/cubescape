@@ -44,13 +44,13 @@ void world_renderer_prepare(world_renderer_t *renderer, world_t *world) {
     int profile_id = profiling_begin("Mesh generation");
     int rendered   = 0;
 
-    for (size_t i = 0; i < world->size * world->size; ++i) {
-        chunk_t *chunk = world->chunks[i];
-        if (chunk->flags.dirty && chunk->flags.generated) {
-            rendered = 1;
-            chunk_generate_mesh(chunk, renderer->state->block_shader, renderer->state->tilemap);
-        }
-    }
+    // for (size_t i = 0; i < world->size * world->size; ++i) {
+    //     chunk_t *chunk = world->chunks[i];
+    //     if (chunk->flags.dirty && chunk->flags.generated) {
+    //         rendered = 1;
+    //         chunk_generate_mesh(chunk, renderer->state->block_shader, renderer->state->tilemap);
+    //     }
+    // }
 
     if (rendered) {
         profiling_end(profile_id);
@@ -70,19 +70,19 @@ void world_renderer_render(world_renderer_t *renderer, world_t *world, vec3s cam
         return;
     }
 
-    for (size_t i = 0; i < world->size * world->size; ++i) {
-        chunk_t *chunk = world->chunks[i];
+    // for (size_t i = 0; i < world->size * world->size; ++i) {
+    //     chunk_t *chunk = world->chunks[i];
 
-        vec3s position = (vec3s) {{chunk->position.x * CHUNK_SIZE, 0.0f, chunk->position.y * CHUNK_SIZE}};
-        float closest_x =
-            fmaxf(chunk->position.x * CHUNK_SIZE, fminf(camera_position.x, (chunk->position.x + 1) * CHUNK_SIZE));
-        float closest_y = fmaxf(0.0f, fminf(camera_position.y, CHUNK_HEIGHT));
-        float closest_z =
-            fmaxf(chunk->position.y * CHUNK_SIZE, fminf(camera_position.z, (chunk->position.y + 1) * CHUNK_SIZE));
-        float distance = sqrtf(powf(camera_position.x - closest_x, 2) + powf(camera_position.y - closest_y, 2) +
-                               powf(camera_position.z - closest_z, 2));
-        if (distance < renderer->state->draw_distance * CHUNK_SIZE) {
-            renderer_draw_mesh(chunk->mesh, position, GLMS_VEC3_ZERO, GLMS_VEC3_ONE);
-        }
-    }
+    //     vec3s position = (vec3s) {{chunk->position.x * CHUNK_SIZE, 0.0f, chunk->position.y * CHUNK_SIZE}};
+    //     float closest_x =
+    //         fmaxf(chunk->position.x * CHUNK_SIZE, fminf(camera_position.x, (chunk->position.x + 1) * CHUNK_SIZE));
+    //     float closest_y = fmaxf(0.0f, fminf(camera_position.y, CHUNK_HEIGHT));
+    //     float closest_z =
+    //         fmaxf(chunk->position.y * CHUNK_SIZE, fminf(camera_position.z, (chunk->position.y + 1) * CHUNK_SIZE));
+    //     float distance = sqrtf(powf(camera_position.x - closest_x, 2) + powf(camera_position.y - closest_y, 2) +
+    //                            powf(camera_position.z - closest_z, 2));
+    //     if (distance < renderer->state->draw_distance * CHUNK_SIZE) {
+    //         renderer_draw_mesh(chunk->mesh, position, GLMS_VEC3_ZERO, GLMS_VEC3_ONE);
+    //     }
+    // }
 }
