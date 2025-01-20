@@ -18,6 +18,10 @@ mesh_t *mesh_create(const vertex_t *vertices, size_t vertex_count, const uint32_
     mesh->texture        = texture;
     mesh->flags.uploaded = false;
 
+    mesh->vertex_buffer = NULL;
+    mesh->index_buffer  = NULL;
+    mesh->vertex_array  = 0;
+
     mesh->vertices = vertex_count != 0 ? malloc(vertex_count * sizeof(vertex_t)) : NULL;
     if (vertices != NULL) {
         memcpy(mesh->vertices, vertices, vertex_count * sizeof(vertex_t));

@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -12,6 +11,7 @@
 #include "core/file.h"
 #include "core/input.h"
 #include "core/profiling.h"
+#include "core/thread.h"
 
 #include "collections/llist.h"
 
@@ -39,14 +39,14 @@ static const int draw_distance      = 6;
 #define MAX_THREADS 10
 
 struct world_gen_task {
-    pthread_t thread;
+    thread_t thread;
     chunk_t *chunk;
     bool busy : 1;
 };
 
 static struct world_gen_task world_gen_task_pool[MAX_THREADS];
 
-void *world_gen_thread(void *arg) {
+THREAD_FUNC(world_gen_thread, arg) {
     struct world_gen_task *task = arg;
     chunk_t *chunk              = task->chunk;
 
@@ -55,10 +55,11 @@ void *world_gen_thread(void *arg) {
     for (int x = 0; x < CHUNK_SIZE; ++x) {
         for (int z = 0; z < CHUNK_SIZE; ++z) {
             for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+                int index = x + y * CHUNK_SIZE + z * (CHUNK_SIZE * CHUNK_HEIGHT);
                 if (y < 50) {
-                    chunk_set_block(chunk, (ivec3s) {{x, y, z}}, BLOCK_ID_STONE);
+                    chunk->blocks[index] = BLOCK_ID_STONE;
                 } else {
-                    chunk_set_block(chunk, (ivec3s) {{x, y, z}}, BLOCK_ID_AIR);
+                    chunk->blocks[index] = BLOCK_ID_AIR;
                 }
             }
         }
@@ -67,7 +68,7 @@ void *world_gen_thread(void *arg) {
     chunk->flags.generated  = true;
     chunk->flags.generating = false;
     task->busy              = false;
-    return NULL;
+    return THREAD_OK;
 }
 
 void world_gen_execute(chunk_t *chunk) {
@@ -79,30 +80,28 @@ void world_gen_execute(chunk_t *chunk) {
         task->chunk             = chunk;
         task->busy              = true;
         chunk->flags.generating = true;
-        pthread_create(&task->thread, NULL, world_gen_thread, task);
+        thread_create(&task->thread, world_gen_thread, task);
         return;
     }
 }
 
 struct mesh_gen_task {
-    pthread_t thread;
+    thread_t thread;
     chunk_t *chunk;
     shader_program_t *shader_program;
     tilemap_t *tilemap;
     bool busy : 1;
 };
 
-void *mesh_gen_thread(void *arg) {
+THREAD_FUNC(mesh_gen_thread, arg) {
     struct mesh_gen_task *task = arg;
     chunk_t *chunk             = task->chunk;
-
-    CUBELOG_INFO("Generating mesh for chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
 
     chunk_generate_mesh(chunk, task->shader_program, task->tilemap);
     chunk->flags.mesh_generating = false;
 
     task->busy = false;
-    return NULL;
+    return THREAD_OK;
 }
 
 static struct mesh_gen_task mesh_gen_task_pool[MAX_THREADS];
@@ -118,7 +117,8 @@ void chunk_generate_mesh_async(chunk_t *chunk, shader_program_t *shader_program,
         task->tilemap                = tilemap;
         task->busy                   = true;
         chunk->flags.mesh_generating = true;
-        pthread_create(&task->thread, NULL, mesh_gen_thread, task);
+        CUBELOG_INFO("Generating mesh for chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
+        thread_create(&task->thread, mesh_gen_thread, task);
         return;
     }
 }
@@ -130,6 +130,14 @@ void key_callback(key_code_t key) {
 
     if (key == KEY_F1) {
         renderer_get_state()->wireframe = !renderer_get_state()->wireframe;
+    }
+
+    if (key == KEY_C) {
+        vec3s camera_position = camera_get_position(camera);
+        ivec2s index          = (ivec2s) {
+            {camera_position.x >= 0 ? (camera_position.x / CHUNK_SIZE) : (camera_position.x / CHUNK_SIZE - 1),
+             camera_position.z >= 0 ? (camera_position.z / CHUNK_SIZE) : (camera_position.z / CHUNK_SIZE - 1)}};
+        CUBELOG_INFO("Chunk at position (%d, %d)", index.x, index.y);
     }
 }
 
@@ -212,8 +220,8 @@ int main(int argc, char **argv) {
     }
 
     window_settings_t window_settings = {0};
-    window_settings.width             = 800;
-    window_settings.height            = 600;
+    window_settings.width             = 1280;
+    window_settings.height            = 720;
     window_settings.title             = EXECUTABLE_NAME;
     window_settings.multisample       = 4;
     result                            = window_init(window_settings);
@@ -350,7 +358,7 @@ int main(int argc, char **argv) {
                     world_gen_execute(chunk);
                 }
 
-                if (chunk->flags.dirty && chunk->flags.generated && !chunk->flags.mesh_generating) {
+                if (chunk->flags.dirty && !chunk->flags.mesh_generating && chunk->flags.generated) {
                     chunk_generate_mesh_async(chunk, shader_program, tilemap);
                 }
 
@@ -406,9 +414,18 @@ int main(int argc, char **argv) {
     }
 
     for (size_t i = 0; i < MAX_THREADS; ++i) {
-        pthread_join(world_gen_task_pool[i].thread, NULL);
-        pthread_join(mesh_gen_task_pool[i].thread, NULL);
+        thread_join(&world_gen_task_pool[i].thread);
+        thread_join(&mesh_gen_task_pool[i].thread);
     }
+
+    int chunks_generated = 0;
+    LLIST_FOREACH(world->chunks, node) {
+        chunk_t *chunk = node->data;
+        if (chunk->flags.generated) {
+            chunks_generated++;
+        }
+    }
+    CUBELOG_INFO("Chunks: %d, Chunks generated: %d", world->chunks->size, chunks_generated);
 
     // world_generator_destroy(generator);
     // world_renderer_destroy(world_renderer);
