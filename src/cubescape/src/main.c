@@ -36,7 +36,7 @@ static const float horizontal_speed = 7.0f;
 static const float vertical_speed   = 5.0f;
 static const int draw_distance      = 6;
 
-#define MAX_THREADS 100
+#define MAX_THREADS 10
 
 struct world_gen_task {
     pthread_t thread;
@@ -342,10 +342,11 @@ int main(int argc, char **argv) {
                 ivec2s chunk_index = (ivec2s) {{x, z}};
                 chunk_t *chunk     = world_get_chunk(world, chunk_index);
                 if (!chunk) {
+                    CUBELOG_INFO("Adding chunk at position (%d, %d)", chunk_index.x, chunk_index.y);
                     chunk = world_add_chunk(world, chunk_index);
                 }
 
-                if (!chunk->flags.generated) {
+                if (!chunk->flags.generated && !chunk->flags.generating) {
                     world_gen_execute(chunk);
                 }
 
@@ -371,6 +372,37 @@ int main(int argc, char **argv) {
         // world_renderer_render(world_renderer, world, camera_get_position(camera));
 
         renderer_end_frame();
+
+        LLIST_FOREACH(world->chunks, node) {
+            chunk_t *chunk = node->data;
+
+            if (chunk->flags.generating || chunk->flags.mesh_generating) {
+                continue;
+            }
+
+            bool neighbor_mesh_generating = false;
+            for (int i = 0; i < 4; ++i) {
+                if (chunk->neighbors[i] && chunk->neighbors[i]->flags.mesh_generating) {
+                    neighbor_mesh_generating = true;
+                    break;
+                }
+            }
+
+            if (neighbor_mesh_generating) {
+                continue;
+            }
+
+            int diff_x          = abs(chunk->position.x - index.x);
+            int diff_y          = abs(chunk->position.y - index.y);
+            int delete_distance = draw_distance + 2;
+
+            if (diff_x > delete_distance || diff_y > delete_distance) {
+                CUBELOG_INFO("Deleting chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
+                llist_remove(world->chunks, chunk);
+                chunk_destroy(chunk);
+                break;
+            }
+        }
     }
 
     for (size_t i = 0; i < MAX_THREADS; ++i) {

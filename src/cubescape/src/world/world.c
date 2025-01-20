@@ -92,6 +92,10 @@ chunk_t *world_add_chunk(world_t *world, ivec2s index) {
     }
 
     chunk_t *chunk = chunk_create(index, world);
+    chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_FRONT, world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{0, -1}})));
+    chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_BACK, world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{0, 1}})));
+    chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_LEFT, world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{-1, 0}})));
+    chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_RIGHT, world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{1, 0}})));
     llist_append(world->chunks, chunk);
     return chunk;
 }

@@ -19,12 +19,20 @@ struct chunk_flags {
     bool mesh_generating: 1;
 };
 
-typedef struct {
+enum chunk_neighbors {
+    CHUNK_NEIGHBOR_FRONT,
+    CHUNK_NEIGHBOR_BACK,
+    CHUNK_NEIGHBOR_LEFT,
+    CHUNK_NEIGHBOR_RIGHT,
+};
+
+typedef struct chunk {
     ivec2s position;
     block_id_t *blocks;
     mesh_t *mesh;
     void *world;
     struct chunk_flags flags;
+    struct chunk *neighbors[4];
 } chunk_t;
 
 /**
@@ -71,3 +79,5 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
  * @param chunk The chunk to destroy.
  */
 void chunk_destroy(chunk_t *chunk);
+
+void chunk_set_neighbor(chunk_t *chunk, enum chunk_neighbors neighbor, chunk_t *neighbor_chunk);

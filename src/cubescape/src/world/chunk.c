@@ -33,7 +33,7 @@ static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position
         case BLOCK_FACE_FRONT:
             adjacent_position = (ivec3s) {{position.x, position.y, position.z + 1}};
             if (adjacent_position.z >= CHUNK_SIZE) {
-                neighbor = world_get_chunk((world_t *)chunk->world, glms_ivec2_add(chunk->position, (ivec2s) {{0, 1}}));
+                neighbor = chunk->neighbors[CHUNK_NEIGHBOR_FRONT];
                 if (neighbor == NULL) {
                     return 1;
                 }
@@ -43,8 +43,7 @@ static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position
         case BLOCK_FACE_BACK:
             adjacent_position = (ivec3s) {{position.x, position.y, position.z - 1}};
             if (adjacent_position.z < 0) {
-                neighbor =
-                    world_get_chunk((world_t *)chunk->world, glms_ivec2_add(chunk->position, (ivec2s) {{0, -1}}));
+                neighbor = chunk->neighbors[CHUNK_NEIGHBOR_BACK];
                 if (neighbor == NULL) {
                     return 1;
                 }
@@ -54,8 +53,7 @@ static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position
         case BLOCK_FACE_LEFT:
             adjacent_position = (ivec3s) {{position.x - 1, position.y, position.z}};
             if (adjacent_position.x < 0) {
-                neighbor =
-                    world_get_chunk((world_t *)chunk->world, glms_ivec2_add(chunk->position, (ivec2s) {{-1, 0}}));
+                neighbor = chunk->neighbors[CHUNK_NEIGHBOR_LEFT];
                 if (neighbor == NULL) {
                     return 1;
                 }
@@ -64,7 +62,7 @@ static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position
             break;
         case BLOCK_FACE_RIGHT:
             adjacent_position = (ivec3s) {{position.x + 1, position.y, position.z}};
-            neighbor = world_get_chunk((world_t *)chunk->world, glms_ivec2_add(chunk->position, (ivec2s) {{1, 0}}));
+            neighbor = chunk->neighbors[CHUNK_NEIGHBOR_RIGHT];
             if (adjacent_position.x >= CHUNK_SIZE) {
                 if (neighbor == NULL) {
                     return 1;
@@ -130,25 +128,25 @@ void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block) {
     chunk->flags.dirty = 1;
     chunk_t *neighbor  = NULL;
     if (position.x == 0) {
-        neighbor = world_get_chunk((world_t *)chunk->world, glms_ivec2_add(chunk->position, (ivec2s) {{-1, 0}}));
+        neighbor = chunk->neighbors[CHUNK_NEIGHBOR_LEFT];
         if (neighbor != NULL) {
             neighbor->flags.dirty = 1;
         }
     }
     if (position.x == CHUNK_SIZE - 1) {
-        neighbor = world_get_chunk((world_t *)chunk->world, glms_ivec2_add(chunk->position, (ivec2s) {{1, 0}}));
+        neighbor = chunk->neighbors[CHUNK_NEIGHBOR_RIGHT];
         if (neighbor != NULL) {
             neighbor->flags.dirty = 1;
         }
     }
     if (position.z == 0) {
-        neighbor = world_get_chunk((world_t *)chunk->world, glms_ivec2_add(chunk->position, (ivec2s) {{0, -1}}));
+        neighbor = chunk->neighbors[CHUNK_NEIGHBOR_BACK];
         if (neighbor != NULL) {
             neighbor->flags.dirty = 1;
         }
     }
     if (position.z == CHUNK_SIZE - 1) {
-        neighbor = world_get_chunk((world_t *)chunk->world, glms_ivec2_add(chunk->position, (ivec2s) {{0, 1}}));
+        neighbor = chunk->neighbors[CHUNK_NEIGHBOR_FRONT];
         if (neighbor != NULL) {
             neighbor->flags.dirty = 1;
         }
@@ -224,4 +222,18 @@ void chunk_destroy(chunk_t *chunk) {
     mesh_destroy(chunk->mesh);
     free(chunk->blocks);
     free(chunk);
+
+}
+
+void chunk_set_neighbor(chunk_t *chunk, enum chunk_neighbors neighbor, chunk_t *neighbor_chunk) {
+    if (chunk == NULL) {
+        CUBELOG_ERROR("'chunk_set_neighbor' called with NULL chunk");
+        return;
+    }
+
+    chunk->neighbors[neighbor] = neighbor_chunk;
+
+    if (neighbor_chunk != NULL) {
+        neighbor_chunk->neighbors[neighbor ^ 1] = chunk;
+    }
 }
