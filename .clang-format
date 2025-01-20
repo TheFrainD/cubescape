@@ -37,9 +37,11 @@ IncludeCategories:
     Priority: 2
   - Regex: '^"core/.*\.h"'
     Priority: 4
-  - Regex: '^"graphics/.*\.h"'
+  - Regex: '^"collections/.*\.h"'
     Priority: 5
-  - Regex: '^"world/.*\.h"'
+  - Regex: '^"graphics/.*\.h"'
     Priority: 6
-  - Regex: '^".*\.h"'
+  - Regex: '^"world/.*\.h"'
     Priority: 7
+  - Regex: '^".*\.h"'
+    Priority: 8

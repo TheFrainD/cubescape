@@ -1,7 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
-#include <time.h>
 #include <string.h>
+#include <time.h>
 
 #include <cglm/cglm.h>
 
@@ -12,6 +12,8 @@
 #include "core/file.h"
 #include "core/input.h"
 #include "core/profiling.h"
+
+#include "collections/llist.h"
 
 #include "graphics/camera.h"
 #include "graphics/renderer.h"
@@ -59,9 +61,9 @@ void *world_gen_thread(void *arg) {
         }
     }
 
-    chunk->flags.generated = true;
+    chunk->flags.generated  = true;
     chunk->flags.generating = false;
-    task->busy = false;
+    task->busy              = false;
     return NULL;
 }
 
@@ -71,8 +73,8 @@ void world_gen_execute(chunk_t *chunk) {
         if (task->busy) {
             continue;
         }
-        task->chunk = chunk;
-        task->busy  = true;
+        task->chunk             = chunk;
+        task->busy              = true;
         chunk->flags.generating = true;
         pthread_create(&task->thread, NULL, world_gen_thread, task);
         return;
@@ -108,10 +110,10 @@ void chunk_generate_mesh_async(chunk_t *chunk, shader_program_t *shader_program,
         if (task->busy) {
             continue;
         }
-        task->chunk = chunk;
-        task->shader_program = shader_program;
-        task->tilemap = tilemap;
-        task->busy  = true;
+        task->chunk                  = chunk;
+        task->shader_program         = shader_program;
+        task->tilemap                = tilemap;
+        task->busy                   = true;
         chunk->flags.mesh_generating = true;
         pthread_create(&task->thread, NULL, mesh_gen_thread, task);
         return;
@@ -314,7 +316,12 @@ int main(int argc, char **argv) {
 
     // world_generator_generate(generator, world);
 
-    chunk_t *chunk = chunk_create((ivec2s) {{0, 0}}, world);
+    llist_t *chunks = llist_create();
+    for (int x = 0; x < 3; ++x) {
+        for (int y = 0; y < 3; ++y) {
+            llist_append(chunks, chunk_create((ivec2s) {{x, y}}, world));
+        }
+    }
 
     is_running = true;
 
@@ -329,22 +336,27 @@ int main(int argc, char **argv) {
 
         renderer_begin_frame();
 
-        if (!chunk->flags.generated) {
-            world_gen_execute(chunk);
-        }
+        LLIST_FOREACH(chunks, node) {
+            chunk_t *chunk = node->data;
 
-        if (chunk->flags.dirty && chunk->flags.generated && !chunk->flags.mesh_generating) {
-            chunk_generate_mesh_async(chunk, shader_program, tilemap);
-        }
-
-        if (chunk->mesh) {
-            if (chunk->mesh->flags.ready_to_upload) {
-                mesh_upload(chunk->mesh);
+            if (!chunk->flags.generated) {
+                world_gen_execute(chunk);
             }
 
-            if (chunk->mesh->flags.uploaded) {
-                renderer_draw_mesh(chunk->mesh, (vec3s) {{0.0f, 0.0f, 0.0f}}, (vec3s) {{0.0f, 0.0f, 0.0f}},
-                                   (vec3s) {{10.0f, 1.0f, 10.0f}});
+            if (chunk->flags.dirty && chunk->flags.generated && !chunk->flags.mesh_generating) {
+                chunk_generate_mesh_async(chunk, shader_program, tilemap);
+            }
+
+            if (chunk->mesh) {
+                if (chunk->mesh->flags.ready_to_upload) {
+                    mesh_upload(chunk->mesh);
+                }
+
+                if (chunk->mesh->flags.uploaded) {
+                    vec3s position = (vec3s) {{chunk->position.x * CHUNK_SIZE, 0.0f, chunk->position.y * CHUNK_SIZE}};
+                    renderer_draw_mesh(chunk->mesh, position, (vec3s) {{0.0f, 0.0f, 0.0f}},
+                                       (vec3s) {{1.0f, 1.0f, 1.0f}});
+                }
             }
         }
 
@@ -355,6 +367,7 @@ int main(int argc, char **argv) {
 
     // world_generator_destroy(generator);
     // world_renderer_destroy(world_renderer);
+    llist_destroy(chunks);
     world_destroy(world);
     // world_renderer_destroy(world_renderer);
     shader_program_destroy(shader_program);
