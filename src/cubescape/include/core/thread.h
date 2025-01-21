@@ -43,7 +43,7 @@ typedef void *(*thread_func_t)(void *);
  * @param arg Argument to pass to the function
  *
  * Usage example:
- * THREAD_FUNC(my_thread_function, void *arg) {
+ * THREAD_FUNC(my_thread_function, arg) {
  *     // Do something
  *     return THREAD_OK;
  * }
