@@ -79,6 +79,7 @@ void world_gen_execute(chunk_t *chunk) {
         task->chunk             = chunk;
         task->busy              = true;
         chunk->flags.generating = true;
+        CUBELOG_INFO("Generating chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
         thread_create(&task->thread, world_gen_thread, task);
         return;
     }
@@ -116,6 +117,7 @@ void chunk_generate_mesh_async(chunk_t *chunk, shader_program_t *shader_program,
         task->tilemap                = tilemap;
         task->busy                   = true;
         chunk->flags.mesh_generating = true;
+        CUBELOG_INFO("Generating mesh for chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
         thread_create(&task->thread, mesh_gen_thread, task);
         return;
     }
@@ -249,8 +251,8 @@ int main(int argc, char **argv) {
     }
 
     window_settings_t window_settings = {0};
-    window_settings.width             = 1280;
-    window_settings.height            = 720;
+    window_settings.width             = 800;
+    window_settings.height            = 600;
     window_settings.title             = EXECUTABLE_NAME;
     window_settings.multisample       = 1;
     result                            = window_init(window_settings);
@@ -356,24 +358,24 @@ int main(int argc, char **argv) {
 
         // Offloading doesn't work with the hash tables
 
-        // htable_iter_t iter = htable_iter(world->chunks);
-        // while (htable_next(&iter)) {
-        //     chunk_t *chunk = iter.value;
+        htable_iter_t iter = htable_iter(world->chunks);
+        while (htable_next(&iter)) {
+            chunk_t *chunk = iter.value;
 
-        //     if (chunk->flags.generating && chunk->flags.mesh_generating) {
-        //         continue;
-        //     }
+            if (chunk->flags.generating && chunk->flags.mesh_generating) {
+                continue;
+            }
 
-        //     int diff_x          = abs(chunk->position.x - index.x);
-        //     int diff_y          = abs(chunk->position.y - index.y);
-        //     int delete_distance = draw_distance + 2;
+            int diff_x          = abs(chunk->position.x - index.x);
+            int diff_y          = abs(chunk->position.y - index.y);
+            int delete_distance = draw_distance + 2;
 
-        //     if (diff_x > delete_distance || diff_y > delete_distance) {
-        //         CUBELOG_INFO("Deleting chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
-        //         htable_remove(world->chunks, &chunk->position);
-        //         break;
-        //     }
-        // }
+            if (diff_x > delete_distance || diff_y > delete_distance) {
+                CUBELOG_INFO("Deleting chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
+                htable_remove(world->chunks, &chunk->position);
+                break;
+            }
+        }
 
         renderer_begin_frame();
 

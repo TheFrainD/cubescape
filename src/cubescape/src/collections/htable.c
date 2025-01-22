@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <cubelog/cubelog.h>
+
 htable_t *htable_create(size_t capacity, size_t key_size, htable_hash_fn hash_fn, htable_compare_fn compare_fn,
                         htable_key_free_fn key_free_fn, htable_data_free_fn data_free_fn) {
     htable_t *table   = malloc(sizeof(htable_t));
@@ -64,31 +66,36 @@ static void htable_set_entry(htable_entry_t *entries, size_t capacity, size_t ke
     }
 
     if (size) {
-        entries[index].key = malloc(key_size);
-        memcpy(entries[index].key, key, key_size);
+        void *original_key = key;
+        key = malloc(key_size);
+        memcpy(key, original_key, key_size);
         ++(*size);
     }
 
+    entries[index].key   = key;
     entries[index].value = value;
 }
 
 static void htable_expand(htable_t *table) {
-    htable_entry_t *old_entries = table->entries;
-    size_t old_capacity         = table->capacity;
+    size_t new_capacity = table->capacity * 2;
+    if (new_capacity < table->capacity) {
+        CUBELOG_ERROR("Failed to expand hash table: capacity overflow");
+        return;
+    }
 
-    table->capacity *= 2;
-    table->entries = malloc(sizeof(htable_entry_t) * table->capacity);
-    memset(table->entries, 0, sizeof(htable_entry_t) * table->capacity);
-    table->size = 0;
+    htable_entry_t *new_entries = malloc(sizeof(htable_entry_t) * new_capacity);
+    memset(new_entries, 0, sizeof(htable_entry_t) * new_capacity);
 
-    for (size_t i = 0; i < old_capacity; i++) {
-        if (old_entries[i].key) {
-            htable_set_entry(table->entries, table->capacity, table->key_size, table->hash_fn, table->compare_fn,
-                             table->data_free_fn, old_entries[i].key, old_entries[i].value, NULL);
+    for (size_t i = 0; i < table->capacity; ++i) {
+        if (table->entries[i].key != NULL) {
+            htable_set_entry(new_entries, new_capacity, table->key_size, table->hash_fn, table->compare_fn,
+                             table->data_free_fn, table->entries[i].key, table->entries[i].value, NULL);
         }
     }
 
-    free(old_entries);
+    free(table->entries);
+    table->entries  = new_entries;
+    table->capacity = new_capacity;
 }
 
 void htable_set(htable_t *table, void *key, void *value) {
@@ -144,7 +151,10 @@ void htable_remove(htable_t *table, void *key) {
             return;
         }
 
-        index = (index + 1) & (table->capacity - 1);
+        ++index;
+        if (index >= table->capacity) {
+            index = 0;
+        }
     }
 }
 
