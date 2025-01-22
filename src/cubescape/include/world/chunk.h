@@ -13,9 +13,9 @@
 #define CHUNK_VOLUME (CHUNK_SIZE * CHUNK_SIZE * CHUNK_HEIGHT)
 
 struct chunk_flags {
-    bool dirty : 1;
-    bool generated : 1;
-    bool generating : 1;
+    bool dirty;
+    bool generated;
+    bool generating;
     bool mesh_generating: 1;
 };
 

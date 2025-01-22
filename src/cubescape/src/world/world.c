@@ -1,14 +1,45 @@
 #include "world/world.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <cubelog/cubelog.h>
 
 #include "world/generator.h"
 
+uint64_t jenkins_hash(void *key) {
+    ivec2s *index = (ivec2s *)key;
+    size_t hash   = 0;
+
+    // Hash x component
+    hash += index->x;
+    hash += hash << 10;
+    hash ^= hash >> 6;
+
+    // Hash y component
+    hash += index->y;
+    hash += hash << 10;
+    hash ^= hash >> 6;
+
+    // Finalize hash
+    hash += hash << 3;
+    hash ^= hash >> 11;
+    hash += hash << 15;
+
+    return hash;
+}
+
+bool chunk_equals(void *key1, void *key2) {
+    ivec2s a = *(ivec2s *)key1;
+    ivec2s b = *(ivec2s *)key2;
+    return glms_ivec2_eqv(a, b);
+}
+
+void chunk_destroy_fn(void *chunk) { return chunk_destroy((chunk_t *)chunk); }
+
 world_t *world_create(world_settings_t settings) {
     world_t *world = malloc(sizeof(world_t));
-    world->chunks  = llist_create();
+    world->chunks  = htable_create(100, sizeof(ivec2s), jenkins_hash, chunk_equals, NULL, chunk_destroy_fn);
     return world;
 }
 
@@ -18,11 +49,7 @@ void world_destroy(world_t *world) {
         return;
     }
 
-    LLIST_FOREACH(world->chunks, node) {
-        chunk_t *chunk = node->data;
-        chunk_destroy(chunk);
-    }
-    llist_destroy(world->chunks);
+    htable_destroy(world->chunks);
     free(world);
 }
 
@@ -32,14 +59,7 @@ chunk_t *world_get_chunk(world_t *world, ivec2s index) {
         return NULL;
     }
 
-    LLIST_FOREACH(world->chunks, node) {
-        chunk_t *chunk = node->data;
-        if (glms_ivec2_eqv(chunk->position, index)) {
-            return chunk;
-        }
-    }
-
-    return NULL;
+    return (chunk_t *)htable_get(world->chunks, &index);
 }
 
 block_id_t world_get_block(world_t *world, ivec3s position) {
@@ -96,6 +116,7 @@ chunk_t *world_add_chunk(world_t *world, ivec2s index) {
     chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_BACK, world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{0, 1}})));
     chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_LEFT, world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{-1, 0}})));
     chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_RIGHT, world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{1, 0}})));
-    llist_append(world->chunks, chunk);
+
+    htable_set(world->chunks, &index, chunk);
     return chunk;
 }

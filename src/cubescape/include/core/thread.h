@@ -30,7 +30,6 @@ typedef DWORD(WINAPI *thread_func_t)(LPVOID);
 #define THREAD_PARAM_TYPE         LPVOID
 #define THREAD_OK                 0
 #else
-typedef void *(*thread_func_t)(void *);
 #define THREAD_RETURN_TYPE void *
 #define THREAD_CALLING_CONVENTION
 #define THREAD_PARAM_TYPE void *

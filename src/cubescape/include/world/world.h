@@ -2,12 +2,12 @@
 
 #include <cglm/struct.h>
 
-#include "collections/llist.h"
+#include "collections/htable.h"
 
 #include "world/chunk.h"
 
 typedef struct {
-    llist_t *chunks;
+    htable_t *chunks;
 } world_t;
 
 typedef struct {
