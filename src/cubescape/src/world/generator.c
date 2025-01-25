@@ -1,36 +1,22 @@
 #include "world/generator.h"
 
+#include <string.h>
+
 #include <cubelog/cubelog.h>
 
 #include "core/math.h"
 
-world_generator_t *world_generator_create(world_generator_parameters_t parameters) {
-    world_generator_t *generator = malloc(sizeof(world_generator_t));
-    generator->parameters        = parameters;
-    generator->noise_scale       = 1.3f;
+struct world_gen_task {
+    thread_t thread;
+    world_generator_t *generator;
+    chunk_t *chunk;
+    bool busy;
+};
 
-    for (int i = 0; i < 4; ++i) {
-        generator->octave_noise[i] = octave_noise_create(8);
-    }
-    generator->combined_noise1 =
-        combined_noise_create((noise_t *)generator->octave_noise[0], (noise_t *)generator->octave_noise[1]);
-    generator->combined_noise2 =
-        combined_noise_create((noise_t *)generator->octave_noise[1], (noise_t *)generator->octave_noise[2]);
-    generator->octave_noise_misc = octave_noise_create(6);
-
-    return generator;
-}
-
-void world_generator_generate(world_generator_t *generator, chunk_t *chunk) {
-    if (generator == NULL) {
-        CUBELOG_ERROR("'world_generator_generate' called with NULL generator");
-        return;
-    }
-
-    if (chunk == NULL) {
-        CUBELOG_ERROR("'world_generator_generate' called with NULL chunk");
-        return;
-    }
+THREAD_FUNC(world_gen_thread, arg) {
+    struct world_gen_task *task  = arg;
+    chunk_t *chunk               = task->chunk;
+    world_generator_t *generator = task->generator;
 
     for (size_t i = 0; i < CHUNK_VOLUME; ++i) {
         ivec3s block_position =
@@ -83,9 +69,69 @@ void world_generator_generate(world_generator_t *generator, chunk_t *chunk) {
 
         chunk_set_block(chunk, dirt_position, BLOCK_ID_GRASS);
     }
+
+    chunk->flags.generated  = true;
+    chunk->flags.generating = false;
+    task->busy              = false;
+    return THREAD_OK;
+}
+
+world_generator_t *world_generator_create(world_generator_parameters_t parameters) {
+    world_generator_t *generator = malloc(sizeof(world_generator_t));
+    generator->parameters        = parameters;
+    generator->noise_scale       = 1.3f;
+
+    for (int i = 0; i < 4; ++i) {
+        generator->octave_noise[i] = octave_noise_create(8);
+    }
+    generator->combined_noise1 =
+        combined_noise_create((noise_t *)generator->octave_noise[0], (noise_t *)generator->octave_noise[1]);
+    generator->combined_noise2 =
+        combined_noise_create((noise_t *)generator->octave_noise[1], (noise_t *)generator->octave_noise[2]);
+    generator->octave_noise_misc = octave_noise_create(6);
+
+    generator->task_pool = malloc(sizeof(struct world_gen_task) * parameters.thread_count);
+    memset(generator->task_pool, 0, sizeof(struct world_gen_task) * parameters.thread_count);
+
+    return generator;
+}
+
+void world_generator_generate(world_generator_t *generator, chunk_t *chunk) {
+    if (generator == NULL) {
+        CUBELOG_ERROR("'world_generator_generate' called with NULL generator");
+        return;
+    }
+
+    if (chunk == NULL) {
+        CUBELOG_ERROR("'world_generator_generate' called with NULL chunk");
+        return;
+    }
+
+    for (size_t i = 0; i < generator->parameters.thread_count; ++i) {
+        struct world_gen_task *task = &generator->task_pool[i];
+        if (task->busy) {
+            continue;
+        }
+        task->generator         = generator;
+        task->chunk             = chunk;
+        task->busy              = true;
+        chunk->flags.generating = true;
+        CUBELOG_DEBUG("Generating chunk at index (%d, %d)", chunk->position.x, chunk->position.y);
+        thread_create(&task->thread, world_gen_thread, task);
+        return;
+    }
 }
 
 void world_generator_destroy(world_generator_t *generator) {
+    if (generator == NULL) {
+        CUBELOG_ERROR("'world_generator_destroy' called with NULL generator");
+        return;
+    }
+
+    for (size_t i = 0; i < generator->parameters.thread_count; ++i) {
+        thread_join(&generator->task_pool[i].thread);
+    }
+
     for (int i = 0; i < 4; ++i) {
         octave_noise_destroy(generator->octave_noise[i]);
     }

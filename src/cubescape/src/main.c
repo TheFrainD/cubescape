@@ -11,9 +11,6 @@
 #include "core/file.h"
 #include "core/input.h"
 #include "core/profiling.h"
-#include "core/thread.h"
-
-#include "collections/llist.h"
 
 #include "graphics/camera.h"
 #include "graphics/renderer.h"
@@ -21,108 +18,22 @@
 #include "graphics/window.h"
 
 #include "world/ray.h"
+#include "world/renderer.h"
 #include "world/world.h"
-#include "world/world_renderer.h"
 
-#define VERTEX_SHADER_PATH   "assets/shaders/main.vs"
-#define FRAGMENT_SHADER_PATH "assets/shaders/main.fs"
+#define VERTEX_SHADER_PATH   "assets/shaders/block.vs"
+#define FRAGMENT_SHADER_PATH "assets/shaders/block.fs"
 
 #define CUBELOG_FILE EXECUTABLE_NAME ".log"
 
-static int is_running               = 0;
-static camera_t *camera             = NULL;
-static world_t *world               = NULL;
+static int is_running = 0;
+
+static camera_t *camera           = NULL;
+static world_t *world             = NULL;
+static world_renderer_t *renderer = NULL;
+
 static const float horizontal_speed = 7.0f;
 static const float vertical_speed   = 5.0f;
-static const int draw_distance      = 6;
-
-#define MAX_THREADS 10
-
-struct world_gen_task {
-    thread_t thread;
-    chunk_t *chunk;
-    bool busy;
-};
-
-static struct world_gen_task world_gen_task_pool[MAX_THREADS];
-
-THREAD_FUNC(world_gen_thread, arg) {
-    struct world_gen_task *task = arg;
-    chunk_t *chunk              = task->chunk;
-
-    for (int x = 0; x < CHUNK_SIZE; ++x) {
-        for (int z = 0; z < CHUNK_SIZE; ++z) {
-            for (int y = 0; y < CHUNK_HEIGHT; ++y) {
-                int index = x + y * CHUNK_SIZE + z * (CHUNK_SIZE * CHUNK_HEIGHT);
-                if (y < 50) {
-                    chunk->blocks[index] = BLOCK_ID_STONE;
-                } else {
-                    chunk->blocks[index] = BLOCK_ID_AIR;
-                }
-            }
-        }
-    }
-
-    chunk->flags.generated  = true;
-    chunk->flags.generating = false;
-    task->busy              = false;
-    return THREAD_OK;
-}
-
-void world_gen_execute(chunk_t *chunk) {
-    for (size_t i = 0; i < MAX_THREADS; ++i) {
-        struct world_gen_task *task = &world_gen_task_pool[i];
-        if (task->busy) {
-            continue;
-        }
-        task->chunk             = chunk;
-        task->busy              = true;
-        chunk->flags.generating = true;
-
-        CUBELOG_INFO("Generating chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
-        thread_create(&task->thread, world_gen_thread, task);
-        return;
-    }
-}
-
-struct mesh_gen_task {
-    thread_t thread;
-    chunk_t *chunk;
-    shader_program_t *shader_program;
-    tilemap_t *tilemap;
-    bool busy;
-};
-
-THREAD_FUNC(mesh_gen_thread, arg) {
-    struct mesh_gen_task *task = arg;
-    chunk_t *chunk             = task->chunk;
-
-    chunk_generate_mesh(chunk, task->shader_program, task->tilemap);
-    chunk->flags.mesh_generating = false;
-
-    task->busy = false;
-    return THREAD_OK;
-}
-
-static struct mesh_gen_task mesh_gen_task_pool[MAX_THREADS];
-
-void chunk_generate_mesh_async(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap) {
-    for (size_t i = 0; i < MAX_THREADS; ++i) {
-        struct mesh_gen_task *task = &mesh_gen_task_pool[i];
-        if (task->busy) {
-            continue;
-        }
-        task->chunk                  = chunk;
-        task->shader_program         = shader_program;
-        task->tilemap                = tilemap;
-        task->busy                   = true;
-        chunk->flags.mesh_generating = true;
-
-        CUBELOG_INFO("Generating mesh for chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
-        thread_create(&task->thread, mesh_gen_thread, task);
-        return;
-    }
-}
 
 void key_callback(key_code_t key) {
     if (key == KEY_ESCAPE) {
@@ -202,8 +113,6 @@ int main(int argc, char **argv) {
 
     cubelog_set_level(CUBELOG_LEVEL_DEBUG);
 
-    memset(world_gen_task_pool, 0, sizeof(world_gen_task_pool));
-
     // Log to file
     FILE *log_fp = fopen(CUBELOG_FILE, "w");
     if (log_fp) {
@@ -224,7 +133,7 @@ int main(int argc, char **argv) {
     window_settings.width             = 1280;
     window_settings.height            = 720;
     window_settings.title             = EXECUTABLE_NAME;
-    window_settings.multisample       = 4;
+    window_settings.multisample       = 1;
     result                            = window_init(window_settings);
     if (result) {
         CUBELOG_FATAL("Failed to initialize window");
@@ -303,89 +212,45 @@ int main(int argc, char **argv) {
     input_add_mouse_position_callback(mouse_callback);
     input_add_mouse_button_pressed_callback(mouse_button_callback);
 
-    world_settings_t world_settings = {0};
-    world_settings.size             = 1;
-    world                           = world_create(world_settings);
+    world_generator_parameters_t generator_parameters = {0};
+    generator_parameters.thread_count                 = 10;
+
+    world_settings_t world_settings        = {0};
+    world_settings.htable_initial_capacity = 128;
+    world_settings.generator_parameters    = generator_parameters;
+    world                                  = world_create(world_settings);
     if (!world) {
         CUBELOG_FATAL("Failed to create world");
         return 1;
     }
 
+    world_renderer_settings_t world_renderer_settings    = {0};
+    world_renderer_settings.tilemap                      = tilemap;
+    world_renderer_settings.block_shader                 = shader_program;
+    world_renderer_settings.draw_distance                = 10;
+    world_renderer_settings.mesh_generation_thread_count = 10;
+    renderer                                             = world_renderer_create(world_renderer_settings);
+
     is_running = true;
 
     while (is_running) {
-        is_running &= !window_should_close();
+        is_running = !window_should_close();
 
         window_poll_events();
         window_update_delta_time();
         update();
 
         vec3s camera_position = camera_get_position(camera);
-        ivec2s index          = (ivec2s) {
-            {camera_position.x >= 0 ? (camera_position.x / CHUNK_SIZE) : (camera_position.x / CHUNK_SIZE - 1),
-             camera_position.z >= 0 ? (camera_position.z / CHUNK_SIZE) : (camera_position.z / CHUNK_SIZE - 1)}};
-
-        htable_iter_t iter = htable_iter(world->chunks);
-        while (htable_next(&iter)) {
-            chunk_t *chunk = iter.value;
-
-            if (chunk->flags.generating && chunk->flags.mesh_generating) {
-                continue;
-            }
-
-            int diff_x          = abs(chunk->position.x - index.x);
-            int diff_y          = abs(chunk->position.y - index.y);
-            int delete_distance = draw_distance * 2;
-
-            if (diff_x > delete_distance || diff_y > delete_distance) {
-                CUBELOG_INFO("Deleting chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
-                htable_remove(world->chunks, &chunk->position);
-                break;
-            }
-        }
+        world_delete_far_chunks(world, camera_position, world_renderer_settings.draw_distance);
 
         renderer_begin_frame();
 
-        for (int x = index.x - draw_distance; x <= index.x + draw_distance; ++x) {
-            for (int z = index.y - draw_distance; z <= index.y + draw_distance; ++z) {
-                ivec2s chunk_index = (ivec2s) {{x, z}};
-                chunk_t *chunk     = world_get_chunk(world, chunk_index);
-                if (!chunk) {
-                    CUBELOG_INFO("Adding chunk at position (%d, %d)", chunk_index.x, chunk_index.y);
-                    chunk = world_add_chunk(world, chunk_index);
-                }
-
-                if (!chunk->flags.generated && !chunk->flags.generating) {
-                    world_gen_execute(chunk);
-                }
-
-                if (chunk->flags.dirty && !chunk->flags.mesh_generating && chunk->flags.generated) {
-                    chunk_generate_mesh_async(chunk, shader_program, tilemap);
-                }
-
-                if (chunk->mesh) {
-                    if (chunk->mesh->flags.ready_to_upload) {
-                        mesh_upload(chunk->mesh);
-                    }
-
-                    if (chunk->mesh->flags.uploaded) {
-                        vec3s position =
-                            (vec3s) {{chunk->position.x * CHUNK_SIZE, 0.0f, chunk->position.y * CHUNK_SIZE}};
-                        renderer_draw_mesh(chunk->mesh, position, (vec3s) {{0.0f, 0.0f, 0.0f}},
-                                           (vec3s) {{1.0f, 1.0f, 1.0f}});
-                    }
-                }
-            }
-        }
+        world_renderer_render(renderer, world, camera_position);
 
         renderer_end_frame();
     }
 
-    for (size_t i = 0; i < MAX_THREADS; ++i) {
-        thread_join(&world_gen_task_pool[i].thread);
-        thread_join(&mesh_gen_task_pool[i].thread);
-    }
-
+    world_renderer_destroy(renderer);
     world_destroy(world);
     shader_program_destroy(shader_program);
     tilemap_free(tilemap);
