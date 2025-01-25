@@ -320,12 +320,31 @@ int main(int argc, char **argv) {
         window_update_delta_time();
         update();
 
-        renderer_begin_frame();
-
         vec3s camera_position = camera_get_position(camera);
         ivec2s index          = (ivec2s) {
             {camera_position.x >= 0 ? (camera_position.x / CHUNK_SIZE) : (camera_position.x / CHUNK_SIZE - 1),
              camera_position.z >= 0 ? (camera_position.z / CHUNK_SIZE) : (camera_position.z / CHUNK_SIZE - 1)}};
+
+        htable_iter_t iter = htable_iter(world->chunks);
+        while (htable_next(&iter)) {
+            chunk_t *chunk = iter.value;
+
+            if (chunk->flags.generating && chunk->flags.mesh_generating) {
+                continue;
+            }
+
+            int diff_x          = abs(chunk->position.x - index.x);
+            int diff_y          = abs(chunk->position.y - index.y);
+            int delete_distance = draw_distance * 2;
+
+            if (diff_x > delete_distance || diff_y > delete_distance) {
+                CUBELOG_INFO("Deleting chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
+                htable_remove(world->chunks, &chunk->position);
+                break;
+            }
+        }
+
+        renderer_begin_frame();
 
         for (int x = index.x - draw_distance; x <= index.x + draw_distance; ++x) {
             for (int z = index.y - draw_distance; z <= index.y + draw_distance; ++z) {
@@ -360,37 +379,6 @@ int main(int argc, char **argv) {
         }
 
         renderer_end_frame();
-
-        htable_iter_t iter = htable_iter(world->chunks);
-        while (htable_next(&iter)) {
-            chunk_t *chunk = iter.value;
-
-            if (chunk->flags.generating || chunk->flags.mesh_generating) {
-                continue;
-            }
-
-            bool neighbor_mesh_generating = false;
-            for (int i = 0; i < 4; ++i) {
-                if (chunk->neighbors[i] && chunk->neighbors[i]->flags.mesh_generating) {
-                    neighbor_mesh_generating = true;
-                    break;
-                }
-            }
-
-            if (neighbor_mesh_generating) {
-                continue;
-            }
-
-            int diff_x          = abs(chunk->position.x - index.x);
-            int diff_y          = abs(chunk->position.y - index.y);
-            int delete_distance = draw_distance + 2;
-
-            if (diff_x > delete_distance || diff_y > delete_distance) {
-                CUBELOG_INFO("Deleting chunk at position (%d, %d)", chunk->position.x, chunk->position.y);
-                htable_remove(world->chunks, &chunk->position);
-                break;
-            }
-        }
     }
 
     for (size_t i = 0; i < MAX_THREADS; ++i) {

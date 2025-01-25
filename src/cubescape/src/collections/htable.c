@@ -50,7 +50,7 @@ static void htable_set_entry(htable_entry_t *entries, size_t capacity, size_t ke
                              htable_compare_fn compare_fn, htable_data_free_fn data_free_fn, void *key, void *value,
                              size_t *size) {
     uint64_t hash = hash_fn(key);
-    size_t index  = (size_t)(hash & (uint64_t)(capacity - 1));
+    size_t index  = hash % capacity;
 
     while (entries[index].key != NULL) {
         if (compare_fn(entries[index].key, key)) {
@@ -59,15 +59,12 @@ static void htable_set_entry(htable_entry_t *entries, size_t capacity, size_t ke
             return;
         }
 
-        ++index;
-        if (index >= capacity) {
-            index = 0;
-        }
+        index = (index + 1) % capacity;
     }
 
     if (size) {
         void *original_key = key;
-        key = malloc(key_size);
+        key                = malloc(key_size);
         memcpy(key, original_key, key_size);
         ++(*size);
     }
@@ -117,17 +114,14 @@ void *htable_get(htable_t *table, void *key) {
     }
 
     uint64_t hash = table->hash_fn(key);
-    size_t index  = (size_t)(hash & (uint64_t)(table->capacity - 1));
+    size_t index  = hash % table->capacity;
 
     while (table->entries[index].key != NULL) {
         if (table->compare_fn(table->entries[index].key, key)) {
             return table->entries[index].value;
         }
 
-        ++index;
-        if (index >= table->capacity) {
-            index = 0;
-        }
+        index = (index + 1) % table->capacity;
     }
 
     return NULL;
@@ -139,21 +133,43 @@ void htable_remove(htable_t *table, void *key) {
     }
 
     uint64_t hash = table->hash_fn(key);
-    size_t index  = (size_t)(hash & (uint64_t)(table->capacity - 1));
+    size_t index  = hash % table->capacity;
 
-    while (table->entries[index].key != NULL) {
-        if (table->compare_fn(table->entries[index].key, key)) {
-            table->key_free_fn(table->entries[index].key);
-            table->data_free_fn(table->entries[index].value);
-            table->entries[index].key  = NULL;
-            table->entries[index].value = NULL;
-            --table->size;
+    for (size_t i = 0; i < table->capacity; ++i) {
+        size_t current_index = (index + i) % table->capacity;
+
+        if (table->entries[current_index].key == NULL) {
             return;
         }
 
-        ++index;
-        if (index >= table->capacity) {
-            index = 0;
+        if (table->compare_fn(table->entries[current_index].key, key)) {
+            table->key_free_fn(table->entries[current_index].key);
+            table->data_free_fn(table->entries[current_index].value);
+
+            table->entries[current_index].key   = NULL;
+            table->entries[current_index].value = NULL;
+            --table->size;
+
+            // Rehash the remaining entries
+            size_t next_index = (current_index + 1) % table->capacity;
+            while (table->entries[next_index].key != NULL) {
+                void *rekey   = table->entries[next_index].key;
+                void *revalue = table->entries[next_index].value;
+
+                table->entries[next_index].key   = NULL;
+                table->entries[next_index].value = NULL;
+
+                size_t new_index = table->hash_fn(rekey) % table->capacity;
+                while (table->entries[new_index].key != NULL) {
+                    new_index = (new_index + 1) % table->capacity;
+                }
+                table->entries[new_index].key   = rekey;
+                table->entries[new_index].value = revalue;
+
+                next_index = (next_index + 1) % table->capacity;
+            }
+
+            return;
         }
     }
 }
@@ -168,7 +184,7 @@ htable_iter_t htable_iter(htable_t *table) {
 bool htable_next(htable_iter_t *iter) {
     while (iter->__index < iter->__table->capacity) {
         if (iter->__table->entries[iter->__index].key != NULL) {
-            iter->key  = iter->__table->entries[iter->__index].key;
+            iter->key   = iter->__table->entries[iter->__index].key;
             iter->value = iter->__table->entries[iter->__index].value;
             ++iter->__index;
             return true;
