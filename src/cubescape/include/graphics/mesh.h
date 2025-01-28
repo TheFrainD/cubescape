@@ -1,17 +1,17 @@
 #pragma once
 
-#include <stdbool.h>
-
 #include <cglm/struct.h>
 
 #include <cubegl/buffer.h>
 #include <cubegl/shader_program.h>
 
+#include "core/bool.h"
+
 #include "graphics/vertex.h"
 
 struct mesh_flags {
-    bool ready_to_upload;
-    bool uploaded;
+    BOOL ready_to_upload;
+    BOOL uploaded;
 };
 
 typedef struct {

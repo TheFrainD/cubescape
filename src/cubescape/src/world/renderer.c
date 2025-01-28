@@ -4,7 +4,7 @@
 
 #include <cubelog/cubelog.h>
 
-#include "core/profiling.h"
+#include "core/bool.h"
 #include "core/thread.h"
 
 #include "graphics/renderer.h"
@@ -14,7 +14,7 @@ struct mesh_gen_task {
     chunk_t *chunk;
     shader_program_t *shader_program;
     tilemap_t *tilemap;
-    bool busy;
+    BOOL busy;
 };
 
 THREAD_FUNC(mesh_gen_thread, arg) {
@@ -22,9 +22,9 @@ THREAD_FUNC(mesh_gen_thread, arg) {
     chunk_t *chunk             = task->chunk;
 
     chunk_generate_mesh(chunk, task->shader_program, task->tilemap);
-    chunk->flags.mesh_generating = false;
+    chunk->flags.mesh_generating = FALSE;
 
-    task->busy = false;
+    task->busy = FALSE;
     return THREAD_OK;
 }
 
@@ -46,8 +46,8 @@ static void world_renderer_generate_mesh(world_renderer_t *renderer, chunk_t *ch
         task->chunk                  = chunk;
         task->shader_program         = renderer->state->block_shader;
         task->tilemap                = renderer->state->tilemap;
-        task->busy                   = true;
-        chunk->flags.mesh_generating = true;
+        task->busy                   = TRUE;
+        chunk->flags.mesh_generating = TRUE;
         thread_create(&task->thread, mesh_gen_thread, task);
         return;
     }
@@ -111,13 +111,32 @@ void world_renderer_render(world_renderer_t *renderer, world_t *world, vec3s cam
     for (int x = index.x - renderer->state->draw_distance; x <= index.x + renderer->state->draw_distance; ++x) {
         for (int z = index.y - renderer->state->draw_distance; z <= index.y + renderer->state->draw_distance; ++z) {
             ivec2s chunk_index = (ivec2s) {{x, z}};
-            chunk_t *chunk     = world_get_chunk(world, chunk_index, true);
+            chunk_t *chunk     = world_get_chunk(world, chunk_index);
+            if (!chunk) {
+                chunk = world_add_chunk(world, chunk_index);
+                continue;
+            }
 
             if (!chunk->flags.generated && !chunk->flags.generating) {
                 world_generate_chunk(world, chunk);
             }
 
-            if (chunk->flags.dirty && !chunk->flags.mesh_generating && chunk->flags.generated) {
+            BOOL neighboring_chunks_generated = TRUE;
+            for (int i = 0; i < 4; ++i) {
+                ivec2s neighbor_index =
+                    (ivec2s) {{chunk_index.x + (i % 2 == 0 ? 1 : -1), chunk_index.y + (i / 2 == 0 ? 1 : -1)}};
+                chunk_t *neighbor = world_get_chunk(world, neighbor_index);
+                if (!neighbor) {
+                    continue;
+                }
+                if (!neighbor->flags.generated) {
+                    neighboring_chunks_generated = FALSE;
+                    break;
+                }
+            }
+
+            if (chunk->flags.dirty && !chunk->flags.mesh_generating && chunk->flags.generated &&
+                neighboring_chunks_generated) {
                 world_renderer_generate_mesh(renderer, chunk);
             }
 

@@ -181,15 +181,15 @@ htable_iter_t htable_iter(htable_t *table) {
     return iter;
 }
 
-bool htable_next(htable_iter_t *iter) {
+BOOL htable_next(htable_iter_t *iter) {
     while (iter->__index < iter->__table->capacity) {
         if (iter->__table->entries[iter->__index].key != NULL) {
             iter->key   = iter->__table->entries[iter->__index].key;
             iter->value = iter->__table->entries[iter->__index].value;
             ++iter->__index;
-            return true;
+            return TRUE;
         }
         ++iter->__index;
     }
-    return false;
+    return FALSE;
 }

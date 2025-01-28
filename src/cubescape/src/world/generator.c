@@ -4,13 +4,14 @@
 
 #include <cubelog/cubelog.h>
 
+#include "core/bool.h"
 #include "core/math.h"
 
 struct world_gen_task {
     thread_t thread;
     world_generator_t *generator;
     chunk_t *chunk;
-    bool busy;
+    BOOL busy;
 };
 
 THREAD_FUNC(world_gen_thread, arg) {
@@ -58,21 +59,26 @@ THREAD_FUNC(world_gen_thread, arg) {
             (ivec3s) {{i % CHUNK_SIZE, (i / CHUNK_SIZE) % CHUNK_HEIGHT, i / (CHUNK_SIZE * CHUNK_HEIGHT)}};
         ivec3s dirt_position = glms_ivec3_add(block_position, (ivec3s) {{0, 1, 0}});
 
-        if (chunk->blocks[i] != BLOCK_ID_STONE || chunk_get_block(chunk, dirt_position) != BLOCK_ID_AIR) {
+        if (chunk->blocks[i] != BLOCK_ID_STONE ||
+            chunk->blocks[(dirt_position.z * CHUNK_SIZE * CHUNK_HEIGHT) + (dirt_position.y * CHUNK_SIZE) +
+                          dirt_position.x] != BLOCK_ID_AIR) {
             continue;
         }
 
         for (int i = 0; i < 4; ++i) {
-            chunk_set_block(chunk, dirt_position, BLOCK_ID_DIRT);
-            dirt_position = glms_ivec3_add(dirt_position, (ivec3s) {{0, 1, 0}});
+            chunk->blocks[(dirt_position.z * CHUNK_SIZE * CHUNK_HEIGHT) + (dirt_position.y * CHUNK_SIZE) +
+                          dirt_position.x] = BLOCK_ID_DIRT;
+            dirt_position                  = glms_ivec3_add(dirt_position, (ivec3s) {{0, 1, 0}});
         }
 
-        chunk_set_block(chunk, dirt_position, BLOCK_ID_GRASS);
+        chunk
+            ->blocks[(dirt_position.z * CHUNK_SIZE * CHUNK_HEIGHT) + (dirt_position.y * CHUNK_SIZE) + dirt_position.x] =
+            BLOCK_ID_GRASS;
     }
 
-    chunk->flags.generated  = true;
-    chunk->flags.generating = false;
-    task->busy              = false;
+    chunk->flags.generated  = TRUE;
+    chunk->flags.generating = FALSE;
+    task->busy              = FALSE;
     return THREAD_OK;
 }
 
@@ -114,8 +120,8 @@ void world_generator_generate(world_generator_t *generator, chunk_t *chunk) {
         }
         task->generator         = generator;
         task->chunk             = chunk;
-        task->busy              = true;
-        chunk->flags.generating = true;
+        task->busy              = TRUE;
+        chunk->flags.generating = TRUE;
         CUBELOG_DEBUG("Generating chunk at index (%d, %d)", chunk->position.x, chunk->position.y);
         thread_create(&task->thread, world_gen_thread, task);
         return;

@@ -33,7 +33,7 @@ static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position
         case BLOCK_FACE_FRONT:
             adjacent_position = (ivec3s) {{position.x, position.y, position.z + 1}};
             if (adjacent_position.z >= CHUNK_SIZE) {
-                neighbor = chunk->neighbors[CHUNK_NEIGHBOR_FRONT];
+                neighbor = world_get_chunk(chunk->world, (ivec2s) {{chunk->position.x, chunk->position.y + 1}});
                 if (neighbor == NULL) {
                     return 1;
                 }
@@ -43,7 +43,7 @@ static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position
         case BLOCK_FACE_BACK:
             adjacent_position = (ivec3s) {{position.x, position.y, position.z - 1}};
             if (adjacent_position.z < 0) {
-                neighbor = chunk->neighbors[CHUNK_NEIGHBOR_BACK];
+                neighbor = world_get_chunk(chunk->world, (ivec2s) {{chunk->position.x, chunk->position.y - 1}});
                 if (neighbor == NULL) {
                     return 1;
                 }
@@ -53,7 +53,7 @@ static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position
         case BLOCK_FACE_LEFT:
             adjacent_position = (ivec3s) {{position.x - 1, position.y, position.z}};
             if (adjacent_position.x < 0) {
-                neighbor = chunk->neighbors[CHUNK_NEIGHBOR_LEFT];
+                neighbor = world_get_chunk(chunk->world, (ivec2s) {{chunk->position.x - 1, chunk->position.y}});
                 if (neighbor == NULL) {
                     return 1;
                 }
@@ -62,7 +62,7 @@ static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position
             break;
         case BLOCK_FACE_RIGHT:
             adjacent_position = (ivec3s) {{position.x + 1, position.y, position.z}};
-            neighbor = chunk->neighbors[CHUNK_NEIGHBOR_RIGHT];
+            neighbor          = world_get_chunk(chunk->world, (ivec2s) {{chunk->position.x + 1, chunk->position.y}});
             if (adjacent_position.x >= CHUNK_SIZE) {
                 if (neighbor == NULL) {
                     return 1;
@@ -91,10 +91,10 @@ chunk_t *chunk_create(ivec2s position, void *world) {
     chunk->mesh     = NULL;
     chunk->world    = world;
 
-    chunk->flags.dirty           = true;
-    chunk->flags.generated       = false;
-    chunk->flags.generating      = false;
-    chunk->flags.mesh_generating = false;
+    chunk->flags.dirty           = TRUE;
+    chunk->flags.generated       = FALSE;
+    chunk->flags.generating      = FALSE;
+    chunk->flags.mesh_generating = FALSE;
     return chunk;
 }
 
@@ -128,25 +128,25 @@ void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block) {
     chunk->flags.dirty = 1;
     chunk_t *neighbor  = NULL;
     if (position.x == 0) {
-        neighbor = chunk->neighbors[CHUNK_NEIGHBOR_LEFT];
+        neighbor = world_get_chunk(chunk->world, (ivec2s) {{chunk->position.x - 1, chunk->position.y}});
         if (neighbor != NULL) {
             neighbor->flags.dirty = 1;
         }
     }
     if (position.x == CHUNK_SIZE - 1) {
-        neighbor = chunk->neighbors[CHUNK_NEIGHBOR_RIGHT];
+        neighbor = world_get_chunk(chunk->world, (ivec2s) {{chunk->position.x + 1, chunk->position.y}});
         if (neighbor != NULL) {
             neighbor->flags.dirty = 1;
         }
     }
     if (position.z == 0) {
-        neighbor = chunk->neighbors[CHUNK_NEIGHBOR_BACK];
+        neighbor = world_get_chunk(chunk->world, (ivec2s) {{chunk->position.x, chunk->position.y - 1}});
         if (neighbor != NULL) {
             neighbor->flags.dirty = 1;
         }
     }
     if (position.z == CHUNK_SIZE - 1) {
-        neighbor = chunk->neighbors[CHUNK_NEIGHBOR_FRONT];
+        neighbor = world_get_chunk(chunk->world, (ivec2s) {{chunk->position.x, chunk->position.y + 1}});
         if (neighbor != NULL) {
             neighbor->flags.dirty = 1;
         }
@@ -210,7 +210,7 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
     free(vertices);
     free(indices);
 
-    chunk->flags.dirty = false;
+    chunk->flags.dirty = FALSE;
 }
 
 void chunk_destroy(chunk_t *chunk) {
@@ -222,18 +222,4 @@ void chunk_destroy(chunk_t *chunk) {
     mesh_destroy(chunk->mesh);
     free(chunk->blocks);
     free(chunk);
-
-}
-
-void chunk_set_neighbor(chunk_t *chunk, enum chunk_neighbors neighbor, chunk_t *neighbor_chunk) {
-    if (chunk == NULL) {
-        CUBELOG_ERROR("'chunk_set_neighbor' called with NULL chunk");
-        return;
-    }
-
-    chunk->neighbors[neighbor] = neighbor_chunk;
-
-    if (neighbor_chunk != NULL) {
-        neighbor_chunk->neighbors[neighbor ^ 1] = chunk;
-    }
 }

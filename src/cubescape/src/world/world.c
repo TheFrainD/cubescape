@@ -27,7 +27,7 @@ static uint64_t jenkins_hash(void *key) {
     return hash;
 }
 
-static bool key_equal(void *key1, void *key2) {
+static BOOL key_equal(void *key1, void *key2) {
     ivec2s a = *(ivec2s *)key1;
     ivec2s b = *(ivec2s *)key2;
     return glms_ivec2_eqv(a, b);
@@ -53,17 +53,13 @@ void world_destroy(world_t *world) {
     free(world);
 }
 
-chunk_t *world_get_chunk(world_t *world, ivec2s index, bool create_if_null) {
+chunk_t *world_get_chunk(world_t *world, ivec2s index) {
     if (world == NULL) {
         CUBELOG_ERROR("'world_get_chunk' called with NULL world");
         return NULL;
     }
 
-    chunk_t *chunk = htable_get(world->chunks, &index);
-    if (chunk == NULL && create_if_null) {
-        chunk = world_add_chunk(world, index);
-    }
-    return chunk;
+    return htable_get(world->chunks, &index);
 }
 
 block_id_t world_get_block(world_t *world, ivec3s position) {
@@ -74,7 +70,7 @@ block_id_t world_get_block(world_t *world, ivec3s position) {
 
     ivec2s index = (ivec2s) {{position.x / CHUNK_SIZE, position.z / CHUNK_SIZE}};
 
-    chunk_t *chunk = world_get_chunk(world, index, false);
+    chunk_t *chunk = world_get_chunk(world, index);
     if (chunk == NULL) {
         return BLOCK_ID_AIR;
     }
@@ -95,7 +91,7 @@ void world_set_block(world_t *world, ivec3s position, block_id_t block) {
 
     ivec2s index = (ivec2s) {{position.x / CHUNK_SIZE, position.z / CHUNK_SIZE}};
 
-    chunk_t *chunk = world_get_chunk(world, index, false);
+    chunk_t *chunk = world_get_chunk(world, index);
     if (chunk == NULL) {
         return;
     }
@@ -113,14 +109,6 @@ chunk_t *world_add_chunk(world_t *world, ivec2s index) {
     CUBELOG_DEBUG("Adding chunk at index (%d, %d)", index.x, index.y);
 
     chunk_t *chunk = chunk_create(index, world);
-    chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_FRONT,
-                       world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{0, -1}}), false));
-    chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_BACK,
-                       world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{0, 1}}), false));
-    chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_LEFT,
-                       world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{-1, 0}}), false));
-    chunk_set_neighbor(chunk, CHUNK_NEIGHBOR_RIGHT,
-                       world_get_chunk(world, glms_ivec2_add(index, (ivec2s) {{1, 0}}), false));
     htable_set(world->chunks, &index, chunk);
 
     return chunk;

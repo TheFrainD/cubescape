@@ -11,7 +11,6 @@
 #include "core/assert.h"
 #include "core/file.h"
 #include "core/input.h"
-#include "core/profiling.h"
 
 #include "graphics/camera.h"
 #include "graphics/renderer.h"
@@ -109,7 +108,7 @@ void update() {
     }
 }
 
-int main(int argc, char **argv) {    
+int main(int argc, char **argv) {
     srand(time(NULL));
 
     cubelog_set_level(CUBELOG_LEVEL_DEBUG);
@@ -124,18 +123,12 @@ int main(int argc, char **argv) {
 
     CUBELOG_INFO("%s starting up...", EXECUTABLE_NAME);
 
-    int result = profiling_init();
-    if (result) {
-        CUBELOG_FATAL("Failed to initialize profiling");
-        return 1;
-    }
-
     window_settings_t window_settings = {0};
     window_settings.width             = 1280;
     window_settings.height            = 720;
     window_settings.title             = EXECUTABLE_NAME;
     window_settings.multisample       = 1;
-    result                            = window_init(window_settings);
+    int result                        = window_init(window_settings);
     if (result) {
         CUBELOG_FATAL("Failed to initialize window");
         return 1;
@@ -232,7 +225,7 @@ int main(int argc, char **argv) {
     world_renderer_settings.mesh_generation_thread_count = 4;
     renderer                                             = world_renderer_create(world_renderer_settings);
 
-    is_running = true;
+    is_running = TRUE;
 
     while (is_running) {
         is_running = !window_should_close();
@@ -258,7 +251,6 @@ int main(int argc, char **argv) {
 
     renderer_deinit();
     window_deinit();
-    profiling_deinit();
 
     fclose(log_fp);
     return 0;

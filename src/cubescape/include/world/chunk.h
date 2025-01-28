@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "core/bool.h"
+
 #include "graphics/mesh.h"
 #include "graphics/tilemap.h"
 
@@ -13,17 +15,10 @@
 #define CHUNK_VOLUME (CHUNK_SIZE * CHUNK_SIZE * CHUNK_HEIGHT)
 
 struct chunk_flags {
-    bool dirty;
-    bool generated;
-    bool generating;
-    bool mesh_generating: 1;
-};
-
-enum chunk_neighbors {
-    CHUNK_NEIGHBOR_FRONT,
-    CHUNK_NEIGHBOR_BACK,
-    CHUNK_NEIGHBOR_LEFT,
-    CHUNK_NEIGHBOR_RIGHT,
+    BOOL dirty;
+    BOOL generated;
+    BOOL generating;
+    BOOL mesh_generating;
 };
 
 typedef struct chunk {
@@ -32,7 +27,6 @@ typedef struct chunk {
     mesh_t *mesh;
     void *world;
     struct chunk_flags flags;
-    struct chunk *neighbors[4];
 } chunk_t;
 
 /**
@@ -79,5 +73,3 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
  * @param chunk The chunk to destroy.
  */
 void chunk_destroy(chunk_t *chunk);
-
-void chunk_set_neighbor(chunk_t *chunk, enum chunk_neighbors neighbor, chunk_t *neighbor_chunk);

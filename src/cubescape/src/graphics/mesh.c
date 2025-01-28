@@ -16,7 +16,7 @@ mesh_t *mesh_create(const vertex_t *vertices, size_t vertex_count, const uint32_
     mesh_t *mesh         = malloc(sizeof(mesh_t));
     mesh->shader_program = shader_program;
     mesh->texture        = texture;
-    mesh->flags.uploaded = false;
+    mesh->flags.uploaded = FALSE;
 
     mesh->vertex_buffer = NULL;
     mesh->index_buffer  = NULL;
@@ -161,6 +161,6 @@ void mesh_upload(mesh_t *mesh) {
         vertex_array_unbind();
     }
 
-    mesh->flags.uploaded        = true;
-    mesh->flags.ready_to_upload = false;
+    mesh->flags.uploaded        = TRUE;
+    mesh->flags.ready_to_upload = FALSE;
 }

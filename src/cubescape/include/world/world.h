@@ -2,6 +2,8 @@
 
 #include <cglm/struct.h>
 
+#include "core/bool.h"
+
 #include "collections/htable.h"
 
 #include "world/chunk.h"
@@ -40,10 +42,9 @@ void world_destroy(world_t *world);
  *
  * @param world The world to retrieve the chunk from.
  * @param index The index of the chunk.
- * @param create_if_null Whether to create the chunk if it does not exist.
  * @return chunk_t* The chunk at the specified position.
  */
-chunk_t *world_get_chunk(world_t *world, ivec2s index, bool create_if_null);
+chunk_t *world_get_chunk(world_t *world, ivec2s index);
 
 /**
  * @brief Generates the specified chunk.
