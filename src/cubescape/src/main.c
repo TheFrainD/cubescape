@@ -8,6 +8,7 @@
 #include <cubegl/shader_program.h>
 #include <cubelog/cubelog.h>
 
+#include "core/assert.h"
 #include "core/file.h"
 #include "core/input.h"
 #include "core/profiling.h"
@@ -108,7 +109,7 @@ void update() {
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) {    
     srand(time(NULL));
 
     cubelog_set_level(CUBELOG_LEVEL_DEBUG);
@@ -213,7 +214,7 @@ int main(int argc, char **argv) {
     input_add_mouse_button_pressed_callback(mouse_button_callback);
 
     world_generator_parameters_t generator_parameters = {0};
-    generator_parameters.thread_count                 = 10;
+    generator_parameters.thread_count                 = 4;
 
     world_settings_t world_settings        = {0};
     world_settings.htable_initial_capacity = 128;
@@ -227,8 +228,8 @@ int main(int argc, char **argv) {
     world_renderer_settings_t world_renderer_settings    = {0};
     world_renderer_settings.tilemap                      = tilemap;
     world_renderer_settings.block_shader                 = shader_program;
-    world_renderer_settings.draw_distance                = 10;
-    world_renderer_settings.mesh_generation_thread_count = 10;
+    world_renderer_settings.draw_distance                = 6;
+    world_renderer_settings.mesh_generation_thread_count = 4;
     renderer                                             = world_renderer_create(world_renderer_settings);
 
     is_running = true;

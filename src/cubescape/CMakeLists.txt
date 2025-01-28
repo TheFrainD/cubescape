@@ -7,6 +7,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 find_package(OpenGL REQUIRED)
 
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ASSERTIONS_ENABLED)
+endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE EXECUTABLE_NAME="${PROJECT_NAME}")
 
 target_link_libraries(${PROJECT_NAME} glfw glad cglm stb cubelog cubegl FastNoiseLite)
