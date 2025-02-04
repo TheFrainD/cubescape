@@ -4,43 +4,89 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <cJSON.h>
+
+#include "core/file.h"
 #include "core/log.h"
 
 #include "gl/image.h"
 #include "gl/texture.h"
 
 tilemap_t *tilemap_load(const char *filename) {
-    tilemap_t *tilemap = malloc(sizeof(tilemap_t));
-
     FILE *file = fopen(filename, "r");
     if (!file) {
         LOG_ERROR("Failed to open file: %s", filename);
         return NULL;
     }
 
-    char line[256];
-    while (fgets(line, sizeof(line), file)) {
-        char key[16];
-        if (sscanf(line, "%15s", key) != 1) {
-            continue;
-        }
-
-        if (strcmp(key, "name") == 0) {
-            char name[256];
-            sscanf(line + strlen(key) + 1, "%255[^\n]", name);
-            tilemap->name = strdup(name);
-        } else if (strcmp(key, "tile") == 0) {
-            sscanf(line + strlen(key) + 1, "%d", &tilemap->tile_size);
-        } else if (strcmp(key, "size") == 0) {
-            sscanf(line + strlen(key) + 1, "%d", &tilemap->map_size);
-        } else if (strcmp(key, "path") == 0) {
-            char path[256];
-            sscanf(line + strlen(key) + 1, "%255[^\n]", path);
-            tilemap->path = strdup(path);
-        }
+    size_t file_size = get_file_size(file);
+    uint8_t *data    = (uint8_t *)malloc(file_size + 1);
+    if (data == NULL) {
+        LOG_ERROR("Failed to allocate memory for file data");
+        fclose(file);
+        return NULL;
     }
 
-    fclose(file);
+    read_file_content(file, (char *)data, file_size);
+
+    cJSON *json = cJSON_Parse(data);
+    free(data);
+
+    if (json == NULL) {
+        LOG_ERROR("Failed to parse JSON data");
+        return NULL;
+    }
+
+    cJSON *name = cJSON_GetObjectItem(json, "name");
+    cJSON *tile = cJSON_GetObjectItem(json, "tile");
+    cJSON *size = cJSON_GetObjectItem(json, "size");
+    cJSON *path = cJSON_GetObjectItem(json, "path");
+
+    tilemap_t *tilemap = malloc(sizeof(tilemap_t));
+    if (tilemap == NULL) {
+        LOG_ERROR("Failed to allocate memory for tilemap");
+        cJSON_Delete(json);
+        return NULL;
+    }
+
+    if (cJSON_IsString(name) && name->valuestring) {
+        tilemap->name = strdup(name->valuestring);
+    } else {
+        LOG_ERROR("Failed to parse tilemap name");
+        free(tilemap);
+        cJSON_Delete(json);
+        return NULL;
+    }
+
+    if (cJSON_IsNumber(tile)) {
+        tilemap->tile_size = tile->valueint;
+    } else {
+        LOG_ERROR("Failed to parse tilemap tile size");
+        free(tilemap);
+        cJSON_Delete(json);
+        return NULL;
+    }
+
+    if (cJSON_IsNumber(size)) {
+        tilemap->map_size = size->valueint;
+    } else {
+        LOG_ERROR("Failed to parse tilemap size");
+        free(tilemap);
+        cJSON_Delete(json);
+        return NULL;
+    }
+
+    if (cJSON_IsString(path) && path->valuestring) {
+        tilemap->path = strdup(path->valuestring);
+    } else {
+        LOG_ERROR("Failed to parse tilemap path");
+        free(tilemap->name);
+        free(tilemap);
+        cJSON_Delete(json);
+        return NULL;
+    }
+
+    cJSON_Delete(json);
 
     tilemap->texture = texture_create();
 

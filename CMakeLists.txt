@@ -19,7 +19,7 @@ endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE EXECUTABLE_NAME="${PROJECT_NAME}")
 
-target_link_libraries(${PROJECT_NAME} glfw glad cglm stb FastNoiseLite)
+target_link_libraries(${PROJECT_NAME} glfw glad cglm stb FastNoiseLite cjson)
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4)
