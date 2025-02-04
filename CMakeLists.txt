@@ -21,7 +21,11 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE GLFW_INCLUDE_NONE EXECUTABLE_
 
 target_link_libraries(${PROJECT_NAME} glfw glad cglm stb FastNoiseLite)
 
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wno-missing-braces)
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wno-missing-braces)
+endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
-#define BOOL  uint8_t
-#define TRUE  1
-#define FALSE 0
+typedef uint8_t bool_t;
+
+#define CS_TRUE  1
+#define CS_FALSE 0

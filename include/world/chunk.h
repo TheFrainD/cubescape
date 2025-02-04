@@ -15,10 +15,10 @@
 #define CHUNK_VOLUME (CHUNK_SIZE * CHUNK_SIZE * CHUNK_HEIGHT)
 
 struct chunk_flags {
-    BOOL dirty;
-    BOOL generated;
-    BOOL generating;
-    BOOL mesh_generating;
+    bool_t dirty;
+    bool_t generated;
+    bool_t generating;
+    bool_t mesh_generating;
 };
 
 typedef struct chunk {

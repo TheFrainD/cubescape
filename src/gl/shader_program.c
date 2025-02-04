@@ -30,7 +30,12 @@ static void print_info_log(uint32_t program, const char *message) {
 
 shader_program_t *shader_program_create() {
     shader_program_t *program = malloc(sizeof(shader_program_t));
-    program->id               = glCreateProgram();
+    if (program == NULL) {
+        LOG_ERROR("Failed to allocate memory for shader program");
+        return NULL;
+    }
+
+    program->id = glCreateProgram();
     if (program->id == 0) {
         free(program);
         return NULL;

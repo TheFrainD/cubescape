@@ -1,5 +1,6 @@
 #include "graphics/camera.h"
 
+#include "core/bool.h"
 #include "core/input.h"
 #include "core/log.h"
 #include "core/math.h"
@@ -20,10 +21,10 @@ struct camera {
     float sensitivity;
 
     mat4s view;
-    int view_dirty;
+    bool_t view_dirty;
 };
 
-static vec3s world_up = (vec3s) {{0.0f, 1.0f, 0.0f}};
+static vec3s world_up = {0.0f, 1.0f, 0.0f};
 
 static void update_view(camera_t *camera) {
     if (camera == NULL) {
@@ -33,7 +34,7 @@ static void update_view(camera_t *camera) {
 
     vec3s center       = glms_vec3_add(camera->position, camera->front);
     camera->view       = glms_lookat(camera->position, center, camera->up);
-    camera->view_dirty = 1;
+    camera->view_dirty = CS_TRUE;
 }
 
 void camera_update_view(camera_t *camera, vec2s mouse_position) {
@@ -79,7 +80,12 @@ void camera_destroy(camera_t *camera) {
 }
 
 camera_t *camera_create(camera_settings_t settings) {
-    camera_t *camera    = malloc(sizeof(camera_t));
+    camera_t *camera = malloc(sizeof(camera_t));
+    if (camera == NULL) {
+        LOG_ERROR("Failed to allocate memory for camera");
+        return NULL;
+    }
+
     camera->position    = GLMS_VEC3_ZERO;
     camera->yaw         = -PI_2;
     camera->pitch       = 0.0f;
@@ -166,7 +172,7 @@ void camera_view_reset(camera_t *camera) {
         LOG_ERROR("'camera_view_reset' called with NULL camera");
         return;
     }
-    camera->view_dirty = 0;
+    camera->view_dirty = CS_FALSE;
 }
 
 vec3s camera_get_front(camera_t *camera) {

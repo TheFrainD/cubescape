@@ -6,7 +6,9 @@
 
 #include "core/log.h"
 
-const char *buffer_target_to_string(buffer_target_t target) {
+#define BUFFER_TARGET_COUNT 3
+
+static const char *buffer_target_to_string(buffer_target_t target) {
     switch (target) {
         case GL_ARRAY_BUFFER:
             return "Array Buffer";
@@ -18,8 +20,6 @@ const char *buffer_target_to_string(buffer_target_t target) {
             return "Unknown Buffer Target";
     }
 }
-
-#define BUFFER_TARGET_COUNT 3
 
 static uint32_t bound_targets[BUFFER_TARGET_COUNT] = {0};
 
@@ -37,9 +37,14 @@ static int target_to_id(buffer_target_t target) {
 
 buffer_t *buffer_create(size_t size, const void *data, buffer_usage_t usage, buffer_target_t target) {
     buffer_t *buffer = malloc(sizeof(buffer_t));
-    buffer->usage    = usage;
-    buffer->target   = target;
-    buffer->size     = size;
+    if (buffer == NULL) {
+        LOG_ERROR("Failed to allocate memory for buffer");
+        return NULL;
+    }
+
+    buffer->usage  = usage;
+    buffer->target = target;
+    buffer->size   = size;
 
     glGenBuffers(1, &buffer->id);
     buffer_data(buffer, size, data);

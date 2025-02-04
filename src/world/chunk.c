@@ -3,15 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core/assert.h"
 #include "core/log.h"
 #include "core/math.h"
 
 #include "world/world.h"
 
 static int should_render_face(chunk_t *chunk, block_face_t face, ivec3s position) {
-    chunk_t *neighbor = NULL;
-    ivec3s adjacent_position;
-    block_id_t block = -1;
+    chunk_t *neighbor        = NULL;
+    ivec3s adjacent_position = GLMS_IVEC3_ZERO;
+    block_id_t block         = -1;
 
     switch (face) {
         case BLOCK_FACE_TOP:
@@ -81,24 +82,25 @@ chunk_t *chunk_create(ivec2s position, void *world) {
         return NULL;
     }
 
-    chunk_t *chunk  = malloc(sizeof(chunk_t));
+    chunk_t *chunk = malloc(sizeof(chunk_t));
+    if (chunk == NULL) {
+        LOG_ERROR("Failed to allocate memory for chunk");
+        return NULL;
+    }
     chunk->position = position;
     chunk->blocks   = malloc(CHUNK_VOLUME * sizeof(block_id_t));
     chunk->mesh     = NULL;
     chunk->world    = world;
 
-    chunk->flags.dirty           = TRUE;
-    chunk->flags.generated       = FALSE;
-    chunk->flags.generating      = FALSE;
-    chunk->flags.mesh_generating = FALSE;
+    chunk->flags.dirty           = CS_TRUE;
+    chunk->flags.generated       = CS_FALSE;
+    chunk->flags.generating      = CS_FALSE;
+    chunk->flags.mesh_generating = CS_FALSE;
     return chunk;
 }
 
 block_id_t chunk_get_block(chunk_t *chunk, ivec3s position) {
-    if (chunk == NULL) {
-        LOG_ERROR("'chunk_get_block' called with NULL chunk");
-        return BLOCK_ID_AIR;
-    }
+    ASSERT(chunk != NULL);
 
     if (position.x < 0 || position.x >= CHUNK_SIZE || position.y < 0 || position.y >= CHUNK_HEIGHT || position.z < 0 ||
         position.z >= CHUNK_SIZE) {
@@ -109,10 +111,7 @@ block_id_t chunk_get_block(chunk_t *chunk, ivec3s position) {
 }
 
 void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block) {
-    if (chunk == NULL) {
-        LOG_ERROR("'chunk_set_block' called with NULL chunk");
-        return;
-    }
+    ASSERT(chunk != NULL);
 
     if (position.x < 0 || position.x >= CHUNK_SIZE || position.y < 0 || position.y >= CHUNK_HEIGHT || position.z < 0 ||
         position.z >= CHUNK_SIZE) {
@@ -150,18 +149,21 @@ void chunk_set_block(chunk_t *chunk, ivec3s position, block_id_t block) {
 }
 
 void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilemap_t *tilemap) {
-    if (chunk == NULL) {
-        LOG_ERROR("'chunk_generate_mesh' called with NULL chunk");
+    ASSERT(chunk != NULL);
+    ASSERT(shader_program != NULL);
+    ASSERT(tilemap != NULL);
+
+    vertex_t *vertices = (vertex_t *)malloc(CHUNK_VOLUME * 36 * sizeof(vertex_t));
+    if (vertices == NULL) {
+        LOG_ERROR("Failed to allocate memory for chunk vertices");
         return;
     }
-
-    if (shader_program == NULL) {
-        LOG_ERROR("'chunk_generate_mesh' called with NULL shader program");
+    uint32_t *indices = (uint32_t *)malloc(CHUNK_VOLUME * 36 * sizeof(uint32_t));
+    if (indices == NULL) {
+        LOG_ERROR("Failed to allocate memory for chunk indices");
+        free(vertices);
         return;
     }
-
-    vertex_t *vertices  = (vertex_t *)malloc(CHUNK_VOLUME * 36 * sizeof(vertex_t));
-    uint32_t *indices   = (uint32_t *)malloc(CHUNK_VOLUME * 36 * sizeof(uint32_t));
     size_t vertex_count = 0;
     size_t index_count  = 0;
 
@@ -206,14 +208,11 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
     free(vertices);
     free(indices);
 
-    chunk->flags.dirty = FALSE;
+    chunk->flags.dirty = CS_FALSE;
 }
 
 void chunk_destroy(chunk_t *chunk) {
-    if (chunk == NULL) {
-        LOG_ERROR("'chunk_destroy' called with NULL chunk");
-        return;
-    }
+    ASSERT(chunk != NULL);
 
     mesh_destroy(chunk->mesh);
     free(chunk->blocks);

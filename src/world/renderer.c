@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "core/assert.h"
 #include "core/bool.h"
 #include "core/log.h"
 #include "core/thread.h"
@@ -13,17 +14,17 @@ struct mesh_gen_task {
     chunk_t *chunk;
     shader_program_t *shader_program;
     tilemap_t *tilemap;
-    BOOL busy;
+    bool_t busy;
 };
 
-THREAD_FUNC(mesh_gen_thread, arg) {
+static THREAD_FUNC(mesh_gen_thread, arg) {
     struct mesh_gen_task *task = arg;
     chunk_t *chunk             = task->chunk;
 
     chunk_generate_mesh(chunk, task->shader_program, task->tilemap);
-    chunk->flags.mesh_generating = FALSE;
+    chunk->flags.mesh_generating = CS_FALSE;
 
-    task->busy = FALSE;
+    task->busy = CS_FALSE;
     return THREAD_OK;
 }
 
@@ -45,32 +46,44 @@ static void world_renderer_generate_mesh(world_renderer_t *renderer, chunk_t *ch
         task->chunk                  = chunk;
         task->shader_program         = renderer->state->block_shader;
         task->tilemap                = renderer->state->tilemap;
-        task->busy                   = TRUE;
-        chunk->flags.mesh_generating = TRUE;
+        task->busy                   = CS_TRUE;
+        chunk->flags.mesh_generating = CS_TRUE;
         thread_create(&task->thread, mesh_gen_thread, task);
         return;
     }
 }
 
 world_renderer_t *world_renderer_create(world_renderer_settings_t settings) {
-    world_renderer_t *renderer     = malloc(sizeof(world_renderer_t));
-    renderer->state                = malloc(sizeof(world_renderer_state_t));
+    world_renderer_t *renderer = malloc(sizeof(world_renderer_t));
+    if (renderer == NULL) {
+        LOG_ERROR("Failed to allocate memory for world renderer");
+        return NULL;
+    }
+    renderer->state = malloc(sizeof(world_renderer_state_t));
+    if (renderer->state == NULL) {
+        LOG_ERROR("Failed to allocate memory for world renderer state");
+        free(renderer);
+        return NULL;
+    }
     renderer->state->tilemap       = settings.tilemap;
     renderer->state->block_shader  = settings.block_shader;
     renderer->state->draw_distance = settings.draw_distance;
 
     renderer->state->mesh_generation_thread_count = settings.mesh_generation_thread_count;
     renderer->state->mesh_gen_task_pool = malloc(sizeof(struct mesh_gen_task) * settings.mesh_generation_thread_count);
+    if (renderer->state->mesh_gen_task_pool == NULL) {
+        LOG_ERROR("Failed to allocate memory for mesh generation task pool");
+        free(renderer->state);
+        free(renderer);
+        return NULL;
+    }
     memset(renderer->state->mesh_gen_task_pool, 0,
            sizeof(struct mesh_gen_task) * settings.mesh_generation_thread_count);
     return renderer;
 }
 
 void world_renderer_destroy(world_renderer_t *renderer) {
-    if (renderer == NULL) {
-        LOG_ERROR("'world_renderer_destroy' called with NULL renderer");
-        return;
-    }
+    ASSERT(renderer != NULL);
 
     for (size_t i = 0; i < renderer->state->mesh_generation_thread_count; ++i) {
         thread_join(&renderer->state->mesh_gen_task_pool[i].thread);
@@ -80,28 +93,9 @@ void world_renderer_destroy(world_renderer_t *renderer) {
     free(renderer);
 }
 
-void world_renderer_prepare(world_renderer_t *renderer, world_t *world) {
-    if (renderer == NULL) {
-        LOG_ERROR("'world_renderer_prepare' called with NULL renderer");
-        return;
-    }
-
-    if (world == NULL) {
-        LOG_ERROR("'world_renderer_prepare' called with NULL world");
-        return;
-    }
-}
-
 void world_renderer_render(world_renderer_t *renderer, world_t *world, vec3s camera_position) {
-    if (renderer == NULL) {
-        LOG_ERROR("'world_renderer_render' called with NULL renderer");
-        return;
-    }
-
-    if (world == NULL) {
-        LOG_ERROR("'world_renderer_render' called with NULL world");
-        return;
-    }
+    ASSERT(renderer != NULL);
+    ASSERT(world != NULL);
 
     ivec2s index =
         (ivec2s) {{camera_position.x >= 0 ? (camera_position.x / CHUNK_SIZE) : (camera_position.x / CHUNK_SIZE - 1),
@@ -120,7 +114,7 @@ void world_renderer_render(world_renderer_t *renderer, world_t *world, vec3s cam
                 world_generate_chunk(world, chunk);
             }
 
-            BOOL neighboring_chunks_generated = TRUE;
+            bool_t neighboring_chunks_generated = CS_TRUE;
             for (int i = 0; i < 4; ++i) {
                 ivec2s neighbor_index =
                     (ivec2s) {{chunk_index.x + (i % 2 == 0 ? 1 : -1), chunk_index.y + (i / 2 == 0 ? 1 : -1)}};
@@ -129,7 +123,7 @@ void world_renderer_render(world_renderer_t *renderer, world_t *world, vec3s cam
                     continue;
                 }
                 if (!neighbor->flags.generated) {
-                    neighboring_chunks_generated = FALSE;
+                    neighboring_chunks_generated = CS_FALSE;
                     break;
                 }
             }

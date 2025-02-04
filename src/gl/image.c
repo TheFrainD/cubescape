@@ -8,7 +8,12 @@
 
 image_t *image_load(const char *filename) {
     image_t *image = malloc(sizeof(image_t));
-    image->data    = stbi_load(filename, &image->width, &image->height, (int *)&image->format, 0);
+    if (image == NULL) {
+        LOG_ERROR("Failed to allocate memory for image");
+        return NULL;
+    }
+
+    image->data = stbi_load(filename, &image->width, &image->height, (int *)&image->format, 0);
     if (!image->data) {
         LOG_ERROR("Failed to load image: %s", filename);
     }

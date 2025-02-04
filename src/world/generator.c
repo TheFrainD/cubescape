@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "core/assert.h"
 #include "core/bool.h"
 #include "core/log.h"
 #include "core/math.h"
@@ -10,10 +11,10 @@ struct world_gen_task {
     thread_t thread;
     world_generator_t *generator;
     chunk_t *chunk;
-    BOOL busy;
+    bool_t busy;
 };
 
-THREAD_FUNC(world_gen_thread, arg) {
+static THREAD_FUNC(world_gen_thread, arg) {
     struct world_gen_task *task  = arg;
     chunk_t *chunk               = task->chunk;
     world_generator_t *generator = task->generator;
@@ -75,16 +76,20 @@ THREAD_FUNC(world_gen_thread, arg) {
             BLOCK_ID_GRASS;
     }
 
-    chunk->flags.generated  = TRUE;
-    chunk->flags.generating = FALSE;
-    task->busy              = FALSE;
+    chunk->flags.generated  = CS_TRUE;
+    chunk->flags.generating = CS_FALSE;
+    task->busy              = CS_FALSE;
     return THREAD_OK;
 }
 
 world_generator_t *world_generator_create(world_generator_parameters_t parameters) {
     world_generator_t *generator = malloc(sizeof(world_generator_t));
-    generator->parameters        = parameters;
-    generator->noise_scale       = 1.3f;
+    if (generator == NULL) {
+        LOG_ERROR("Failed to allocate memory for world generator");
+        return NULL;
+    }
+    generator->parameters  = parameters;
+    generator->noise_scale = 1.3f;
 
     for (int i = 0; i < 4; ++i) {
         generator->octave_noise[i] = octave_noise_create(8);
@@ -96,21 +101,19 @@ world_generator_t *world_generator_create(world_generator_parameters_t parameter
     generator->octave_noise_misc = octave_noise_create(6);
 
     generator->task_pool = malloc(sizeof(struct world_gen_task) * parameters.thread_count);
+    if (!generator->task_pool) {
+        LOG_ERROR("Failed to allocate memory for world generator task pool");
+        free(generator);
+        return NULL;
+    }
     memset(generator->task_pool, 0, sizeof(struct world_gen_task) * parameters.thread_count);
 
     return generator;
 }
 
 void world_generator_generate(world_generator_t *generator, chunk_t *chunk) {
-    if (generator == NULL) {
-        LOG_ERROR("'world_generator_generate' called with NULL generator");
-        return;
-    }
-
-    if (chunk == NULL) {
-        LOG_ERROR("'world_generator_generate' called with NULL chunk");
-        return;
-    }
+    ASSERT(generator != NULL);
+    ASSERT(chunk != NULL);
 
     for (size_t i = 0; i < generator->parameters.thread_count; ++i) {
         struct world_gen_task *task = &generator->task_pool[i];
@@ -119,8 +122,8 @@ void world_generator_generate(world_generator_t *generator, chunk_t *chunk) {
         }
         task->generator         = generator;
         task->chunk             = chunk;
-        task->busy              = TRUE;
-        chunk->flags.generating = TRUE;
+        task->busy              = CS_TRUE;
+        chunk->flags.generating = CS_TRUE;
         LOG_DEBUG("Generating chunk at index (%d, %d)", chunk->position.x, chunk->position.y);
         thread_create(&task->thread, world_gen_thread, task);
         return;
@@ -128,10 +131,7 @@ void world_generator_generate(world_generator_t *generator, chunk_t *chunk) {
 }
 
 void world_generator_destroy(world_generator_t *generator) {
-    if (generator == NULL) {
-        LOG_ERROR("'world_generator_destroy' called with NULL generator");
-        return;
-    }
+    ASSERT(generator != NULL);
 
     for (size_t i = 0; i < generator->parameters.thread_count; ++i) {
         thread_join(&generator->task_pool[i].thread);

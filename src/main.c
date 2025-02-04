@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
     world_renderer_settings.mesh_generation_thread_count = 4;
     renderer                                             = world_renderer_create(world_renderer_settings);
 
-    is_running = TRUE;
+    is_running = CS_TRUE;
 
     while (is_running) {
         is_running = !window_should_close();

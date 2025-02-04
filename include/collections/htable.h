@@ -6,7 +6,7 @@
 #include "core/bool.h"
 
 typedef uint64_t (*htable_hash_fn)(void *key);
-typedef BOOL (*htable_compare_fn)(void *key1, void *key2);
+typedef bool_t (*htable_compare_fn)(void *key1, void *key2);
 typedef void (*htable_key_free_fn)(void *key);
 typedef void (*htable_data_free_fn)(void *value);
 
@@ -109,6 +109,6 @@ htable_iter_t htable_iter(htable_t *table);
  * This function advances the iterator to the next entry in the hash table.
  *
  * @param iter A pointer to the iterator.
- * @return BOOL Whether the iterator was advanced.
+ * @return bool_t Whether the iterator was advanced.
  */
-BOOL htable_next(htable_iter_t *iter);
+bool_t htable_next(htable_iter_t *iter);

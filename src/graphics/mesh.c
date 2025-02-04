@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core/assert.h"
 #include "core/log.h"
 
 #include "gl/texture.h"
@@ -14,23 +15,28 @@
 
 mesh_t *mesh_create(const vertex_t *vertices, size_t vertex_count, const uint32_t *indices, size_t index_count,
                     shader_program_t *shader_program, uint32_t texture) {
-    mesh_t *mesh         = malloc(sizeof(mesh_t));
+    mesh_t *mesh = malloc(sizeof(mesh_t));
+    if (mesh == NULL) {
+        LOG_ERROR("Failed to allocate memory for mesh");
+        return NULL;
+    }
+
     mesh->shader_program = shader_program;
     mesh->texture        = texture;
-    mesh->flags.uploaded = FALSE;
+    mesh->flags.uploaded = CS_FALSE;
 
     mesh->vertex_buffer = NULL;
     mesh->index_buffer  = NULL;
     mesh->vertex_array  = 0;
 
     mesh->vertices = vertex_count != 0 ? malloc(vertex_count * sizeof(vertex_t)) : NULL;
-    if (vertices != NULL) {
+    if (vertices != NULL && mesh->vertices != NULL) {
         memcpy(mesh->vertices, vertices, vertex_count * sizeof(vertex_t));
     }
     mesh->vertex_count = vertex_count;
 
     mesh->indices = index_count != 0 ? malloc(index_count * sizeof(uint32_t)) : NULL;
-    if (indices != NULL) {
+    if (indices != NULL && mesh->indices != NULL) {
         memcpy(mesh->indices, indices, index_count * sizeof(uint32_t));
     }
     mesh->index_count = index_count;
@@ -79,10 +85,17 @@ void mesh_set_vertices(mesh_t *mesh, const vertex_t *vertices, size_t vertex_cou
     if (mesh->vertices == NULL) {
         mesh->vertices = malloc(vertex_count * sizeof(vertex_t));
     } else if (vertex_count > mesh->vertex_count) {
-        mesh->vertices = realloc(mesh->vertices, vertex_count * sizeof(vertex_t));
+        vertex_t *new_vertices = realloc(mesh->vertices, vertex_count * sizeof(vertex_t));
+        if (new_vertices == NULL) {
+            LOG_ERROR("Failed to reallocate memory for vertices");
+            return;
+        }
+        mesh->vertices = new_vertices;
     }
 
     mesh->vertex_count = vertex_count;
+
+    ASSERT(mesh->vertices != NULL);
     memcpy(mesh->vertices, vertices, vertex_count * sizeof(vertex_t));
 
     mesh->flags.ready_to_upload = READY_TO_UPLOAD;
@@ -102,10 +115,17 @@ void mesh_set_indices(mesh_t *mesh, const uint32_t *indices, size_t index_count)
     if (mesh->indices == NULL) {
         mesh->indices = malloc(index_count * sizeof(uint32_t));
     } else if (index_count > mesh->index_count) {
-        mesh->indices = realloc(mesh->indices, index_count * sizeof(uint32_t));
+        uint32_t *new_indices = realloc(mesh->indices, index_count * sizeof(uint32_t));
+        if (new_indices == NULL) {
+            LOG_ERROR("Failed to reallocate memory for indices");
+            return;
+        }
+        mesh->indices = new_indices;
     }
 
     mesh->index_count = index_count;
+
+    ASSERT(mesh->indices != NULL);
     memcpy(mesh->indices, indices, index_count * sizeof(uint32_t));
 
     mesh->flags.ready_to_upload = READY_TO_UPLOAD;
@@ -162,6 +182,6 @@ void mesh_upload(mesh_t *mesh) {
         vertex_array_unbind();
     }
 
-    mesh->flags.uploaded        = TRUE;
-    mesh->flags.ready_to_upload = FALSE;
+    mesh->flags.uploaded        = CS_TRUE;
+    mesh->flags.ready_to_upload = CS_FALSE;
 }

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core/assert.h"
 #include "core/log.h"
 
 static uint64_t jenkins_hash(void *key) {
@@ -27,7 +28,7 @@ static uint64_t jenkins_hash(void *key) {
     return hash;
 }
 
-static BOOL key_equal(void *key1, void *key2) {
+static bool_t key_equal(void *key1, void *key2) {
     ivec2s a = *(ivec2s *)key1;
     ivec2s b = *(ivec2s *)key2;
     return glms_ivec2_eqv(a, b);
@@ -35,18 +36,24 @@ static BOOL key_equal(void *key1, void *key2) {
 
 world_t *world_create(world_settings_t settings) {
     world_t *world = malloc(sizeof(world_t));
-    world->chunks  = htable_create(settings.htable_initial_capacity, sizeof(ivec2s), jenkins_hash, key_equal, NULL,
+    if (world == NULL) {
+        LOG_ERROR("Failed to allocate memory for world");
+        return NULL;
+    }
+    world->chunks = htable_create(settings.htable_initial_capacity, sizeof(ivec2s), jenkins_hash, key_equal, NULL,
                                   (htable_data_free_fn)chunk_destroy);
+    if (world->chunks == NULL) {
+        LOG_ERROR("Failed to create hash table for chunks");
+        free(world);
+        return NULL;
+    }
 
     world->generator = world_generator_create(settings.generator_parameters);
     return world;
 }
 
 void world_destroy(world_t *world) {
-    if (world == NULL) {
-        LOG_ERROR("'world_destroy' called with NULL world");
-        return;
-    }
+    ASSERT(world != NULL);
 
     world_generator_destroy(world->generator);
     htable_destroy(world->chunks);
@@ -63,10 +70,7 @@ chunk_t *world_get_chunk(world_t *world, ivec2s index) {
 }
 
 block_id_t world_get_block(world_t *world, ivec3s position) {
-    if (world == NULL) {
-        LOG_ERROR("'world_get_block' called with NULL world");
-        return BLOCK_ID_AIR;
-    }
+    ASSERT(world != NULL);
 
     ivec2s index = (ivec2s) {{position.x / CHUNK_SIZE, position.z / CHUNK_SIZE}};
 
@@ -84,10 +88,7 @@ ivec3s world_to_block(vec3s world_pos) {
 }
 
 void world_set_block(world_t *world, ivec3s position, block_id_t block) {
-    if (world == NULL) {
-        LOG_ERROR("'world_set_block' called with NULL world");
-        return;
-    }
+    ASSERT(world != NULL);
 
     ivec2s index = (ivec2s) {{position.x / CHUNK_SIZE, position.z / CHUNK_SIZE}};
 
@@ -101,10 +102,7 @@ void world_set_block(world_t *world, ivec3s position, block_id_t block) {
 }
 
 chunk_t *world_add_chunk(world_t *world, ivec2s index) {
-    if (world == NULL) {
-        LOG_ERROR("'world_add_chunk' called with NULL world");
-        return NULL;
-    }
+    ASSERT(world != NULL);
 
     LOG_DEBUG("Adding chunk at index (%d, %d)", index.x, index.y);
 
@@ -115,20 +113,15 @@ chunk_t *world_add_chunk(world_t *world, ivec2s index) {
 }
 
 void world_generate_chunk(world_t *world, chunk_t *chunk) {
-    if (world == NULL) {
-        LOG_ERROR("'world_generate_chunk' called with NULL world");
-        return;
-    }
-
-    if (chunk == NULL) {
-        LOG_ERROR("'world_generate_chunk' called with NULL chunk");
-        return;
-    }
+    ASSERT(world != NULL);
+    ASSERT(chunk != NULL);
 
     world_generator_generate(world->generator, chunk);
 }
 
 void world_delete_far_chunks(world_t *world, vec3s camera_position, int draw_distance) {
+    ASSERT(world != NULL);
+
     ivec2s index =
         (ivec2s) {{camera_position.x >= 0 ? (camera_position.x / CHUNK_SIZE) : (camera_position.x / CHUNK_SIZE - 1),
                    camera_position.z >= 0 ? (camera_position.z / CHUNK_SIZE) : (camera_position.z / CHUNK_SIZE - 1)}};

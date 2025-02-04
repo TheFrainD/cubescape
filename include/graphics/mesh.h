@@ -10,8 +10,8 @@
 #include "graphics/vertex.h"
 
 struct mesh_flags {
-    BOOL ready_to_upload;
-    BOOL uploaded;
+    bool_t ready_to_upload;
+    bool_t uploaded;
 };
 
 typedef struct {
