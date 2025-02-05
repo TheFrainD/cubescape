@@ -14,10 +14,11 @@ typedef struct {
  *
  * This function creates a new octave noise generator with the specified number of octaves.
  *
+ * @param seed The seed to use for the noise generator.
  * @param octaves The number of octaves to use.
  * @return octave_noise_t* The created octave noise generator.
  */
-octave_noise_t *octave_noise_create(int octaves);
+octave_noise_t *octave_noise_create(int seed, int octaves);
 
 /**
  * @brief Computes the octave noise value at the given coordinates.

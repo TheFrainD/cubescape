@@ -5,7 +5,7 @@
 #include "core/assert.h"
 #include "core/log.h"
 
-octave_noise_t *octave_noise_create(int octaves) {
+octave_noise_t *octave_noise_create(int seed, int octaves) {
     octave_noise_t *noise = malloc(sizeof(octave_noise_t));
     if (noise == NULL) {
         LOG_ERROR("Failed to allocate memory for octave noise");
@@ -22,7 +22,7 @@ octave_noise_t *octave_noise_create(int octaves) {
     noise->base.compute = octave_noise_compute;
 
     for (int i = 0; i < octaves; ++i) {
-        noise->noise[i] = perlin_noise_create(rand());
+        noise->noise[i] = perlin_noise_create(seed + i);
     }
     return noise;
 }

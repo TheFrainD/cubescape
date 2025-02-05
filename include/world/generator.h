@@ -8,6 +8,7 @@
 
 typedef struct {
     size_t thread_count;
+    int seed;
 } world_generator_parameters_t;
 
 struct world_gen_task;

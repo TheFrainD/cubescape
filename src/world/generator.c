@@ -92,13 +92,13 @@ world_generator_t *world_generator_create(world_generator_parameters_t parameter
     generator->noise_scale = 1.3f;
 
     for (int i = 0; i < 4; ++i) {
-        generator->octave_noise[i] = octave_noise_create(8);
+        generator->octave_noise[i] = octave_noise_create(parameters.seed + i + 1, 8);
     }
     generator->combined_noise1 =
         combined_noise_create((noise_t *)generator->octave_noise[0], (noise_t *)generator->octave_noise[1]);
     generator->combined_noise2 =
         combined_noise_create((noise_t *)generator->octave_noise[1], (noise_t *)generator->octave_noise[2]);
-    generator->octave_noise_misc = octave_noise_create(6);
+    generator->octave_noise_misc = octave_noise_create(parameters.seed, 6);
 
     generator->task_pool = malloc(sizeof(struct world_gen_task) * parameters.thread_count);
     if (!generator->task_pool) {
