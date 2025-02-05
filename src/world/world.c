@@ -111,6 +111,15 @@ chunk_t *world_add_chunk(world_t *world, ivec2s index) {
     chunk_t *chunk = chunk_create(index, world);
     htable_set(world->chunks, &index, chunk);
 
+    for (int i = 0; i < 4; ++i) {
+        ivec2s neighbor_index = (ivec2s) {{index.x + (i % 2 == 0 ? 1 : -1), index.y + (i / 2 == 0 ? 1 : -1)}};
+        chunk_t *neighbor     = world_get_chunk(world, neighbor_index);
+        if (!neighbor) {
+            continue;
+        }
+        neighbor->flags.dirty = CS_TRUE;
+    }
+
     return chunk;
 }
 
