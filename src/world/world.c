@@ -72,14 +72,15 @@ chunk_t *world_get_chunk(world_t *world, ivec2s index) {
 block_id_t world_get_block(world_t *world, ivec3s position) {
     ASSERT(world != NULL);
 
-    ivec2s index = (ivec2s) {{position.x / CHUNK_SIZE, position.z / CHUNK_SIZE}};
+    ivec2s index = (ivec2s) {{floorf((float)position.x / CHUNK_SIZE), floorf((float)position.z / CHUNK_SIZE)}};
 
     chunk_t *chunk = world_get_chunk(world, index);
     if (chunk == NULL) {
         return BLOCK_ID_AIR;
     }
 
-    ivec3s block_position = (ivec3s) {{position.x % CHUNK_SIZE, position.y % CHUNK_HEIGHT, position.z % CHUNK_SIZE}};
+    ivec3s block_position =
+        (ivec3s) {{position.x - (index.x * CHUNK_SIZE), position.y, position.z - (index.y * CHUNK_SIZE)}};
     return chunk_get_block(chunk, block_position);
 }
 
@@ -90,14 +91,15 @@ ivec3s world_to_block(vec3s world_pos) {
 void world_set_block(world_t *world, ivec3s position, block_id_t block) {
     ASSERT(world != NULL);
 
-    ivec2s index = (ivec2s) {{position.x / CHUNK_SIZE, position.z / CHUNK_SIZE}};
+    ivec2s index = (ivec2s) {{floorf((float)position.x / CHUNK_SIZE), floorf((float)position.z / CHUNK_SIZE)}};
 
     chunk_t *chunk = world_get_chunk(world, index);
     if (chunk == NULL) {
         return;
     }
 
-    ivec3s block_position = (ivec3s) {{position.x % CHUNK_SIZE, position.y % CHUNK_HEIGHT, position.z % CHUNK_SIZE}};
+    ivec3s block_position =
+        (ivec3s) {{position.x - (index.x * CHUNK_SIZE), position.y, position.z - (index.y * CHUNK_SIZE)}};
     chunk_set_block(chunk, block_position, block);
 }
 

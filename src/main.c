@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
     }
 
     camera = renderer_get_camera();
-    camera_set_position(camera, (vec3s) {{10.0f, 68.0f, 10.0f}});
+    camera_set_position(camera, (vec3s) {{10.0f, 20.0f, 10.0f}});
 
     input_set_cursor_enabled(0);
     input_add_key_pressed_callback(key_callback);
