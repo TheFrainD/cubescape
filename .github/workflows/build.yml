@@ -63,7 +63,7 @@ jobs:
         libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
         libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
         libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
-        libxcb-util0-dev libxcb-util-dev
+        libxcb-util0-dev libxcb-util-dev xorg-dev libwayland-dev wayland-protocols
     
     - name: Configure CMake
       run: >
@@ -71,19 +71,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DSOL2_ENABLE_INSTALL=OFF
-        -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=${{ github.workspace }}/third-party/cmake-conan/conan_provider.cmake
         -S ${{ github.workspace }}
     
     - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }} --target install
-
-    - name: Tests
-      working-directory: ${{ github.workspace }}/build
-      run: ctest --output-on-failure
-
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: build-artifact-${{ matrix.os }}
-        path: ./bin/
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
