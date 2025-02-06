@@ -24,6 +24,7 @@ lib/
 
 # IDE artifacts
 .vscode/
+.vs/
 .idea/
 *.sln
 *.vcxproj

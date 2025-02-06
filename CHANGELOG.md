@@ -2,14 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Snapshot 1.0.1-alpha.2024.1.16]
+## Next Snapshot  
 
-### Added
+### Bugfixes
+- Fixed a bug where block destroying/placing wouldn't work in with negative coordinates
+
+## Snapshot 1ea895 (2025-02-05)
+- Implemented infinite world
+- Optimized rendering
+- Reverted changes to project structure
+- Moved to JSON for tilemap metadata
 - Implemented placing and destroying blocks
-
-### Changed
 - Separated OpenGL and logging into libraries
-
-## [Version 1.0.0-alpha] - 2024-01-15
-### Added
-- Initial release
