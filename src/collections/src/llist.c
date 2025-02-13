@@ -81,9 +81,9 @@ void llist_remove(llist_t *list, void *data) {
     }
 }
 
-void llist_remove_at(llist_t *list, size_t index) {
+void *llist_remove_at(llist_t *list, size_t index) {
     if (list == NULL || index >= list->size) {
-        return;
+        return NULL;
     }
 
     llist_node_t *prev    = NULL;
@@ -99,8 +99,11 @@ void llist_remove_at(llist_t *list, size_t index) {
         prev->next = current->next;
     }
 
+    void *data = current->data;
     free(current);
     list->size--;
+
+    return data;
 }
 
 void *llist_get(llist_t *list, size_t index) {
@@ -114,4 +117,18 @@ void *llist_get(llist_t *list, size_t index) {
     }
 
     return current->data;
+}
+
+void *llist_pop(llist_t *list) {
+    if (list == NULL || list->size == 0) {
+        return NULL;
+    }
+
+    llist_node_t *node = list->head;
+    list->head = node->next;
+    void *data = node->data;
+    free(node);
+    list->size--;
+
+    return data;
 }

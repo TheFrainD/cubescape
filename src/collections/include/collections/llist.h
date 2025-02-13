@@ -60,8 +60,9 @@ void llist_remove(llist_t *list, void *data);
  *
  * @param list A pointer to the linked list to remove the data from.
  * @param index The index of the data to remove from the linked list.
+ * @return void* The data that was removed from the linked list.
  */
-void llist_remove_at(llist_t *list, size_t index);
+void *llist_remove_at(llist_t *list, size_t index);
 
 /**
  * @brief Retrieves the data at the specified index from the linked list.
@@ -74,3 +75,13 @@ void llist_remove_at(llist_t *list, size_t index);
  * @return void* The data at the specified index.
  */
 void *llist_get(llist_t *list, size_t index);
+
+/**
+ * @brief Pops the first element from the linked list.
+ *
+ * This function pops the first element from the linked list.
+ *
+ * @param list A pointer to the linked list to pop the element from.
+ * @return void* The first element in the linked list.
+ */
+void *llist_pop(llist_t *list);

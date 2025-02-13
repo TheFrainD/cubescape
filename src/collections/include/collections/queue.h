@@ -2,11 +2,9 @@
 
 #include <stddef.h>
 
+#include "collections/llist.h"
 typedef struct {
-    void **data;
-    size_t size;
-    size_t capacity;
-    size_t front;
+    llist_t *list;
 } queue_t;
 
 /**
@@ -14,10 +12,9 @@ typedef struct {
  *
  * This function creates a new queue with the specified capacity.
  *
- * @param capacity The capacity of the queue.
  * @return queue_t* A pointer to the newly created queue.
  */
-queue_t *queue_create(size_t capacity);
+queue_t *queue_create();
 
 /**
  * @brief Destroys the specified queue.
@@ -67,3 +64,13 @@ void queue_push(queue_t *queue, void *value);
  * @return void* A pointer to the removed element.
  */
 void *queue_pop(queue_t *queue);
+
+/**
+ * @brief Get the size of the queue.
+ * 
+ * This function returns the number of elements in the queue.
+ * 
+ * @param queue A pointer to the queue.
+ * @return size_t The number of elements in the queue.
+ */
+size_t queue_size(queue_t *queue);

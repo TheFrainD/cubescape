@@ -3,15 +3,14 @@
 #include <unity.h>
 
 void test_queue_create_destroy(void) {
-    queue_t *queue = queue_create(5);
+    queue_t *queue = queue_create();
     TEST_ASSERT_NOT_NULL(queue);
-    TEST_ASSERT_EQUAL_UINT32(0, queue->size);
-    TEST_ASSERT_EQUAL_UINT32(5, queue->capacity);
+    TEST_ASSERT_EQUAL_UINT32(0, queue_size(queue));
     queue_destroy(queue);
 }
 
 void test_queue_push_pop(void) {
-    queue_t *queue = queue_create(3);
+    queue_t *queue = queue_create();
     int values[]   = {10, 20, 30};
 
     queue_push(queue, &values[0]);
@@ -26,7 +25,7 @@ void test_queue_push_pop(void) {
 }
 
 void test_queue_front_back(void) {
-    queue_t *queue = queue_create(3);
+    queue_t *queue = queue_create();
     int values[]   = {100, 200, 300};
 
     queue_push(queue, &values[0]);
@@ -40,7 +39,7 @@ void test_queue_front_back(void) {
 }
 
 void test_queue_empty_behavior(void) {
-    queue_t *queue = queue_create(2);
+    queue_t *queue = queue_create();
 
     TEST_ASSERT_NULL(queue_pop(queue));
     TEST_ASSERT_NULL(queue_front(queue));
@@ -50,7 +49,7 @@ void test_queue_empty_behavior(void) {
 }
 
 void test_queue_overflow(void) {
-    queue_t *queue = queue_create(2);
+    queue_t *queue = queue_create();
     int values[]   = {1, 2, 3};
 
     queue_push(queue, &values[0]);

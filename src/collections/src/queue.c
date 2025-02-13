@@ -7,66 +7,63 @@
 
 queue_t *queue_create(size_t capacity) {
     queue_t *queue  = malloc(sizeof(queue_t));
-    queue->data     = malloc(sizeof(void *) * capacity);
-    queue->size     = 0;
-    queue->capacity = capacity;
-    queue->front    = 0;
+    queue->list     = llist_create();
 
     return queue;
 }
 
 void queue_destroy(queue_t *queue) {
-    free(queue->data);
+    llist_destroy(queue->list);
     free(queue);
 }
 
 void *queue_front(queue_t *queue) {
     ASSERT(queue != NULL);
-    ASSERT(queue->data != NULL);
+    ASSERT(queue->list != NULL);
 
-    if (queue->size == 0) {
+    if (queue->list->size == 0) {
         return NULL;
     }
 
-    return queue->data[queue->front];
+    return queue->list->head->data;
 }
 
 void *queue_back(queue_t *queue) {
     ASSERT(queue != NULL);
-    ASSERT(queue->data != NULL);
+    ASSERT(queue->size != NULL);
 
-    if (queue->size == 0) {
+    if (queue->list->size == 0) {
         return NULL;
     }
 
-    return queue->data[queue->size - 1];
+    LLIST_FOREACH(queue->list, node) {
+        if (node->next == NULL) {
+            return node->data;
+        }
+    }
 }
 
 void queue_push(queue_t *queue, void *value) {
     ASSERT(queue != NULL);
-    ASSERT(queue->data != NULL);
+    ASSERT(queue->list != NULL);
 
-    if (queue->size == queue->capacity) {
-        return;
-    }
-
-    queue->data[queue->front + queue->size] = value;
-    ++queue->size;
+    llist_append(queue->list, value);
 }
 
 void *queue_pop(queue_t *queue) {
     ASSERT(queue != NULL);
     ASSERT(queue->data != NULL);
 
-    if (queue->size == 0) {
+    if (queue->list->size == 0) {
         return NULL;
     }
 
-    void *value = queue->data[queue->front];
-    for (size_t i = 1; i < queue->size; ++i) {
-        queue->data[i - 1] = queue->data[i];
-    }
-    --queue->size;
+    return llist_pop(queue->list);
+}
 
-    return value;
+size_t queue_size(queue_t *queue) {
+    ASSERT(queue != NULL);
+    ASSERT(queue->list != NULL);
+
+    return queue->list->size;
 }
