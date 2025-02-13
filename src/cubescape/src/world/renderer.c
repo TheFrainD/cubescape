@@ -5,7 +5,7 @@
 #include "core/assert.h"
 #include "core/bool.h"
 #include "core/log.h"
-#include "core/thread.h"
+#include "core/concurrency/thread.h"
 
 #include "graphics/renderer.h"
 

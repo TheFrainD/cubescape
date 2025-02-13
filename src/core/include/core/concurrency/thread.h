@@ -1,11 +1,15 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <pthread.h>
 #endif
+
+#include "core/bool.h"
 
 typedef struct {
 #ifdef _WIN32
@@ -14,14 +18,6 @@ typedef struct {
     pthread_t handle;
 #endif
 } thread_t;
-
-typedef struct {
-#ifdef _WIN32
-    HANDLE mutex;
-#else
-    pthread_mutex_t mutex;
-#endif
-} mutex_t;
 
 #ifdef _WIN32
 typedef DWORD(WINAPI *thread_func_t)(LPVOID);
@@ -76,29 +72,29 @@ void thread_join(thread_t *thread);
 void thread_detach(thread_t *thread);
 
 /**
- * @brief Create a new mutex
- *
- * @param mutex Pointer to the mutex_t struct
+ * @brief Get the number of hardware threads
+ * 
+ * @return int The number of hardware threads
  */
-void mutex_create(mutex_t *mutex);
+int thread_hardware_concurrency();
 
 /**
- * @brief Destroy a mutex
- *
- * @param mutex Pointer to the mutex_t struct
+ * @brief Sleep for the specified number of milliseconds
+ * 
+ * @param ms The number of milliseconds to sleep
  */
-void mutex_destroy(mutex_t *mutex);
+void thread_sleep_for(uint64_t ms);
 
 /**
- * @brief Lock a mutex
- *
- * @param mutex Pointer to the mutex_t struct
+ * @brief Yield the current thread
+ * 
+ * This function yields the current thread to allow other threads to run
  */
-void mutex_lock(mutex_t *mutex);
+void thread_yield();
 
 /**
- * @brief Unlock a mutex
- *
- * @param mutex Pointer to the mutex_t struct
+ * @brief Get the ID of the current thread
+ * 
+ * @return uint64_t The ID of the current thread
  */
-void mutex_unlock(mutex_t *mutex);
+uint64_t thread_get_id();

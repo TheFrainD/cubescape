@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/thread.h"
+#include "core/concurrency/thread.h"
 
 #include "world/chunk.h"
 #include "world/noise/combined_noise.h"

@@ -1,4 +1,8 @@
-#include "core/thread.h"
+#include "core/concurrency/thread.h"
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 int thread_create(thread_t *thread, thread_func_t func, void *arg) {
 #ifdef _WIN32
@@ -31,34 +35,36 @@ void thread_detach(thread_t *thread) {
 #endif
 }
 
-void mutex_create(mutex_t *mutex) {
+int thread_hardware_concurrency() {
 #ifdef _WIN32
-    mutex->mutex = CreateMutex(NULL, FALSE, NULL);
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    return sysinfo.dwNumberOfProcessors;
 #else
-    pthread_mutex_init(&mutex->mutex, NULL);
+    return sysconf(_SC_NPROCESSORS_ONLN);
 #endif
 }
 
-void mutex_destroy(mutex_t *mutex) {
+void thread_sleep_for(uint64_t ms) {
 #ifdef _WIN32
-    CloseHandle(mutex->mutex);
+    Sleep(ms);
 #else
-    pthread_mutex_destroy(&mutex->mutex);
+    usleep(ms * 1000);
 #endif
 }
 
-void mutex_lock(mutex_t *mutex) {
+void thread_yield() {
 #ifdef _WIN32
-    WaitForSingleObject(mutex->mutex, INFINITE);
+    SwitchToThread();
 #else
-    pthread_mutex_lock(&mutex->mutex);
+    sched_yield();
 #endif
 }
 
-void mutex_unlock(mutex_t *mutex) {
+uint64_t thread_get_id() {
 #ifdef _WIN32
-    ReleaseMutex(mutex->mutex);
+    return GetCurrentThreadId();
 #else
-    pthread_mutex_unlock(&mutex->mutex);
+    return (uint64_t)(uintptr_t)pthread_self();
 #endif
 }
