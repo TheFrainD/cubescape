@@ -1,4 +1,4 @@
-#include "graphics/window.h"
+#include "core/window.h"
 
 #include <stdio.h>
 #include <stdlib.h>

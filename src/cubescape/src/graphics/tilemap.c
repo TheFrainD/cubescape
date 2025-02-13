@@ -29,7 +29,7 @@ tilemap_t *tilemap_load(const char *filename) {
 
     read_file_content(file, (char *)data, file_size);
 
-    cJSON *json = cJSON_Parse(data);
+    cJSON *json = cJSON_Parse((char *)data);
     free(data);
 
     if (json == NULL) {

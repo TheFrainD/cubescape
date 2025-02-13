@@ -8,7 +8,8 @@ add_subdirectory(glfw EXCLUDE_FROM_ALL)
 add_subdirectory(glad)
 
 # cglm
-add_subdirectory(cglm)
+add_library(cglm INTERFACE)
+target_include_directories(cglm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/cglm/include)
 
 # stb_image
 add_library(stb INTERFACE)

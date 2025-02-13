@@ -15,7 +15,7 @@
 #include "graphics/camera.h"
 #include "graphics/renderer.h"
 #include "graphics/tilemap.h"
-#include "graphics/window.h"
+#include "core/window.h"
 
 #include "world/ray.h"
 #include "world/renderer.h"

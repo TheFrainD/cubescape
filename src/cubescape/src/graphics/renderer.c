@@ -9,7 +9,7 @@
 #include "gl/vertex_array.h"
 
 #include "graphics/vertex.h"
-#include "graphics/window.h"
+#include "core/window.h"
 
 typedef struct {
     buffer_t *uniform_buffer;

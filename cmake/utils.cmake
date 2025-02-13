@@ -1,0 +1,10 @@
+macro(gather_sources target)
+    file(GLOB_RECURSE ${target}_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+    file(GLOB_RECURSE ${target}_HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
+endmacro()
+
+macro(add_library_with_sources target)
+gather_sources(${target})
+add_library(${target} SHARED ${${target}_SOURCES} ${${target}_HEADERS})
+target_include_directories(${target} PUBLIC include)
+endmacro()

@@ -5,7 +5,7 @@
 #include "core/log.h"
 #include "core/math.h"
 
-#include "graphics/window.h"
+#include "core/window.h"
 
 struct camera {
     vec3s position;
