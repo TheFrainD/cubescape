@@ -4,12 +4,12 @@
 
 #include "core/log.h"
 #include "core/math.h"
+#include "core/window.h"
 
 #include "gl/buffer.h"
 #include "gl/vertex_array.h"
 
 #include "graphics/vertex.h"
-#include "core/window.h"
 
 typedef struct {
     buffer_t *uniform_buffer;

@@ -24,15 +24,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:core>
-        $<TARGET_FILE:collections>
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>
-)
-
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${PROJECT_SOURCE_DIR}/assets $<TARGET_FILE_DIR:${PROJECT_NAME}>/assets)
+    ${PROJECT_SOURCE_DIR}/assets ${CMAKE_BINARY_DIR}/assets)
 
 set(INSTALL_DIR "${CMAKE_SOURCE_DIR}/bin")
 

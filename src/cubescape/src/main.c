@@ -8,6 +8,7 @@
 #include "core/file.h"
 #include "core/input.h"
 #include "core/log.h"
+#include "core/window.h"
 
 #include "gl/shader.h"
 #include "gl/shader_program.h"
@@ -15,7 +16,6 @@
 #include "graphics/camera.h"
 #include "graphics/renderer.h"
 #include "graphics/tilemap.h"
-#include "core/window.h"
 
 #include "world/ray.h"
 #include "world/renderer.h"

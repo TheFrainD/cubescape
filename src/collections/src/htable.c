@@ -15,31 +15,31 @@ htable_t *htable_create(size_t capacity, size_t key_size, htable_hash_fn hash_fn
     table->hash_fn    = hash_fn;
     table->compare_fn = compare_fn;
 
-    if (key_free_fn == NULL) {
-        table->key_free_fn = free;
-    } else {
-        table->key_free_fn = key_free_fn;
-    }
-
-    if (data_free_fn == NULL) {
-        table->data_free_fn = free;
-    } else {
-        table->data_free_fn = data_free_fn;
-    }
-
     memset(table->entries, 0, sizeof(htable_entry_t) * capacity);
 
     return table;
 }
 
+static void free_key(htable_t *table, void *key) {
+    if (table->key_free_fn) {
+        table->key_free_fn(key);
+    }
+}
+
+static void free_data(htable_t *table, void *data) {
+    if (table->data_free_fn) {
+        table->data_free_fn(data);
+    }
+}
+
 void htable_destroy(htable_t *table) {
     for (size_t i = 0; i < table->size; i++) {
         if (table->entries[i].key) {
-            table->key_free_fn(table->entries[i].key);
+            free_key(table, table->entries[i].key);
         }
 
         if (table->entries[i].value) {
-            table->data_free_fn(table->entries[i].value);
+            free_data(table, table->entries[i].value);
         }
     }
     free(table->entries);
@@ -143,8 +143,8 @@ void htable_remove(htable_t *table, void *key) {
         }
 
         if (table->compare_fn(table->entries[current_index].key, key)) {
-            table->key_free_fn(table->entries[current_index].key);
-            table->data_free_fn(table->entries[current_index].value);
+            free_key(table, table->entries[current_index].key);
+            free_data(table, table->entries[current_index].value);
 
             table->entries[current_index].key   = NULL;
             table->entries[current_index].value = NULL;

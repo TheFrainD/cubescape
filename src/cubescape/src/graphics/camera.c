@@ -4,7 +4,6 @@
 #include "core/input.h"
 #include "core/log.h"
 #include "core/math.h"
-
 #include "core/window.h"
 
 struct camera {

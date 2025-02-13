@@ -22,3 +22,7 @@ target_include_directories(FastNoiseLite INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/F
 # cJSON
 add_library(cjson STATIC cJSON/cJSON.c cJSON/cJSON.h)
 target_include_directories(cjson PUBLIC cJSON)
+
+# Unity
+add_library(unity STATIC unity/src/unity.c unity/src/unity.h)
+target_include_directories(unity PUBLIC unity/src)
