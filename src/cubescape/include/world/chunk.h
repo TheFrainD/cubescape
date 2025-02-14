@@ -14,6 +14,10 @@
 #define CHUNK_HEIGHT 256
 #define CHUNK_VOLUME (CHUNK_SIZE * CHUNK_SIZE * CHUNK_HEIGHT)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct chunk_flags {
     bool_t dirty;
     bool_t generated;
@@ -73,3 +77,7 @@ void chunk_generate_mesh(chunk_t *chunk, shader_program_t *shader_program, tilem
  * @param chunk The chunk to destroy.
  */
 void chunk_destroy(chunk_t *chunk);
+
+#ifdef __cplusplus
+}
+#endif

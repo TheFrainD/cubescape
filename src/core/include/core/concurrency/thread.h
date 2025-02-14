@@ -11,6 +11,10 @@
 
 #include "core/bool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
 #ifdef _WIN32
     HANDLE handle;
@@ -73,28 +77,32 @@ void thread_detach(thread_t *thread);
 
 /**
  * @brief Get the number of hardware threads
- * 
+ *
  * @return int The number of hardware threads
  */
 int thread_hardware_concurrency();
 
 /**
  * @brief Sleep for the specified number of milliseconds
- * 
+ *
  * @param ms The number of milliseconds to sleep
  */
 void thread_sleep_for(uint64_t ms);
 
 /**
  * @brief Yield the current thread
- * 
+ *
  * This function yields the current thread to allow other threads to run
  */
 void thread_yield();
 
 /**
  * @brief Get the ID of the current thread
- * 
+ *
  * @return uint64_t The ID of the current thread
  */
 uint64_t thread_get_id();
+
+#ifdef __cplusplus
+}
+#endif

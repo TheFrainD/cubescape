@@ -1,5 +1,5 @@
 macro(gather_sources target)
-    file(GLOB_RECURSE ${target}_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+    file(GLOB_RECURSE ${target}_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
     file(GLOB_RECURSE ${target}_HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
 endmacro()
 

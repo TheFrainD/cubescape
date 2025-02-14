@@ -10,6 +10,10 @@
 
 #include "core/concurrency/mutex.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
 #ifdef _WIN32
 #error "condition_variable_t is not supported on Windows"
@@ -32,3 +36,7 @@ void condition_variable_notify_one(condition_variable_t *cond);
 void condition_variable_wait(condition_variable_t *cond, mutex_t *mutex);
 
 void condition_variable_wait_for(condition_variable_t *cond, mutex_t *mutex, uint64_t timeout_ms);
+
+#ifdef __cplusplus
+}
+#endif

@@ -2,6 +2,9 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef enum {
     SHADER_TYPE_VERTEX   = 0x8B31,
     SHADER_TYPE_FRAGMENT = 0x8B30,
@@ -23,3 +26,7 @@ uint32_t shader_create(shader_type_t type, const char *source);
  * @param shader A pointer to the ID of the shader to destroy.
  */
 void shader_destroy(uint32_t *shader);
+
+#ifdef __cplusplus
+}
+#endif

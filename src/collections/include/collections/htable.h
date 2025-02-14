@@ -5,6 +5,10 @@
 
 #include "core/bool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef uint64_t (*htable_hash_fn)(void *key);
 typedef bool_t (*htable_compare_fn)(void *key1, void *key2);
 typedef void (*htable_key_free_fn)(void *key);
@@ -112,3 +116,7 @@ htable_iter_t htable_iter(htable_t *table);
  * @return bool_t Whether the iterator was advanced.
  */
 bool_t htable_next(htable_iter_t *iter);
+
+#ifdef __cplusplus
+}
+#endif

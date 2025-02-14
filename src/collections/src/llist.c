@@ -125,8 +125,8 @@ void *llist_pop(llist_t *list) {
     }
 
     llist_node_t *node = list->head;
-    list->head = node->next;
-    void *data = node->data;
+    list->head         = node->next;
+    void *data         = node->data;
     free(node);
     list->size--;
 

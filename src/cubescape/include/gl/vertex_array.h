@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     VERTEX_ARRAY_DATA_TYPE_BYTE           = 0x1400,
     VERTEX_ARRAY_DATA_TYPE_UNSIGNED_BYTE  = 0x1401,
@@ -49,3 +53,7 @@ void vertex_array_unbind();
  * @param pointer A pointer to the first component of the first vertex attribute in the array.
  */
 void vertex_array_attrib(uint32_t index, int size, vertex_array_data_type_t type, int stride, const void *pointer);
+
+#ifdef __cplusplus
+}
+#endif

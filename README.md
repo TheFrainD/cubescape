@@ -1,6 +1,6 @@
 # Cubescape
 
-Cubescape is a lightweight Minecraft-inspired game written in C. It features a simple 3D world rendered using OpenGL, GLFW, and GLAD.
+Cubescape is a lightweight Minecraft-inspired game written in C++. It features a simple 3D world rendered using OpenGL, GLFW, and GLAD.
 
 ## Features
 

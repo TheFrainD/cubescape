@@ -6,8 +6,8 @@
 #include "core/assert.h"
 
 queue_t *queue_create(size_t capacity) {
-    queue_t *queue  = malloc(sizeof(queue_t));
-    queue->list     = llist_create();
+    queue_t *queue = malloc(sizeof(queue_t));
+    queue->list    = llist_create();
 
     return queue;
 }

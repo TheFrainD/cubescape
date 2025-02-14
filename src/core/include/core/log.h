@@ -2,6 +2,10 @@
 
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum { LOG_LEVEL_TRACE, LOG_LEVEL_DEBUG, LOG_LEVEL_INFO, LOG_LEVEL_WARN, LOG_LEVEL_ERROR, LOG_LEVEL_FATAL };
 
 #define LOG_TRACE(...) logger_log(LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
@@ -36,3 +40,7 @@ void logger_set_level(int level);
  * @param level The minimum log level for messages to be written to the file pointer.
  */
 void logger_set_fp(FILE *fp, int level);
+
+#ifdef __cplusplus
+}
+#endif

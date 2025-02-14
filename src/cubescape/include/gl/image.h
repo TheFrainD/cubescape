@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum { IMAGE_FORMAT_RGB = 3, IMAGE_FORMAT_RGBA = 4 } image_format_t;
 
 typedef struct {
@@ -30,3 +34,7 @@ image_t *image_load(const char *filename);
  * @param image A pointer to the image_t object whose data is to be freed.
  */
 void image_free(image_t *image);
+
+#ifdef __cplusplus
+}
+#endif

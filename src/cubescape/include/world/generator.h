@@ -6,6 +6,10 @@
 #include "world/noise/combined_noise.h"
 #include "world/noise/octave_noise.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     size_t thread_count;
     int seed;
@@ -32,3 +36,7 @@ world_generator_t *world_generator_create(world_generator_parameters_t parameter
 void world_generator_generate(world_generator_t *generator, chunk_t *chunk);
 
 void world_generator_destroy(world_generator_t *generator);
+
+#ifdef __cplusplus
+}
+#endif

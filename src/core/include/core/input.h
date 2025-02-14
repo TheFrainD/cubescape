@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     KEY_UNKNOWN       = -1,
     KEY_SPACE         = 32,
@@ -216,3 +220,7 @@ void input_add_mouse_scroll_callback(mouse_scroll_callback_t callback);
  * @param enabled Set to 1 to enable the cursor, 0 to disable it.
  */
 void input_set_cursor_enabled(int enabled);
+
+#ifdef __cplusplus
+}
+#endif

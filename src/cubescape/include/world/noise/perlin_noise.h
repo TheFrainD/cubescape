@@ -2,6 +2,10 @@
 
 #include "world/noise/noise.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     noise_t base;
     void *noise;
@@ -37,3 +41,7 @@ float perlin_noise_compute(noise_t *noise, float x, float y);
  * @param noise A pointer to the Perlin noise structure.
  */
 void perlin_noise_destroy(perlin_noise_t *noise);
+
+#ifdef __cplusplus
+}
+#endif

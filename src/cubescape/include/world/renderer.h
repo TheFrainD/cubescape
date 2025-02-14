@@ -6,6 +6,10 @@
 
 #include "world/world.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct world_renderer_state world_renderer_state_t;
 
 typedef struct {
@@ -45,3 +49,7 @@ void world_renderer_destroy(world_renderer_t *renderer);
  * @param camera_position The position of the camera.
  */
 void world_renderer_render(world_renderer_t *renderer, world_t *world, vec3s camera_position);
+
+#ifdef __cplusplus
+}
+#endif

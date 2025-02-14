@@ -4,6 +4,10 @@
 
 #include <cglm/struct.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     char *name;
     char *path;
@@ -33,3 +37,7 @@ tilemap_t *tilemap_load(const char *filename);
  * @param tilemap A pointer to the tilemap_t object whose data is to be freed.
  */
 void tilemap_free(tilemap_t *tilemap);
+
+#ifdef __cplusplus
+}
+#endif

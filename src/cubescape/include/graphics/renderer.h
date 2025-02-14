@@ -5,6 +5,10 @@
 #include "graphics/camera.h"
 #include "graphics/mesh.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define RENDERER_DEFAULT_CLEAR_COLOR \
     (vec3s) {                        \
         { 0.0f, 0.0f, 0.0f }         \
@@ -99,3 +103,7 @@ renderer_state_t *renderer_get_state();
  * @return camera_t* The camera used by the renderer.
  */
 camera_t *renderer_get_camera();
+
+#ifdef __cplusplus
+}
+#endif

@@ -3,6 +3,11 @@
 #include <stddef.h>
 
 #include "collections/llist.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     llist_t *list;
 } queue_t;
@@ -67,10 +72,14 @@ void *queue_pop(queue_t *queue);
 
 /**
  * @brief Get the size of the queue.
- * 
+ *
  * This function returns the number of elements in the queue.
- * 
+ *
  * @param queue A pointer to the queue.
  * @return size_t The number of elements in the queue.
  */
 size_t queue_size(queue_t *queue);
+
+#ifdef __cplusplus
+}
+#endif

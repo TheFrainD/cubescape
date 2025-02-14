@@ -6,6 +6,10 @@
 #include <pthread.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
 #ifdef _WIN32
     HANDLE mutex;
@@ -41,3 +45,7 @@ void mutex_lock(mutex_t *mutex);
  * @param mutex Pointer to the mutex_t struct
  */
 void mutex_unlock(mutex_t *mutex);
+
+#ifdef __cplusplus
+}
+#endif

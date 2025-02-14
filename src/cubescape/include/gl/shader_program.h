@@ -4,6 +4,10 @@
 
 #define UNIFROM_BLOCK_INDEX_SIZE 64
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct shader_program shader_program_t;
 
 /**
@@ -59,3 +63,7 @@ uint32_t shader_program_get_uniform_block_index(shader_program_t *program, const
  * @param binding_point The binding point to bind the uniform block to.
  */
 void shader_program_bind_uniform_block(shader_program_t *program, const char *name, uint32_t binding_point);
+
+#ifdef __cplusplus
+}
+#endif

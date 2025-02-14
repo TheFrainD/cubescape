@@ -9,6 +9,10 @@
 #include "world/chunk.h"
 #include "world/generator.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     htable_t *chunks;
     world_generator_t *generator;
@@ -99,3 +103,7 @@ chunk_t *world_add_chunk(world_t *world, ivec2s index);
  * @param draw_distance The draw distance.
  */
 void world_delete_far_chunks(world_t *world, vec3s camera_position, int draw_distance);
+
+#ifdef __cplusplus
+}
+#endif

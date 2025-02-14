@@ -2,6 +2,10 @@
 
 #include <cglm/struct.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     int width;
     int height;
@@ -104,3 +108,7 @@ float window_get_delta_time();
  * @param callback The callback function to be called when the framebuffer size changes.
  */
 void window_add_framebuffersize_callback(window_framebuffersize_callback_t callback);
+
+#ifdef __cplusplus
+}
+#endif

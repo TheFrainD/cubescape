@@ -4,6 +4,10 @@
 
 #include "gl/image.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     TEXTURE_WRAPPING_CLAMP_TO_EDGE        = 0x812F,
     TEXTURE_WRAPPING_CLAMP_TO_BORDER      = 0x812D,
@@ -104,3 +108,7 @@ void texture_set_anisotropy(uint32_t texture, float anisotropy);
  * @param texture A pointer to the ID of the texture to destroy.
  */
 void texture_destroy(uint32_t *texture);
+
+#ifdef __cplusplus
+}
+#endif

@@ -3,6 +3,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     BUFFER_USAGE_STREAM_DRAW  = 0x88E0,
     BUFFER_USAGE_STREAM_READ  = 0x88E1,
@@ -96,3 +100,7 @@ void buffer_data(const buffer_t *buffer, size_t size, const void *data);
  * @param data A pointer to the data to update the buffer with.
  */
 void buffer_sub_data(const buffer_t *buffer, size_t offset, size_t size, const void *data);
+
+#ifdef __cplusplus
+}
+#endif

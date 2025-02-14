@@ -2,6 +2,10 @@
 
 #include "world/noise/noise.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     noise_t base;
     noise_t *noise1;
@@ -33,3 +37,7 @@ float combined_noise_compute(noise_t *noise, float x, float y);
  * @param noise Pointer to the combined noise object to be destroyed.
  */
 void combined_noise_destroy(combined_noise_t *noise);
+
+#ifdef __cplusplus
+}
+#endif

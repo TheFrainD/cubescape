@@ -3,6 +3,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Get the size of a file.
  *
@@ -25,3 +29,7 @@ size_t get_file_size(FILE *fp);
  * @return The number of bytes read from the file, or -1 if an error occurs.
  */
 int read_file_content(FILE *fp, char *buffer, size_t buffer_size);
+
+#ifdef __cplusplus
+}
+#endif

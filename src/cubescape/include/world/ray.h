@@ -4,6 +4,10 @@
 
 #include "world/world.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     vec3s origin;
     vec3s direction;
@@ -23,3 +27,7 @@ typedef struct {
  * @return int Returns 1 if a block was hit, 0 otherwise.
  */
 int ray_cast(world_t *world, ray_t ray, float max_distance, ivec3s *hit_block, ivec3s *hit_face);
+
+#ifdef __cplusplus
+}
+#endif

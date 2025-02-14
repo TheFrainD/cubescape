@@ -7,6 +7,10 @@
 
 #include "gl/shader_program.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct camera camera_t;
 
 typedef struct {
@@ -138,3 +142,7 @@ vec3s camera_get_up(camera_t *camera);
  * @return vec3s The right vector of the camera.
  */
 vec3s camera_get_right(camera_t *camera);
+
+#ifdef __cplusplus
+}
+#endif

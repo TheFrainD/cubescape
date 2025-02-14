@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-
 #include <cglm/cglm.h>
 
 #include "core/assert.h"
@@ -20,6 +16,8 @@
 #include "world/ray.h"
 #include "world/renderer.h"
 #include "world/world.h"
+
+#include <ctime>
 
 #define VERTEX_SHADER_PATH   "assets/shaders/block.vs"
 #define FRAGMENT_SHADER_PATH "assets/shaders/block.fs"
@@ -47,8 +45,8 @@ void key_callback(key_code_t key) {
     if (key == KEY_C) {
         vec3s camera_position = camera_get_position(camera);
         ivec2s index          = (ivec2s) {
-            {camera_position.x >= 0 ? (camera_position.x / CHUNK_SIZE) : (camera_position.x / CHUNK_SIZE - 1),
-             camera_position.z >= 0 ? (camera_position.z / CHUNK_SIZE) : (camera_position.z / CHUNK_SIZE - 1)}};
+            {(int)(camera_position.x >= 0 ? (camera_position.x / CHUNK_SIZE) : (camera_position.x / CHUNK_SIZE - 1)),
+                      (int)(camera_position.z >= 0 ? (camera_position.z / CHUNK_SIZE) : (camera_position.z / CHUNK_SIZE - 1))}};
         LOG_INFO("Chunk at position (%d, %d)", index.x, index.y);
     }
 }
@@ -69,7 +67,7 @@ void mouse_button_callback(mouse_button_code_t button) {
     }
 }
 
-void mouse_callback(double x, double y) { camera_update_view(camera, (vec2s) {{x, y}}); }
+void mouse_callback(double x, double y) { camera_update_view(camera, (vec2s) {(float)x, (float)y}); }
 
 void update() {
     float horizontal_velocity = horizontal_speed * window_get_delta_time();
@@ -143,7 +141,7 @@ int main(int argc, char **argv) {
     }
 
     size_t vertex_shader_size  = get_file_size(fp);
-    char *vertex_shader_source = malloc(vertex_shader_size);
+    char *vertex_shader_source = new char[vertex_shader_size];
     read_file_content(fp, vertex_shader_source, vertex_shader_size);
     fclose(fp);
 
@@ -154,15 +152,15 @@ int main(int argc, char **argv) {
     }
 
     size_t fragment_shader_size  = get_file_size(fp);
-    char *fragment_shader_source = malloc(fragment_shader_size);
+    char *fragment_shader_source = new char[fragment_shader_size];
     read_file_content(fp, fragment_shader_source, fragment_shader_size);
     fclose(fp);
 
     uint32_t vertex_shader = shader_create(SHADER_TYPE_VERTEX, vertex_shader_source);
-    free(vertex_shader_source);
+    delete[] vertex_shader_source;
 
     uint32_t fragment_shader = shader_create(SHADER_TYPE_FRAGMENT, fragment_shader_source);
-    free(fragment_shader_source);
+    delete[] fragment_shader_source;
 
     shader_program_t *shader_program = shader_program_create();
     if (!shader_program) {

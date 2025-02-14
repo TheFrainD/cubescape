@@ -5,6 +5,10 @@
 
 #define LLIST_FOREACH(list, node) for (llist_node_t *node = list->head; node != NULL; node = node->next)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct llist_node {
     struct llist_node *next;
     void *data;
@@ -85,3 +89,7 @@ void *llist_get(llist_t *list, size_t index);
  * @return void* The first element in the linked list.
  */
 void *llist_pop(llist_t *list);
+
+#ifdef __cplusplus
+}
+#endif

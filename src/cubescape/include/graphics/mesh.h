@@ -9,6 +9,10 @@
 
 #include "graphics/vertex.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct mesh_flags {
     bool_t ready_to_upload;
     bool_t uploaded;
@@ -103,3 +107,7 @@ void mesh_unbind(const mesh_t *mesh);
  * @param mesh A pointer to the mesh object to upload.
  */
 void mesh_upload(mesh_t *mesh);
+
+#ifdef __cplusplus
+}
+#endif

@@ -3,6 +3,10 @@
 #include "world/noise/noise.h"
 #include "world/noise/perlin_noise.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     noise_t base;
     int octaves;
@@ -41,3 +45,7 @@ float octave_noise_compute(noise_t *noise, float x, float y);
  * @param noise A pointer to the octave noise generator object to destroy.
  */
 void octave_noise_destroy(octave_noise_t *noise);
+
+#ifdef __cplusplus
+}
+#endif

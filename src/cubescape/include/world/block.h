@@ -5,6 +5,10 @@
 #include "graphics/tilemap.h"
 #include "graphics/vertex.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     BLOCK_ID_AIR         = 0,
     BLOCK_ID_STONE       = 1,
@@ -73,3 +77,7 @@ block_tiles_t block_get_tiles(block_id_t block);
  * @param faces The faces for the block.
  */
 void block_get_faces(block_id_t block, vec3s position, tilemap_t *tilemap, block_faces_t *faces);
+
+#ifdef __cplusplus
+}
+#endif
