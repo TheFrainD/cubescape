@@ -1,5 +1,5 @@
----
 BasedOnStyle: Google
+AccessModifierOffset: '-4'
 AlignAfterOpenBracket: Align
 AlignConsecutiveMacros: 'true'
 AlignConsecutiveAssignments: 'true'
@@ -8,7 +8,7 @@ AlignOperands: 'true'
 AlignTrailingComments: 'true'
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLambdasOnASingleLine: Inline
-ColumnLimit: '120'
+ColumnLimit: '80'
 FixNamespaceComments: 'true'
 IndentWidth: '4'
 Language: Cpp
@@ -23,27 +23,19 @@ SpaceBeforeAssignmentOperators: 'true'
 SpaceBeforeCpp11BracedList: 'true'
 TabWidth: '4'
 IncludeCategories:
-  - Regex: '^<pthread\.h>'
-    Priority: 1
-  - Regex: '^<time\.h>'
-    Priority: 1
-  - Regex: '^<string\.h>'
-    Priority: 1
-  - Regex: '^<std.*\.h>'
-    Priority: 1
-  - Regex: '^<cube.*\.h>'
-    Priority: 3
   - Regex: '^<.*\.h>'
+    Priority: 1
+  - Regex: '^<.*'
     Priority: 2
   - Regex: '^"core/.*\.h"'
-    Priority: 4
+    Priority: 3
   - Regex: '^"collections/.*\.h"'
-    Priority: 5
+    Priority: 4
   - Regex: '^"gl/.*\.h"'
-    Priority: 6
+    Priority: 5
   - Regex: '^"graphics/.*\.h"'
-    Priority: 7
+    Priority: 6
   - Regex: '^"world/.*\.h"'
-    Priority: 8
+    Priority: 7
   - Regex: '^".*\.h"'
-    Priority: 9
+    Priority: 8
