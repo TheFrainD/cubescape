@@ -5,12 +5,12 @@
 #include <memory>
 #include <string>
 
-#define LOGGER_TRACE(...)    core::Logger::GetLogger()->trace(__VA_ARGS__)
-#define LOGGER_DEBUG(...)    core::Logger::GetLogger()->debug(__VA_ARGS__)
-#define LOGGER_INFO(...)     core::Logger::GetLogger()->info(__VA_ARGS__)
-#define LOGGER_WARN(...)     core::Logger::GetLogger()->warn(__VA_ARGS__)
-#define LOGGER_ERROR(...)    core::Logger::GetLogger()->error(__VA_ARGS__)
-#define LOGGER_CRITICAL(...) core::Logger::GetLogger()->critical(__VA_ARGS__)
+#define LOG_TRACE(...)    core::Logger::GetLogger()->trace(__VA_ARGS__)
+#define LOG_DEBUG(...)    core::Logger::GetLogger()->debug(__VA_ARGS__)
+#define LOG_INFO(...)     core::Logger::GetLogger()->info(__VA_ARGS__)
+#define LOG_WARN(...)     core::Logger::GetLogger()->warn(__VA_ARGS__)
+#define LOG_ERROR(...)    core::Logger::GetLogger()->error(__VA_ARGS__)
+#define LOG_CRITICAL(...) core::Logger::GetLogger()->critical(__VA_ARGS__)
 
 namespace core {
 class Logger {

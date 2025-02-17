@@ -9,9 +9,10 @@ add_subdirectory(glad)
 
 # glm
 add_subdirectory(glm)
-# spdlog
-add_subdirectory(spdlog)
 
+# spdlog
+set(SPDLOG_NO_EXCEPTIONS ON)
+add_subdirectory(spdlog)
 
 # cglm
 add_library(cglm INTERFACE)

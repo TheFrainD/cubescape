@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/log.h"
+#include "core/logger.h"
 
 #ifdef ASSERTIONS_ENABLED
 // Macro that breaks into the debugger
@@ -24,7 +24,7 @@
 #define ASSERT(expr)                                                                    \
     if (expr) {                                                                         \
     } else {                                                                            \
-        LOG_FATAL("Assertion failed: %s, file %s, line %d", #expr, __FILE__, __LINE__); \
+        LOG_FATAL("Assertion failed: {}, file {}, line {}", #expr, __FILE__, __LINE__); \
         DEBUG_BREAK();                                                                  \
     }
 

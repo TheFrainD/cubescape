@@ -1,5 +1,5 @@
 gather_sources(${PROJECT_NAME})
-add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
+add_executable(${PROJECT_NAME} src/main.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
@@ -11,7 +11,7 @@ endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE EXECUTABLE_NAME="${PROJECT_NAME}")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE core collections stb FastNoiseLite cjson)
+target_link_libraries(${PROJECT_NAME} PRIVATE core)
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4)
