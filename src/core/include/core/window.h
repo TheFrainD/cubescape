@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 
+#include "core/context.h"
 #include "core/dimensions.h"
 
 struct GLFWwindow;
@@ -13,7 +14,7 @@ struct WindowSettings {
     std::uint8_t multisample;
 };
 
-enum class WindowError: int {
+enum class WindowError : int {
     kOk = 0,
     kFailedToInitializeGLFW,
     kFailedToCreateGLFWWindow,
@@ -22,7 +23,9 @@ enum class WindowError: int {
 
 class Window {
 public:
-    explicit Window(const WindowSettings &settings);
+    Context &ctx;
+
+    Window(Context &ctx, const WindowSettings &settings);
     ~Window() = default;
 
     /**
@@ -97,13 +100,14 @@ public:
 
     /**
      * @brief Retrieves the handle for the window.
-     * 
+     *
      * @return GLFWwindow* The handle for the window.
      */
     GLFWwindow *GetHandle() const;
 
 private:
     GLFWwindow *handle_ {nullptr};
+
     WindowSettings settings_;
 
     float last_frame_ {0.0f};

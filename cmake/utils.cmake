@@ -5,6 +5,6 @@ endmacro()
 
 macro(add_library_with_sources target)
 gather_sources(${target})
-add_library(${target} SHARED ${${target}_SOURCES} ${${target}_HEADERS})
+add_library(${target} STATIC ${${target}_SOURCES} ${${target}_HEADERS})
 target_include_directories(${target} PUBLIC include)
 endmacro()

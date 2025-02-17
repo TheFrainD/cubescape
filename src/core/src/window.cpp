@@ -9,7 +9,8 @@
 #include "core/logger.h"
 
 namespace core {
-Window::Window(const WindowSettings& settings) : settings_(settings) {}
+Window::Window(Context& ctx, const WindowSettings& settings)
+    : ctx(ctx), settings_(settings) {}
 
 WindowError Window::Init() {
     glfwSetErrorCallback([](int error, const char* description) {
