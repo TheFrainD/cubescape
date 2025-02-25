@@ -1,9 +1,6 @@
 [submodule "third-party/cglm"]
 	path = third-party/cglm
 	url = https://github.com/recp/cglm.git
-[submodule "third-party/FastNoiseLite"]
-	path = third-party/FastNoiseLite
-	url = https://github.com/Auburn/FastNoiseLite.git
 [submodule "third-party/Unity"]
 	path = third-party/Unity
 	url = https://github.com/ThrowTheSwitch/Unity.git
