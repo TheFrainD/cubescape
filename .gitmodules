@@ -1,9 +1,6 @@
 [submodule "third-party/cglm"]
 	path = third-party/cglm
 	url = https://github.com/recp/cglm.git
-[submodule "third-party/Unity"]
-	path = third-party/Unity
-	url = https://github.com/ThrowTheSwitch/Unity.git
 [submodule "third-party/glm"]
 	path = third-party/glm
 	url = https://github.com/g-truc/glm.git
