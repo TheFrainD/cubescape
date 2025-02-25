@@ -37,3 +37,5 @@ lib/
 
 # log files
 *.log
+
+CMakeUserPresets.json

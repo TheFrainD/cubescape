@@ -17,12 +17,12 @@ public:
 
     template <typename Event, auto Method, typename Class>
     void Connect(Class &instance) {
-        dispatcher_.sink<Event>().connect<Method>(&instance);
+        dispatcher_.sink<Event>().template connect<Method>(&instance);
     }
 
     template <typename Event, auto Function>
     void Connect() {
-        dispatcher_.sink<Event>().connect<Function>();
+        dispatcher_.sink<Event>().template connect<Function>();
     }
 
 private:
